@@ -1,0 +1,30 @@
+---
+- model: db.models.Source
+  fields:
+    name: CLIENTE
+    priority: 1
+
+- model: db.models.Source
+  fields:
+    name: CIP
+    priority: 2
+
+- model: db.models.Source
+  fields:
+    name: BANCO
+    priority: 3
+
+- model: db.models.Source
+  fields:
+    name: SERASA
+    priority: 4
+
+- model: db.models.Source
+  fields:
+    name: INTOUCH
+    priority: 5
+
+- model: db.models.Source
+  fields:
+    name: SEM ORIGEM TELEFONE
+    priority: 6

@@ -67,10 +67,12 @@ def check_permission(current_user: User, user_permission: UserPermission):
     
     if user_permission == UserPermission.ADMIN:
         list_permited.append(UserPermission.ADMIN)
+        list_permited.append(UserPermission.INSTRUCTOR)
+        list_permited.append(UserPermission.PARENTS)
 
     if user_permission == UserPermission.INSTRUCTOR:
-        list_permited.append(UserPermission.ADMIN)
         list_permited.append(UserPermission.INSTRUCTOR)
+        list_permited.append(UserPermission.PARENTS)
 
     if user_permission == UserPermission.PARENTS:
         list_permited.append(UserPermission.PARENTS)

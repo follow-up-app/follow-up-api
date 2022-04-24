@@ -22,29 +22,64 @@ router = APIRouter()
 
 tags: str = "Company"
 
-@router.post('/', summary='Create company', response_model=List[CompanyOut], tags=[tags])
-async def create(company_in: CompanyIn, session: Session=Depends(get_db)):
-    company = Company(
-      name = company_in.name, 
-      document = company_in.document,
-      address = company_in.address,
-      complement = company_in.complement,
-      zip_code = company_in.zip_code,
-      city = company_in.city,
-      state = company_in.state,
-      country = company_in.country,
-      email = company_in.email,
-      phone = company_in.phone,
-      status = StatusCompany.ACTIVE
-    )
 
+@router.post('/', summary='Create company', response_model=List[CompanyOut], tags=[tags])
+async def create(company_in: CompanyIn, session: Session = Depends(get_db)):
+    company = Company(
+        name=company_in.name,
+        document=company_in.document,
+        address=company_in.address,
+        complement=company_in.complement,
+        zip_code=company_in.zip_code,
+        city=company_in.city,
+        state=company_in.state,
+        country=company_in.country,
+        email=company_in.email,
+        phone=company_in.phone,
+        status=StatusCompany.ACTIVE
+    )
     session.add(company)
     session.commit()
 
     return CompanyOut.from_orm(company)
 
 
-@router.get('/', summary='Returns list of companies', response_model=List[CompanyOut], tags=[tags])
-async def get_all(session: Session=Depends(get_db)):
+@router.get('/', summary='Returns companies list', response_model=List[CompanyOut], tags=[tags])
+async def get_all(session: Session = Depends(get_db)):
     all_itens = Company.query(session).all()
     return [CompanyOut.from_orm(x) for x in all_itens]
+
+
+@router.get('/{id}', summary='Returns company', response_model=List[CompanyOut], tags=[tags])
+async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    company: Company = Company.query(session).filter(Company.id == id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail='route not found')
+
+    return [CompanyOut.from_orm(company)]
+
+
+@router.put('/{id}', summary='Update company', response_model=List[CompanyOut], tags=[tags])
+async def update(id: UUID, company_in: CompanyIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    company = Company(
+        name=company_in.name,
+        document=company_in.document,
+        address=company_in.address,
+        complement=company_in.complement,
+        zip_code=company_in.zip_code,
+        city=company_in.city,
+        state=company_in.state,
+        country=company_in.country,
+        email=company_in.email,
+        phone=company_in.phone,
+        status=StatusCompany.ACTIVE
+    )
+    session.add(company)
+    session.commit()
+
+    return CompanyOut.from_orm(company)
+
+
+@router.delete('/{id}', summary='Delete company', response_model=List[CompanyOut], tags=[tags])
+async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    pass

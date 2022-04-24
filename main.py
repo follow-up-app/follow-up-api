@@ -21,6 +21,12 @@ import sentry_sdk
 
 from routes.company import router as company_router
 from routes.users import router as user_router
+from routes.students import router as student_router
+from routes.programs import router as program_router
+from routes.procedures import router as procedure_router
+from routes.grid import router as grid_router
+from routes.results import router as result_router
+
 
 
 # sentry_sdk.init(
@@ -38,7 +44,7 @@ origins = [
 settings = get_settings()
 
 app = FastAPI(debug=True, title=settings.APP_NAME,
-              description='Api de comunicação')
+              description='Api Follow-up')
 
 app.add_middleware(
     CORSMiddleware,
@@ -50,6 +56,11 @@ app.add_middleware(
 
 app.include_router(company_router, prefix='/company')
 app.include_router(user_router, prefix='/users')
+app.include_router(student_router, prefix='/students')
+app.include_router(program_router, prefix='/programs')
+app.include_router(procedure_router, prefix='/procedures')
+app.include_router(grid_router, prefix='/grids')
+app.include_router(result_router, prefix='/results')
 
 
 

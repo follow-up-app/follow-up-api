@@ -65,6 +65,8 @@ class Company(ModelBase):
 class User(ModelBase):
     __tablename__ = 'users'
 
+    company_id = Column(UUIDType(binary=False), ForeignKey(Company.id), nullable=False)
+
     fullname = Column(String(255), nullable=False)
     password_hash = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False, unique=True)

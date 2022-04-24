@@ -7,14 +7,13 @@ class CompanyIn(BaseModel):
     name: str
     document: str
     address: str
-    complement: str or None
+    complement: str = None
     zip_code: str
     city: str
     state: str
     country: str
     email: str
     phone: str
-    status: StatusCompany
 
 
 class CompanyOut(BaseModel):
@@ -22,7 +21,7 @@ class CompanyOut(BaseModel):
     name: str
     document: str
     address: str
-    complement: str or None
+    complement: str = None
     zip_code: str
     city: str
     state: str

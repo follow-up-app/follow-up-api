@@ -14,14 +14,16 @@ class UserRegisterSchemaIn(BaseModel):
     document: str
 
 class UserStoreIn(BaseModel):
+    company_id: UUID
     fullname: str
     email: str
     permission: UserPermission
     document: str
+    
 
 
 class LoginSchemaIn(BaseModel):
-    username: str
+    email: str
     password: str
 
 

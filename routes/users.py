@@ -32,10 +32,7 @@ async def get_user(session: Session, email: str) -> User:
             status_code=status.HTTP_404_NOT_FOUND, detail="user does not exists")
     return user
 
-@router.post('/', tags=[user_tag], 
-            summary='Create user', 
-            description='Method for create user',
-            )
+@router.post('/', tags=[user_tag], summary='Create user',description='Method for create user')
 async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
                    settings: Settings = Depends(get_settings)):
     user = User.query(session).filter(or_(
@@ -48,15 +45,36 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
     password = '123'
 
     user = User(
-      password_hash = hash_password(password), 
-      fullname = user_schema.fullname,
-      email = user_schema.email,
-      document = user_schema.document,
-      permission = user_schema.permission,
-      first_access = True,
+        company_id = user_schema.company_id,
+        password_hash = hash_password(password), 
+        fullname = user_schema.fullname,
+        email = user_schema.email,
+        document = user_schema.document,
+        permission = user_schema.permission,
     )
     session.add(user)
     session.commit()
 
-    return {'status_code': 200, 'message': 'Success'}
+    return UserOut.from_orm(user)
 
+
+@router.post('/login/', tags=[user_tag], summary="Authentication in app",
+             response_model=LoginSchemaOut)
+async def login(login_schema_in: LoginSchemaIn,
+                session: Session = Depends(get_db),
+                settings: Settings = Depends(get_settings)
+                ):
+    user: User = User.query(session).filter_by(email=login_schema_in.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="error username or password invalid")
+    if not verify_password(user.password_hash, login_schema_in.password):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="error username or password invalid")
+    access_token_expires = timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        settings,
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return LoginSchemaOut(access_token=access_token, token_type="bearer")

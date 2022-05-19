@@ -18,7 +18,7 @@ from fastapi import BackgroundTasks, FastAPI
 from multiprocessing import Process, Event
 import multiprocessing
 import sentry_sdk
-
+from routes.auth import router as auth_router
 from routes.company import router as company_router
 from routes.users import router as user_router
 from routes.students import router as student_router
@@ -54,6 +54,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router, prefix='/auth')
 app.include_router(company_router, prefix='/company')
 app.include_router(user_router, prefix='/users')
 app.include_router(student_router, prefix='/students')

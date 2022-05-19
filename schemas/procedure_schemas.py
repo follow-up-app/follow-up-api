@@ -9,12 +9,13 @@ class ProcedureIn(BaseModel):
     level: int
     stimulus: str
     orientation_executation: str
-    orientation_partial_executation: str = None
+    orientation_partial_executation: str
     points_total: int
-    points_partial: int = None
+    points_partial: int
 
 
 class ProcedureOut(BaseModel):
+    id: UUID
     program_id: UUID
     mark: MarkProcedure
     level: int

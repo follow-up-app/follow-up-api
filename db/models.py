@@ -117,7 +117,7 @@ class Program(ModelBase):
     company_id = Column(UUIDType(binary=False), ForeignKey(Company.id), nullable=False)
 
     title = Column(String(255), nullable=False)
-    objetive = Column(String(255), nullable=False)
+    objective = Column(String(255), nullable=False)
 
 
 class Procedure(ModelBase):

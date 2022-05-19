@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  app-follow_up:
+    build: .
+    container_name: app_follow-up
+    env_file:
+          - .env
+    command: python main.py
+    volumes:
+      - .:/app
+    #  - ./callers:/var/storage/temp
+      - /var/spool/asterisk/outgoing:/var/spool/asterisk/outgoing
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    depends_on:
+      - alembic
+    networks:
+      - app-network
+    
+  alembic:
+    build: .
+    container_name: alembic-follow-up
+    env_file:
+      - .env
+    command: alembic upgrade head
+    volumes:
+      - .:/app
+    depends_on:
+      - 'db'
+    networks:
+      - app-network
+  
+  db:
+    image: mysql:5.7.22
+    container_name: db_follow_up
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3301:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=Root#1234
+      - MYSQL_DATABASE=follow_up
+      - MYSQL_USER=follow_up
+      - MYSQL_PASSWORD=Root#1234
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

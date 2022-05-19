@@ -23,7 +23,7 @@ class UserStoreIn(BaseModel):
 
 
 class LoginSchemaIn(BaseModel):
-    email: str
+    username: str
     password: str
 
 
@@ -54,7 +54,6 @@ class UserOut(BaseModel):
     fullname: constr(max_length=255)
     email: str
     permission: UserPermission
-    username: str
 
     class Config:
         orm_mode = True

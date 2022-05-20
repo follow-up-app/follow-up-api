@@ -12,7 +12,7 @@ services:
     #  - ./callers:/var/storage/temp
       - /var/spool/asterisk/outgoing:/var/spool/asterisk/outgoing
     ports:
-      - "8081:8081"
+      - "9081:8081"
     restart: unless-stopped
     depends_on:
       - alembic

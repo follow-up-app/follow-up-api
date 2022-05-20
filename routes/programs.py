@@ -47,7 +47,7 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
     if not program:
         raise HTTPException(status_code=404, detail='route not found')
 
-    return [ProgramOut.from_orm(program)]
+    return ProgramOut.from_orm(program)
 
 
 @router.put('/{id}', summary='Update program', tags=[tags])

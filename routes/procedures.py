@@ -44,6 +44,11 @@ async def get_all(current_user: User = Depends(check_is_admin_user), session: Se
     all_itens = Procedure.query(session).all()
     return [ProcedureOut.from_orm(x) for x in all_itens]
 
+@router.get('/program/{id}', summary='Returns procedures list in program reference', response_model=List[ProcedureOut], tags=[tags])
+async def get_all_program(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    all_itens = Procedure.query(session).filter(Procedure.program_id == id).all()
+    return [ProcedureOut.from_orm(x) for x in all_itens]
+
 
 @router.get('/{id}', summary='Returns procedure', tags=[tags])
 async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
@@ -51,7 +56,7 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
     if not procedure:
         raise HTTPException(status_code=404, detail='route not found')
 
-    return [ProcedureOut.from_orm(procedure)]
+    return ProcedureOut.from_orm(procedure)
 
 
 @router.put('/{id}', summary='Update procedure', tags=[tags])

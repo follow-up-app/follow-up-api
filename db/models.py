@@ -1,9 +1,10 @@
+from curses.textpad import Textbox
 from datetime import date
 import datetime
 import enum
-from typing import List
+from typing import List, Text
 from uuid import UUID, uuid4
-from sqlalchemy import Column, String, Boolean, Enum, ForeignKey
+from sqlalchemy import Column, Float, String, Boolean, Enum, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, Query, relationship
 from sqlalchemy.sql.expression import column, false, null
@@ -45,26 +46,7 @@ class StatusCompany(enum.Enum):
     IN_ANALYSIS: str = 'IN_ANALYSIS'
     BLOCKED: str = 'BLOCKED'
     DESACATIVE: str = 'DESACATIVE'
-
-
-class MarkProcedure(enum.Enum):
-    PLAY: str = 'BRINCAR'
-    ECHOIC: str = 'ECOICO'
-    WRITING: str = 'ESCRITA'
-    GROUP: str = 'GRUPO'
-    IMITATION: str = 'IMITAÇÃO'
-    INTRAVERBAL: str = 'INTRAVERBAL'
-    READING: str = 'LEITURA'
-    LINGUISTICS: str = 'LINGUISTICA'
-    LRFFC: str = 'LRFFC'
-    COMMAND: str = 'MANDO'
-    MATHEMATICS: str = 'MATEMÁTICA'
-    LISTENER: str = 'OUVINTE'
-    PV_MTS: str = 'PV-MTS'
-    SOCIAL: str = 'SOCIAL'
-    TACT: str = 'TATO'
-    VOCAL: str = 'VOCAL'
-
+    
 
 class StatusGrid(enum.Enum):
     IN_PROGRESS: str = 'IN_PROGRESS'
@@ -105,10 +87,15 @@ class Student(ModelBase):
     __tablename__ = 'students'
 
     company_id = Column(UUIDType(binary=False), ForeignKey(Company.id), nullable=False)
-    parent = Column(UUIDType(binary=False), ForeignKey(User.id), nullable=False)
+    parent = Column(UUIDType(binary=False), ForeignKey(User.id), nullable=True)
+    instructor = Column(UUIDType(binary=False), ForeignKey(User.id), nullable=True)
 
     fullname = Column(String(255), nullable=False)
-    age: Column(String(255), nullable=False)
+    birthday = Column(Date, nullable=True)
+    avatar = Column(String(255), nullable=True)
+    age = Column(String(3), nullable=True)
+
+    grids = relationship('Grid', back_populates='student')
 
 
 class Program(ModelBase):
@@ -117,21 +104,31 @@ class Program(ModelBase):
     company_id = Column(UUIDType(binary=False), ForeignKey(Company.id), nullable=False)
 
     title = Column(String(255), nullable=False)
-    objective = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
+
+    procedures = relationship('Procedure', back_populates='program')
+    grids = relationship('Grid', back_populates='program')
+
 
 
 class Procedure(ModelBase):
     __tablename__ = 'procedures'
 
     program_id = Column(UUIDType(binary=False), ForeignKey(Program.id), nullable=False)
+    name = Column(String(255), nullable=True)
+    objective = Column(String(1000), nullable=True)
+    stimulus = Column(String(1000), nullable=True)
+    answer = Column(String(1000), nullable=True)
+    consequence = Column(String(1000), nullable=True)
+    material = Column(String(1000), nullable=True)
+    type_help = Column(String(1000), nullable=True)
+    attempts = Column(Integer(), nullable=True)
+    goal_value = Column(String(255), nullable=True)
+    description = Column(String(1000), nullable=True)
 
-    mark = Column(Enum(MarkProcedure), nullable=False)
-    level = Column(Integer(), nullable=False)
-    stimulus = Column(String(255), nullable=False)
-    orientation_executation = Column(String(255), nullable=False)
-    orientation_partial_executation = Column(String(255), nullable=True)
-    points_total = Column(Integer(), nullable=False)
-    points_partial = Column(Integer(), nullable=True)
+    program = relationship('Program', back_populates='procedures')
+    program_title = association_proxy('program', 'title')
+
 
 
 class Grid(ModelBase):
@@ -139,9 +136,15 @@ class Grid(ModelBase):
 
     program_id = Column(UUIDType(binary=False), ForeignKey(Program.id), nullable=False)
     student_id = Column(UUIDType(binary=False), ForeignKey(Student.id), nullable=False)
-    aplicator = Column(UUIDType(binary=False), ForeignKey(User.id), nullable=False)
     
+    aplicator = Column(UUIDType(binary=False), ForeignKey(User.id), nullable=True)
     status = Column(Enum(StatusGrid), nullable=False)
+
+    program = relationship('Program', back_populates='grids')
+    program_title = association_proxy('program', 'title')
+
+    student = relationship('Student', back_populates='grids')
+    student_name = association_proxy('student', 'fullname')
 
 
 
@@ -150,6 +153,6 @@ class Result(ModelBase):
 
     procedure_id = Column(UUIDType(binary=False), ForeignKey(Procedure.id), nullable=False)
     student_id = Column(UUIDType(binary=False), ForeignKey(Student.id), nullable=False)
-    
-    points_made = Column(Integer, nullable=False)
+    attempts = Column(Integer(), nullable=True)
+    points_made = Column(String(255), nullable=False)
     anotations = Column(String(255), nullable=True)

@@ -18,7 +18,7 @@ from db import get_db
 from db.models import User, UserPermission
 from schemas.user_schemas import UserOut, ResetPasswordSchemaIn, ResetPasswordSchemaOut, \
     RecoveryPasswordSchemaIn, RecoveryPasswordSchemaOut, LoginSchemaIn, LoginSchemaOut, \
-    UserRegisterSchemaIn, UserStoreIn
+    UserRegisterSchemaIn, UserStoreIn, UserUpdate
 
 
 router = APIRouter()
@@ -34,7 +34,7 @@ async def get_user(session: Session, email: str) -> User:
     return user
 
 
-@router.post('/', tags=[user_tag], summary='Create user', description='Method for create user')
+@router.post('/register', tags=[user_tag], summary='Create user', description='Method for create user')
 async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
                    settings: Settings = Depends(get_settings)):
     user = User.query(session).filter(or_(
@@ -59,10 +59,41 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
 
     return UserOut.from_orm(user)
 
+@router.post('/', tags=[user_tag], summary='Create user', description='Method for create user')
+async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db),
+                   settings: Settings = Depends(get_settings)):
+    user = User.query(session).filter(or_(
+        User.document == user_schema.document,
+        User.email == user_schema.email)).first()
+    if user:
+        raise HTTPException(
+            status_code=403, detail="user_already_exists")
+
+    password = '123'
+
+    user = User(
+        company_id=current_user.company_id,
+        password_hash=hash_password(password),
+        fullname=user_schema.fullname,
+        email=user_schema.email,
+        document=user_schema.document,
+        permission=user_schema.permission,
+    )
+    session.add(user)
+    session.commit()
+
+    return UserOut.from_orm(user)
+
 
 @router.get('/', summary='Returns users list', response_model=List[UserOut], tags=[user_tag])
 async def get_all(session: Session = Depends(get_db)):
     all_itens = User.query(session).all()
+    return [UserOut.from_orm(x) for x in all_itens]
+
+
+@router.get('/instructors', summary='Returns instuctors profile list', response_model=List[UserOut], tags=[user_tag])
+async def get_all(session: Session = Depends(get_db)):
+    all_itens = User.query(session).filter(User.permission == UserPermission.INSTRUCTOR).all()
     return [UserOut.from_orm(x) for x in all_itens]
 
 
@@ -75,18 +106,17 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
     return [UserOut.from_orm(user)]
 
 
-@router.put('/{id}', summary='Update user', response_model=List[UserOut], tags=[user_tag])
-async def update(id: UUID, user_schema: UserStoreIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    password = '123'
+@router.put('/{id}', summary='Update user', response_model=UserOut, tags=[user_tag])
+async def update(id: UUID, user_schema: UserUpdate, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    user: User = User.query(session).filter(User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='route not found')
+    
+    user.fullname = user_schema.fullname
+    user.document = user_schema.document
+    user.email = user_schema.email
+    user.permission = user_schema.permission
 
-    user = User(
-        company_id=user_schema.company_id,
-        password_hash=hash_password(password),
-        fullname=user_schema.fullname,
-        email=user_schema.email,
-        document=user_schema.document,
-        permission=user_schema.permission,
-    )
     session.add(user)
     session.commit()
 

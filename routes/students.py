@@ -22,12 +22,14 @@ router = APIRouter()
 
 tags: str = "Student"
 
-@router.post('/', summary='Create student', response_model=List[StudentOut], tags=[tags])
-async def create(student_in: StudentIn, current_user: User = Depends(check_is_parents_user), session: Session = Depends(get_db)):
+@router.post('/', summary='Create student', response_model=StudentOut, tags=[tags])
+async def create(student_in: StudentIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     student = Student(
         company_id = current_user.company_id,
         parent = current_user.id,
+        instructor = student_in.instructor,
         fullname = student_in.fullname,
+        birthday = student_in.birthday,
         age = student_in.age
     )
     session.add(student)
@@ -43,7 +45,7 @@ async def get_all(current_user: User = Depends(check_is_admin_user), session: Se
 
 
 @router.get('/parent/{id}', summary='Returns students list for parents', response_model=List[StudentOut], tags=[tags])
-async def get_all_parents(id=UUID, current_user: User = Depends(check_is_parents_user), session: Session = Depends(get_db)):
+async def get_all_parents(id=UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     students: Student = Student.query(session).filter(Student.parent == id).all()
     if not students:
         raise HTTPException(status_code=404, detail='route not found')
@@ -52,7 +54,7 @@ async def get_all_parents(id=UUID, current_user: User = Depends(check_is_parents
 
 
 @router.get('/{id}', summary='Returns student', response_model=List[StudentOut], tags=[tags])
-async def get_id(id: UUID, current_user: User = Depends(check_is_parents_user), session: Session = Depends(get_db)):
+async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     student: Student = Student.query(session).filter(Student.id == id).first()
     if not student:
         raise HTTPException(status_code=404, detail='route not found')
@@ -60,14 +62,16 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_parents_user), 
     return [StudentOut.from_orm(student)]
 
 
-@router.put('/{id}', summary='Update student', response_model=List[StudentOut], tags=[tags])
-async def update(id: UUID, student_in: StudentIn, current_user: User = Depends(check_is_parents_user), session: Session = Depends(get_db)):
-    student = Student(
-        company_id = current_user.company_id,
-        parent = current_user.id,
-        fullname = student_in.fullname,
-        age = student_in.age
-    )
+@router.put('/{id}', summary='Update student', response_model=StudentOut, tags=[tags])
+async def update(id: UUID, student_in: StudentIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    student: Student = Student.query(session).filter(Student.id == id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail='route not found')
+
+    student.fullname = student_in.fullname
+    student.instructor = student_in.instructor
+    student.age = student_in.age
+
     session.add(student)
     session.commit()
 

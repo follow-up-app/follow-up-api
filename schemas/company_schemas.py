@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, constr, Field
 
@@ -7,7 +8,7 @@ class CompanyIn(BaseModel):
     name: str
     document: str
     address: str
-    complement: str = None
+    complement: Optional[str]
     zip_code: str
     city: str
     state: str
@@ -21,7 +22,7 @@ class CompanyOut(BaseModel):
     name: str
     document: str
     address: str
-    complement: str = None
+    complement: Optional[str]
     zip_code: str
     city: str
     state: str

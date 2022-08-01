@@ -6,20 +6,26 @@ from pydantic import BaseModel, constr, Field
 from db.models import UserPermission
 
 
-class UserRegisterSchemaIn(BaseModel):
-    fullname: str
-    email: str
-    permission: UserPermission
-    password: str
-    document: str
-
+# REMOVER DEPOIS
 class UserStoreIn(BaseModel):
     company_id: UUID
     fullname: str
     email: str
     permission: UserPermission
     document: str
-    
+# -------
+
+class UserRegisterSchemaIn(BaseModel):
+    fullname: str
+    email: str
+    permission: UserPermission
+    document: str
+
+class UserUpdate(BaseModel):
+    fullname: str
+    email: str
+    permission: UserPermission
+    document: str
 
 
 class LoginSchemaIn(BaseModel):
@@ -54,6 +60,7 @@ class UserOut(BaseModel):
     fullname: constr(max_length=255)
     email: str
     permission: UserPermission
+    document: str
 
     class Config:
         orm_mode = True

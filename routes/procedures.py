@@ -22,17 +22,20 @@ router = APIRouter()
 
 tags: str = "Procedure"
 
-@router.post('/', summary='Create procedure', tags=[tags])
+@router.post('/', summary='Create procedure', tags=[tags], response_model=ProcedureOut)
 async def create(procedure_in: ProcedureIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     procedure = Procedure(
         program_id=procedure_in.program_id,
-        mark=procedure_in.mark,
-        level=procedure_in.level,
+        name=unidecode.unidecode(procedure_in.name).upper(),
+        objective=procedure_in.objective,
         stimulus=procedure_in.stimulus,
-        orientation_executation = procedure_in.orientation_executation,
-        orientation_partial_executation = procedure_in.orientation_partial_executation,
-        points_total = procedure_in.points_total,
-        points_partial = procedure_in.points_partial
+        answer=procedure_in.answer,
+        consequence = procedure_in.consequence,
+        material = procedure_in.material,
+        type_help = procedure_in.type_help,
+        attempts = procedure_in.attempts,
+        goal_value = procedure_in.goal_value,
+        description = procedure_in.description,
     )
     session.add(procedure)
     session.commit()
@@ -50,7 +53,7 @@ async def get_all_program(id: UUID, current_user: User = Depends(check_is_admin_
     return [ProcedureOut.from_orm(x) for x in all_itens]
 
 
-@router.get('/{id}', summary='Returns procedure', tags=[tags])
+@router.get('/{id}', summary='Returns procedure', tags=[tags], response_model=ProcedureOut)
 async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     procedure: Procedure = Procedure.query(session).filter(Procedure.id == id).first()
     if not procedure:
@@ -59,18 +62,24 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
     return ProcedureOut.from_orm(procedure)
 
 
-@router.put('/{id}', summary='Update procedure', tags=[tags])
+@router.put('/{id}', summary='Update procedure', tags=[tags], response_model=ProcedureOut)
 async def update(id: UUID, procedure_in: ProcedureIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    procedure = Procedure(
-        program_id=procedure_in.program_id,
-        mark=procedure_in.mark,
-        level=procedure_in.level,
-        stimulus=procedure_in.stimulus,
-        orientation_executation = procedure_in.orientation_executation,
-        orientation_partial_executation = procedure_in.orientation_partial_executation,
-        points_total = procedure_in.points_total,
-        points_partial = procedure_in.points_partial
-    )
+    procedure: Procedure = Procedure.query(session).filter(Procedure.id == id).first()
+    if not procedure:
+        raise HTTPException(status_code=404, detail='route not found')
+
+    procedure.program_id = procedure_in.program_id
+    procedure.name = unidecode.unidecode(procedure_in.name).upper()
+    procedure.objective = procedure_in.objective
+    procedure.stimulus = procedure_in.stimulus
+    procedure.answer = procedure_in.answer
+    procedure.consequence = procedure_in.consequence
+    procedure.material = procedure_in.material
+    procedure.type_help = procedure_in.type_help
+    procedure.attempts = procedure_in.attempts
+    procedure.goal_value = procedure_in.goal_value
+    procedure.description = procedure_in.description
+    
     session.add(procedure)
     session.commit()
 

@@ -1,8 +1,8 @@
-"""init migrations
+"""database init
 
-Revision ID: e91cb6800615
+Revision ID: fb375534b40f
 Revises: 
-Create Date: 2022-05-19 19:25:11.857711
+Create Date: 2022-07-31 20:30:50.567984
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlalchemy_utils
 
 
 # revision identifiers, used by Alembic.
-revision = 'e91cb6800615'
+revision = 'fb375534b40f'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -44,7 +44,7 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('company_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=False),
-    sa.Column('objective', sa.String(length=255), nullable=False),
+    sa.Column('description', sa.String(length=255), nullable=False),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -69,13 +69,16 @@ def upgrade():
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('program_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('mark', sa.Enum('PLAY', 'ECHOIC', 'WRITING', 'GROUP', 'IMITATION', 'INTRAVERBAL', 'READING', 'LINGUISTICS', 'LRFFC', 'COMMAND', 'MATHEMATICS', 'LISTENER', 'PV_MTS', 'SOCIAL', 'TACT', 'VOCAL', name='markprocedure'), nullable=False),
-    sa.Column('level', sa.Integer(), nullable=False),
-    sa.Column('stimulus', sa.String(length=255), nullable=False),
-    sa.Column('orientation_executation', sa.String(length=255), nullable=False),
-    sa.Column('orientation_partial_executation', sa.String(length=255), nullable=True),
-    sa.Column('points_total', sa.Integer(), nullable=False),
-    sa.Column('points_partial', sa.Integer(), nullable=True),
+    sa.Column('name', sa.String(length=255), nullable=True),
+    sa.Column('objective', sa.String(length=1000), nullable=True),
+    sa.Column('stimulus', sa.String(length=1000), nullable=True),
+    sa.Column('answer', sa.String(length=1000), nullable=True),
+    sa.Column('consequence', sa.String(length=1000), nullable=True),
+    sa.Column('material', sa.String(length=1000), nullable=True),
+    sa.Column('type_help', sa.String(length=1000), nullable=True),
+    sa.Column('attempts', sa.Integer(), nullable=True),
+    sa.Column('goal_value', sa.String(length=255), nullable=True),
+    sa.Column('description', sa.String(length=1000), nullable=True),
     sa.ForeignKeyConstraint(['program_id'], ['programs.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -85,9 +88,13 @@ def upgrade():
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('company_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('parent', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('parent', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
+    sa.Column('instructor', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
     sa.Column('fullname', sa.String(length=255), nullable=False),
+    sa.Column('birthday', sa.Date(), nullable=True),
+    sa.Column('avatar', sa.String(length=255), nullable=True),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
+    sa.ForeignKeyConstraint(['instructor'], ['users.id'], ),
     sa.ForeignKeyConstraint(['parent'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -98,7 +105,7 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('program_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('student_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('aplicator', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('aplicator', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
     sa.Column('status', sa.Enum('IN_PROGRESS', 'PAUSED', 'CANCELED', 'DONE', name='statusgrid'), nullable=False),
     sa.ForeignKeyConstraint(['aplicator'], ['users.id'], ),
     sa.ForeignKeyConstraint(['program_id'], ['programs.id'], ),
@@ -112,7 +119,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('procedure_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('student_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('points_made', sa.Integer(), nullable=False),
+    sa.Column('attempts', sa.Integer(), nullable=True),
+    sa.Column('points_made', sa.String(length=255), nullable=False),
     sa.Column('anotations', sa.String(length=255), nullable=True),
     sa.ForeignKeyConstraint(['procedure_id'], ['procedures.id'], ),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),

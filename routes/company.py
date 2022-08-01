@@ -23,7 +23,7 @@ router = APIRouter()
 tags: str = "Company"
 
 
-@router.post('/', summary='Create company', response_model=List[CompanyOut], tags=[tags])
+@router.post('/', summary='Create company', response_model=CompanyOut, tags=[tags])
 async def create(company_in: CompanyIn, session: Session = Depends(get_db)):
     company = Company(
         name=company_in.name,

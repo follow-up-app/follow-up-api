@@ -43,8 +43,8 @@ services:
       - MYSQL_DATABASE=follow_up
       - MYSQL_USER=follow_up
       - MYSQL_PASSWORD=Root#1234
-    volumes:
-      - ./storage/database:/var/lib/mysql
+    # volumes:
+    #   - ./storage/database:/var/lib/mysql
     networks:
       - app-network
 

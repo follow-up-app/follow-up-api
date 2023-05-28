@@ -53,6 +53,8 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
         email=user_schema.email,
         document=user_schema.document,
         permission=user_schema.permission,
+        position=user_schema.position,
+        image_path=user_schema.image_path,
     )
     session.add(user)
     session.commit()
@@ -78,6 +80,8 @@ async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depen
         email=user_schema.email,
         document=user_schema.document,
         permission=user_schema.permission,
+        position=user_schema.position.upper(),
+        image_path=user_schema.image_path,
     )
     session.add(user)
     session.commit()
@@ -126,3 +130,8 @@ async def update(id: UUID, user_schema: UserUpdate, current_user: User = Depends
 @router.delete('/{id}', summary='Delete user', response_model=List[UserOut], tags=[user_tag])
 async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     pass
+
+@router.get("/me/", tags=[user_tag], summary="Return user logged", response_model=UserOut)
+async def me(current_user: User = Depends(get_current_user)):
+    result = UserOut.from_orm(current_user)
+    return result

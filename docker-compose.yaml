@@ -26,25 +26,6 @@ services:
     command: alembic upgrade head
     volumes:
       - .:/app
-    depends_on:
-      - db
-    networks:
-      - app-network
-  
-  db:
-    image: mysql:5.7.22
-    container_name: db_follow_up
-    restart: unless-stopped
-    tty: true
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=Root#1234
-      - MYSQL_DATABASE=follow_up
-      - MYSQL_USER=follow_up
-      - MYSQL_PASSWORD=Root#1234
-    volumes:
-      - ./storage/database:/var/lib/mysql
     networks:
       - app-network
 

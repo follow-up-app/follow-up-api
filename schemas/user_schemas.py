@@ -1,8 +1,7 @@
 from core.security import hash_password
 from uuid import UUID
-
+from typing import Optional
 from pydantic import BaseModel, constr, Field
-
 from db.models import UserPermission
 
 
@@ -13,19 +12,27 @@ class UserStoreIn(BaseModel):
     email: str
     permission: UserPermission
     document: str
+    image_path: Optional[str]
+    position: Optional[str]
 # -------
+
 
 class UserRegisterSchemaIn(BaseModel):
     fullname: str
     email: str
     permission: UserPermission
     document: str
+    image_path: Optional[str]
+    position: Optional[str]
+
 
 class UserUpdate(BaseModel):
     fullname: str
     email: str
     permission: UserPermission
     document: str
+    image_path: Optional[str]
+    position: Optional[str]
 
 
 class LoginSchemaIn(BaseModel):
@@ -36,6 +43,7 @@ class LoginSchemaIn(BaseModel):
 class LoginSchemaOut(BaseModel):
     access_token: str
     token_type: str
+    expires_in: int
 
 
 class RecoveryPasswordSchemaIn(BaseModel):
@@ -61,6 +69,8 @@ class UserOut(BaseModel):
     email: str
     permission: UserPermission
     document: str
+    image_path: Optional[str]
+    position: Optional[str]
 
     class Config:
         orm_mode = True

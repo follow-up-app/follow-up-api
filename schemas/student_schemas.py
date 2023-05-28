@@ -4,20 +4,20 @@ from uuid import UUID
 from pydantic import BaseModel, constr, Field
 
 class StudentIn(BaseModel):
+    contractor_id: UUID
+    instructor_id: Optional[UUID]
     fullname: str
     birthday: Optional[date]
-    instructor: Optional[UUID]
-    age: Optional[str]
+    avatar: Optional[str]
     
 
 class StudentOut(BaseModel):
     id: UUID
-    company_id: UUID
-    instructor: Optional[UUID]
-    parent: Optional[UUID]
+    contractor_id: UUID
+    instructor_id: Optional[UUID]
     fullname: str
     birthday: Optional[date]
-    age: Optional[str]
+    avatar: Optional[str]
 
     class Config:
         orm_mode = True

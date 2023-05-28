@@ -26,6 +26,8 @@ from routes.programs import router as program_router
 from routes.procedures import router as procedure_router
 from routes.grid import router as grid_router
 from routes.results import router as result_router
+from routes.configurations import router as configuration_router
+from routes.instructors import router as instuctor_router
 
 
 
@@ -57,11 +59,13 @@ app.add_middleware(
 app.include_router(auth_router, prefix='/auth')
 app.include_router(company_router, prefix='/company')
 app.include_router(user_router, prefix='/users')
+app.include_router(instuctor_router, prefix='/instructors')
 app.include_router(student_router, prefix='/students')
 app.include_router(program_router, prefix='/programs')
 app.include_router(procedure_router, prefix='/procedures')
 app.include_router(grid_router, prefix='/grids')
 app.include_router(result_router, prefix='/results')
+app.include_router(configuration_router, prefix='/configurations')
 
 
 

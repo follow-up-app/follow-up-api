@@ -199,14 +199,17 @@ class Instructor(ModelBase):
     social_name = Column(String(100), nullable=True)
     fantasy_name = Column(String(100), nullable=True)
     email = Column(String(50), nullable=False)
-    phone: Column(String(50), nullable=True)
+    phone = Column(String(50), nullable=True)
+    whats_app = Column(Boolean(), nullable=True)
     value_hour = Column(String(50), nullable=True)
     value_mouth = Column(String(50), nullable=True)
     comission: Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
-    status = Column(Enum(StatusContract), nullable=False)
+    status = Column(Enum(StatusInstructor), nullable=False)
 
     grids = relationship('Grid', back_populates='instructor')
+    address = relationship('AddressInctructor', back_populates='instructor')
+
 
 class AddressInctructor(ModelBase):
     __tablename__ = 'instructor_address'
@@ -215,11 +218,14 @@ class AddressInctructor(ModelBase):
                            ForeignKey(Instructor.id), nullable=False)
 
     address = Column(String(255), nullable=False)
-    complement = Column(String(10), nullable=False)
+    complement = Column(String(60), nullable=True)
     zip_code = Column(String(14), nullable=False)
     district = Column(String(50), nullable=False)
     city = Column(String(50), nullable=False)
     state = Column(String(2), nullable=False)
+
+    instructor = relationship('Instructor', back_populates='address')
+
 
 
 class BankAccountInstructor(ModelBase):

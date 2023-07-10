@@ -1,8 +1,8 @@
 """tables create - dev
 
-Revision ID: d67a8bc60f5f
+Revision ID: b97d2567abfb
 Revises: 
-Create Date: 2023-05-21 11:08:57.164626
+Create Date: 2023-06-24 10:14:16.065038
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlalchemy_utils
 
 
 # revision identifiers, used by Alembic.
-revision = 'd67a8bc60f5f'
+revision = 'b97d2567abfb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -134,10 +134,12 @@ def upgrade():
     sa.Column('social_name', sa.String(length=100), nullable=True),
     sa.Column('fantasy_name', sa.String(length=100), nullable=True),
     sa.Column('email', sa.String(length=50), nullable=False),
+    sa.Column('phone', sa.String(length=50), nullable=True),
+    sa.Column('whats_app', sa.Boolean(), nullable=True),
     sa.Column('value_hour', sa.String(length=50), nullable=True),
     sa.Column('value_mouth', sa.String(length=50), nullable=True),
     sa.Column('avatar', sa.String(length=255), nullable=True),
-    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='statuscontract'), nullable=False),
+    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='statusinstructor'), nullable=False),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.ForeignKeyConstraint(['specialty_instructor_id'], ['specialties_instructor.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
@@ -202,7 +204,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('address', sa.String(length=255), nullable=False),
-    sa.Column('complement', sa.String(length=10), nullable=False),
+    sa.Column('number', sa.Integer(), nullable=False),
+    sa.Column('complement', sa.String(length=60), nullable=True),
     sa.Column('zip_code', sa.String(length=14), nullable=False),
     sa.Column('district', sa.String(length=50), nullable=False),
     sa.Column('city', sa.String(length=50), nullable=False),

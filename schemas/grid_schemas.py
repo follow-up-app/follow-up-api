@@ -7,7 +7,7 @@ from db.models import StatusGrid
 
 
 class GridIn(BaseModel):
-    program_id: UUID
+    skill_id: UUID
     student_id: UUID
     date_schedule: Optional[datetime]
     time_preview: Optional[str]
@@ -29,7 +29,7 @@ class GridOut(BaseModel):
     date_start: Optional[datetime]
     date_finish: Optional[datetime]
     status: Optional[StatusGrid]
-    program_title: str
+    skill_name: str
     instructor_name: str
     student_name: str
     status: Optional[StatusGrid]

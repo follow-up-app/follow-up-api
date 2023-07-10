@@ -37,30 +37,30 @@ class UserPermission(enum.Enum):
     ADMIN: str = 'ADMIN'
     INSTRUCTOR: str = 'INSTRUCTOR'
     PARENTS: str = 'PARENTS'
-    STUDANTS: str = 'STUDANTS'
 
 
-class UserFunction(enum.Enum):
-    ADMIN: str = 'GERENTE'
-    ENGINEER: str = 'ENGENHEIRO'
-    ABA: str = 'ABA'
-    PSYCHOLOGIST: str = 'PSICÓLOGA'
-    PSYCHOPEDAGOGUE: str = 'PSICOPEDAGOGA'
-    PHONO: str = 'FONO'
-    FINANCIAL: str = 'FINANCEIRO'
-    PARENT: str = 'RESPONSÁVEL'
-    STUDANT: str = 'ALUNO'
+class Status(enum.Enum):
+    ACTIVE: str = 'ATIVO'
+    INACTIVE: str = 'INATIVO'
+
+
+class BondPartenal(enum.Enum):
+    FATHER: str = 'PAI'
+    MOTHER: str = 'MÃE'
+    UNCLES: str = 'TIOS'
+    GRANDPARENTS: str = 'AVÓS'
+    OTHERS: str = 'OUTROS'
+
+
+class Genere(enum.Enum):
+    FEMALE: str = 'FEMININO'
+    MALE: str = 'MASCULINO'
+    OTHERS: str = 'OUTRO'
+
 
 class StatusContract(enum.Enum):
     ACTIVE: str = 'ATIVO'
-    INACTIVE: str = 'INATIVO'
-
-class StatusInstructor(enum.Enum):
-    ACTIVE: str = 'ATIVO'
-    INACTIVE: str = 'INATIVO'
-
-class StatusBankAccount(enum.Enum):
-    ACTIVE: str = 'ATIVO'
+    IN_PREPARATION: str = 'EM PREPARAÇÂO'
     INACTIVE: str = 'INATIVO'
 
 
@@ -76,6 +76,7 @@ class StatusGrid(enum.Enum):
     PAUSED: str = 'PAUSADO'
     CANCELED: str = 'CANCELADO'
     DONE: str = 'CONCLUÍDO'
+
 
 
 class Company(ModelBase):
@@ -120,9 +121,35 @@ class Contractor(ModelBase):
         'ResponsibleContract', back_populates='contract')
     responsible_name = relationship(
         'ResponsibleContract', back_populates='contract')
-
+    
+    
+    address = relationship('AddressContract', back_populates='contractor')
     student = relationship('Student', back_populates='contract')
     student_name = association_proxy('student', 'fullname')
+
+
+class Student(ModelBase):
+    __tablename__ = 'students'
+
+    contractor_id = Column(UUIDType(binary=False),
+                           ForeignKey(Contractor.id), nullable=True)
+
+    fullname = Column(String(255), nullable=False)
+    birthday = Column(Date, nullable=True)
+    genere = Column(Enum(Genere), nullable=False)
+    document = Column(String(20), nullable=True)
+    indentity_number = Column(String(100), nullable=True)
+    org_exp = Column(String(10), nullable=True)
+    uf_exp = Column(String(5), nullable=True)
+    nationality = Column(String(20), nullable=True)
+    email = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=True)
+    avatar = Column(String(255), nullable=True)
+    informations = Column(String(500), nullable=True)
+    status = Column(Enum(Status), nullable=False)
+
+    grids = relationship('Grid', back_populates='student')
+
 
 
 class ResponsibleContract(ModelBase):
@@ -134,41 +161,39 @@ class ResponsibleContract(ModelBase):
                      ForeignKey(User.id), nullable=True)
 
     fullname = Column(String(100), nullable=False)
+    birthday = Column(Date, nullable=True)
     document = Column(String(20), nullable=True)
-    indentity_number = Column(String(20), nullable=True)
-    email = Column(String(50), nullable=True)
+    indentity_number = Column(String(100), nullable=True)
+    org_exp = Column(String(10), nullable=True)
+    uf_exp = Column(String(5), nullable=True)
+    nationality = Column(String(20), nullable=True)
+    email = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=True)
+    main_contract = Column(Boolean(), nullable=True)
 
-    contract = relationship('Contractor', back_populates='responsible')
+    address = relationship('AddressContract', back_populates='responsable')
 
-
+    
 class AddressContract(ModelBase):
     __tablename__ = 'contract_address'
 
-    responsible_contract_id = Column(
+    contractor_id = Column(
         UUIDType(binary=False), ForeignKey(Contractor.id), nullable=False)
+    responsible_contract_id = Column(
+        UUIDType(binary=False), ForeignKey(ResponsibleContract.id), nullable=False)
     
     address = Column(String(255), nullable=False)
-    complement = Column(String(10), nullable=False)
+    number = Column(Integer(), nullable=False)
+    complement = Column(String(60), nullable=True)
     zip_code = Column(String(14), nullable=False)
     district = Column(String(50), nullable=False)
     city = Column(String(50), nullable=False)
     state = Column(String(2), nullable=False)
 
+    contractor = relationship('Contractor', back_populates='address')
+    responsable = relationship('Contractor', back_populates='address')
+    responsable_name = association_proxy('address', 'fullname')
 
-class Student(ModelBase):
-    __tablename__ = 'students'
-
-    contractor_id = Column(UUIDType(binary=False),
-                           ForeignKey(Contractor.id), nullable=True)
-    instructor_id = Column(UUIDType(binary=False),
-                           ForeignKey(User.id), nullable=True)
-
-    fullname = Column(String(255), nullable=False)
-    birthday = Column(Date, nullable=True)
-    avatar = Column(String(255), nullable=True)
-
-    grids = relationship('Grid', back_populates='student')
-    contract = relationship('Contractor', back_populates='student')
 
 class SpecialtyInstructor(ModelBase):
     __tablename__ = 'specialties_instructor'
@@ -176,6 +201,8 @@ class SpecialtyInstructor(ModelBase):
     company_id = Column(UUIDType(binary=False),
                         ForeignKey(Company.id), nullable=False)
     specialty = Column(String(100), nullable=False)
+
+    instructor = relationship('Instructor', back_populates='specialty')
 
 
 class Instructor(ModelBase):
@@ -205,10 +232,14 @@ class Instructor(ModelBase):
     value_mouth = Column(String(50), nullable=True)
     comission: Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
-    status = Column(Enum(StatusInstructor), nullable=False)
+    status = Column(Enum(Status), nullable=False)
 
     grids = relationship('Grid', back_populates='instructor')
     address = relationship('AddressInctructor', back_populates='instructor')
+
+    specialty = relationship('SpecialtyInstructor', back_populates='instructor')
+    specialty_name = association_proxy('specialty', 'specialty')
+
 
 
 class AddressInctructor(ModelBase):
@@ -218,88 +249,77 @@ class AddressInctructor(ModelBase):
                            ForeignKey(Instructor.id), nullable=False)
 
     address = Column(String(255), nullable=False)
+    number = Column(Integer(), nullable=False)
     complement = Column(String(60), nullable=True)
     zip_code = Column(String(14), nullable=False)
     district = Column(String(50), nullable=False)
     city = Column(String(50), nullable=False)
     state = Column(String(2), nullable=False)
 
-    instructor = relationship('Instructor', back_populates='address')
+    instructor = relationship('Instructor', back_populates='address')  
 
 
-
-class BankAccountInstructor(ModelBase):
-    __tablename__ = 'instructor_bank_accounts'
-
-    instructor_id = Column(UUIDType(binary=False),
-                           ForeignKey(Instructor.id), nullable=False)
-    
-    bank_code = Column(Integer(), nullable=False)
-    bank_name = Column(String(255), nullable=False)
-    agency = Column(Integer(), nullable=False)
-    account_number = Column(Integer(), nullable=False)
-    account_type = Column(String(255), nullable=False)
-    status = Column(Enum(StatusBankAccount), nullable=False)
-
-
-class Program(ModelBase):
-    __tablename__ = 'programs'
+class Skill(ModelBase):
+    __tablename__ = 'skills'
 
     company_id = Column(UUIDType(binary=False),
                         ForeignKey(Company.id), nullable=False)
-
-    title = Column(String(100), nullable=False)
-    description = Column(String(255), nullable=False)
+    
+    name = Column(String(100), nullable=False)
+    objective = Column(String(255), nullable=False)
 
     procedures = relationship('Procedure', back_populates='program')
-    grids = relationship('Grid', back_populates='program')
+    grids = relationship('Grid', back_populates='skill')
 
 
 class Procedure(ModelBase):
     __tablename__ = 'procedures'
 
-    program_id = Column(UUIDType(binary=False),
-                        ForeignKey(Program.id), nullable=False)
+    skill_id = Column(UUIDType(binary=False),
+                        ForeignKey(Skill.id), nullable=False)
+    
+    tries =  Column(Integer(), nullable=False)
+    time =  Column(String(255), nullable=False)
+    goal =  Column(Float(), nullable=False)
+    period = Column(String(255), nullable=False)
     name = Column(String(255), nullable=True)
     objective = Column(String(1000), nullable=True)
     stimulus = Column(String(1000), nullable=True)
     answer = Column(String(1000), nullable=True)
     consequence = Column(String(1000), nullable=True)
-    material = Column(String(1000), nullable=True)
-    type_help = Column(String(1000), nullable=True)
-    attempts = Column(Integer(), nullable=True)
-    goal_value = Column(String(255), nullable=True)
-    description = Column(String(1000), nullable=True)
-
-    program = relationship('Program', back_populates='procedures')
-    program_title = association_proxy('program', 'title')
+    materials = Column(String(1000), nullable=True)
+    help = Column(String(1000), nullable=True)
+    
+    skill = relationship('Skill', back_populates='procedures')
+    skill_name = association_proxy('skill', 'name')
 
 
 class Grid(ModelBase):
     __tablename__ = 'grids'
 
-    program_id = Column(UUIDType(binary=False),
-                        ForeignKey(Program.id), nullable=False)
+    skill_id = Column(UUIDType(binary=False),
+                        ForeignKey(Skill.id), nullable=False)
     student_id = Column(UUIDType(binary=False),
                         ForeignKey(Student.id), nullable=False)
     instructor_id = Column(UUIDType(binary=False),
                            ForeignKey(Instructor.id), nullable=True)
 
-    date_schedule = Column(DateTime, nullable=True)
-    time_preview = Column(String(20), nullable=True)
+    date_schedule = Column(DateTime, nullable=False)
+    time_preview = Column(String(20), nullable=False)
     observation = Column(String(255), nullable=True)
     date_start = Column(DateTime, nullable=True)
     date_finish = Column(DateTime, nullable=True)
     status = Column(Enum(StatusGrid), nullable=False)
 
-    program = relationship('Program', back_populates='grids')
-    program_title = association_proxy('program', 'title')
+    skill = relationship('Skill', back_populates='grids')
+    skill_name = association_proxy('skill', 'name')
 
     student = relationship('Student', back_populates='grids')
     student_name = association_proxy('student', 'fullname')
 
     instructor = relationship('Instructor', back_populates='grids')
     instructor_name = association_proxy('instructor', 'fullname')
+
 
 
 class Result(ModelBase):

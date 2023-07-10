@@ -27,7 +27,7 @@ async def create(grid_in: GridIn, current_user: User = Depends(check_is_admin_us
         raise HTTPException(status_code=404, detail='route not found')
 
     grid = Grid(
-        program_id=grid_in.program_id,
+        program_id=grid_in.skill_id,
         student_id=grid_in.student_id,
         date_schedule=grid_in.date_schedule,
         time_preview=grid_in.time_preview,

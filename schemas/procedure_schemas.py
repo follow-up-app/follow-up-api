@@ -1,35 +1,39 @@
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, constr, Field
+from pydantic import BaseModel
 
 class ProcedureIn(BaseModel):
-    program_id: UUID
+    skill_id: UUID
+    name: str
+    tries: int    
+    time: str
+    goal: float
+    period: str
     name: str
     objective: Optional[str]    
     stimulus: Optional[str]
     answer: Optional[str]
     consequence: Optional[str]
-    material: Optional[str]
-    type_help: Optional[str]
-    attempts: Optional[str]
-    goal_value: Optional[int]
-    description: Optional[str]
+    materials: Optional[str]
+    help: Optional[str]
 
 
 class ProcedureOut(BaseModel):
     id: UUID
-    program_id: UUID
-    program_title: str
+    skill_id: UUID
+    skill_name = str
+    name: str
+    tries: int    
+    time: str
+    goal: float
+    period: str
     name: str
     objective: Optional[str]    
     stimulus: Optional[str]
     answer: Optional[str]
     consequence: Optional[str]
-    material: Optional[str]
-    type_help: Optional[str]
-    attempts: Optional[str]
-    goal_value: Optional[int]
-    description: Optional[str]
+    materials: Optional[str]
+    help: Optional[str]
 
     class Config:
         orm_mode = True

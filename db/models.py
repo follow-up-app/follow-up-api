@@ -117,14 +117,11 @@ class Contractor(ModelBase):
                         ForeignKey(Company.id), nullable=False)
     status = Column(Enum(StatusContract), nullable=False)
 
-    responsible = relationship(
-        'ResponsibleContract', back_populates='contract')
-    responsible_name = relationship(
-        'ResponsibleContract', back_populates='contract')
-    
+    responsable = relationship(
+        'ResponsibleContract', back_populates='contractor')
     
     address = relationship('AddressContract', back_populates='contractor')
-    student = relationship('Student', back_populates='contract')
+    student = relationship('Student', back_populates='contractor')
     student_name = association_proxy('student', 'fullname')
 
 
@@ -148,7 +145,10 @@ class Student(ModelBase):
     informations = Column(String(500), nullable=True)
     status = Column(Enum(Status), nullable=False)
 
+    contractor = relationship('Contractor', back_populates='student')
     grids = relationship('Grid', back_populates='student')
+
+    
 
 
 
@@ -171,6 +171,7 @@ class ResponsibleContract(ModelBase):
     phone = Column(String(50), nullable=True)
     main_contract = Column(Boolean(), nullable=True)
 
+    contractor = relationship('Contractor', back_populates='responsable')
     address = relationship('AddressContract', back_populates='responsable')
 
     
@@ -191,7 +192,7 @@ class AddressContract(ModelBase):
     state = Column(String(2), nullable=False)
 
     contractor = relationship('Contractor', back_populates='address')
-    responsable = relationship('Contractor', back_populates='address')
+    responsable = relationship('ResponsibleContract', back_populates='address')
     responsable_name = association_proxy('address', 'fullname')
 
 
@@ -268,7 +269,7 @@ class Skill(ModelBase):
     name = Column(String(100), nullable=False)
     objective = Column(String(255), nullable=False)
 
-    procedures = relationship('Procedure', back_populates='program')
+    procedures = relationship('Procedure', back_populates='skill')
     grids = relationship('Grid', back_populates='skill')
 
 

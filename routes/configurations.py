@@ -19,6 +19,7 @@ router = APIRouter()
 
 tags: str = "Configurations"
 
+
 @router.post('/specialty', summary='Create specialty', response_model=SpecialtyOut, tags=[tags])
 async def create(specialty_in: SpecialtyIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     specialty = SpecialtyInstructor(
@@ -30,7 +31,34 @@ async def create(specialty_in: SpecialtyIn, current_user: User = Depends(check_i
 
     return SpecialtyOut.from_orm(specialty)
 
+
 @router.get('/specialty', summary='Return specialty list', response_model=List[SpecialtyOut], tags=[tags])
-async def get_all(scurrent_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+async def get_all(current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     all_itens = SpecialtyInstructor.query(session).all()
     return [SpecialtyOut.from_orm(x) for x in all_itens]
+
+
+@router.put('/specialty/{id}', summary='Update specialty', tags=[tags], response_model=SpecialtyOut)
+async def update(id: UUID, specialty_in: SpecialtyIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    specialty: SpecialtyInstructor = SpecialtyInstructor.query(
+        session).filter(SpecialtyInstructor.id == id).first()
+    if not specialty:
+         raise HTTPException(status_code=404, detail='route not found')
+    
+    specialty.specialty = specialty_in.specialty.upper()
+    session.add(specialty)
+    session.commit()
+
+    return SpecialtyOut.from_orm(specialty)
+
+
+@router.delete('/{id}', summary='Delete instuctor',  tags=[tags])
+async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    specialty: SpecialtyInstructor = SpecialtyInstructor.query(
+        session).filter(SpecialtyInstructor.id == id).first()
+    if not specialty:
+         raise HTTPException(status_code=404, detail='route not found')
+    session.delete(specialty)
+    session.commit()
+
+    return True

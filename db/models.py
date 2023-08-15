@@ -72,11 +72,11 @@ class StatusCompany(enum.Enum):
 
 
 class StatusGrid(enum.Enum):
+    SCHEDULED: str = 'AGENDADO'
     IN_PROGRESS: str = 'EM ANDAMENTO'
     PAUSED: str = 'PAUSADO'
     CANCELED: str = 'CANCELADO'
     DONE: str = 'CONCLUÍDO'
-
 
 
 class Company(ModelBase):
@@ -108,6 +108,7 @@ class User(ModelBase):
     permission = Column(Enum(UserPermission), nullable=False)
     image_path = Column(String(100), nullable=True)
     position = Column(String(100), nullable=True)
+    status = Column(Enum(Status), nullable=False)
 
 
 class Contractor(ModelBase):
@@ -119,7 +120,7 @@ class Contractor(ModelBase):
 
     responsable = relationship(
         'ResponsibleContract', back_populates='contractor')
-    
+
     address = relationship('AddressContract', back_populates='contractor')
     student = relationship('Student', back_populates='contractor')
     student_name = association_proxy('student', 'fullname')
@@ -133,13 +134,14 @@ class Student(ModelBase):
 
     fullname = Column(String(255), nullable=False)
     birthday = Column(Date, nullable=True)
+    allergy = Column(String(20), nullable=True)
     genere = Column(Enum(Genere), nullable=False)
     document = Column(String(20), nullable=True)
     indentity_number = Column(String(100), nullable=True)
     org_exp = Column(String(10), nullable=True)
     uf_exp = Column(String(5), nullable=True)
     nationality = Column(String(20), nullable=True)
-    email = Column(String(50), nullable=False)
+    email = Column(String(50), nullable=True)
     phone = Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
     informations = Column(String(500), nullable=True)
@@ -147,9 +149,6 @@ class Student(ModelBase):
 
     contractor = relationship('Contractor', back_populates='student')
     grids = relationship('Grid', back_populates='student')
-
-    
-
 
 
 class ResponsibleContract(ModelBase):
@@ -169,12 +168,13 @@ class ResponsibleContract(ModelBase):
     nationality = Column(String(20), nullable=True)
     email = Column(String(50), nullable=False)
     phone = Column(String(50), nullable=True)
+    bond = Column(String(50), nullable=True)
     main_contract = Column(Boolean(), nullable=True)
 
     contractor = relationship('Contractor', back_populates='responsable')
     address = relationship('AddressContract', back_populates='responsable')
 
-    
+
 class AddressContract(ModelBase):
     __tablename__ = 'contract_address'
 
@@ -182,7 +182,7 @@ class AddressContract(ModelBase):
         UUIDType(binary=False), ForeignKey(Contractor.id), nullable=False)
     responsible_contract_id = Column(
         UUIDType(binary=False), ForeignKey(ResponsibleContract.id), nullable=False)
-    
+
     address = Column(String(255), nullable=False)
     number = Column(Integer(), nullable=False)
     complement = Column(String(60), nullable=True)
@@ -214,8 +214,8 @@ class Instructor(ModelBase):
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=True)
     specialty_instructor_id = Column(UUIDType(binary=False),
-                     ForeignKey(SpecialtyInstructor.id), nullable=False)
-    
+                                     ForeignKey(SpecialtyInstructor.id), nullable=False)
+
     fullname = Column(String(100), nullable=False)
     document = Column(String(100), nullable=False)
     indentity_number = Column(String(100), nullable=True)
@@ -238,9 +238,9 @@ class Instructor(ModelBase):
     grids = relationship('Grid', back_populates='instructor')
     address = relationship('AddressInctructor', back_populates='instructor')
 
-    specialty = relationship('SpecialtyInstructor', back_populates='instructor')
+    specialty = relationship('SpecialtyInstructor',
+                             back_populates='instructor')
     specialty_name = association_proxy('specialty', 'specialty')
-
 
 
 class AddressInctructor(ModelBase):
@@ -257,7 +257,7 @@ class AddressInctructor(ModelBase):
     city = Column(String(50), nullable=False)
     state = Column(String(2), nullable=False)
 
-    instructor = relationship('Instructor', back_populates='address')  
+    instructor = relationship('Instructor', back_populates='address')
 
 
 class Skill(ModelBase):
@@ -265,7 +265,7 @@ class Skill(ModelBase):
 
     company_id = Column(UUIDType(binary=False),
                         ForeignKey(Company.id), nullable=False)
-    
+
     name = Column(String(100), nullable=False)
     objective = Column(String(255), nullable=False)
 
@@ -277,11 +277,11 @@ class Procedure(ModelBase):
     __tablename__ = 'procedures'
 
     skill_id = Column(UUIDType(binary=False),
-                        ForeignKey(Skill.id), nullable=False)
-    
-    tries =  Column(Integer(), nullable=False)
-    time =  Column(String(255), nullable=False)
-    goal =  Column(Float(), nullable=False)
+                      ForeignKey(Skill.id), nullable=False)
+
+    tries = Column(Integer(), nullable=False)
+    time = Column(String(255), nullable=False)
+    goal = Column(Float(), nullable=False)
     period = Column(String(255), nullable=False)
     name = Column(String(255), nullable=True)
     objective = Column(String(1000), nullable=True)
@@ -290,7 +290,7 @@ class Procedure(ModelBase):
     consequence = Column(String(1000), nullable=True)
     materials = Column(String(1000), nullable=True)
     help = Column(String(1000), nullable=True)
-    
+
     skill = relationship('Skill', back_populates='procedures')
     skill_name = association_proxy('skill', 'name')
 
@@ -299,7 +299,7 @@ class Grid(ModelBase):
     __tablename__ = 'grids'
 
     skill_id = Column(UUIDType(binary=False),
-                        ForeignKey(Skill.id), nullable=False)
+                      ForeignKey(Skill.id), nullable=False)
     student_id = Column(UUIDType(binary=False),
                         ForeignKey(Student.id), nullable=False)
     instructor_id = Column(UUIDType(binary=False),
@@ -320,7 +320,6 @@ class Grid(ModelBase):
 
     instructor = relationship('Instructor', back_populates='grids')
     instructor_name = association_proxy('instructor', 'fullname')
-
 
 
 class Result(ModelBase):

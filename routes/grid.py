@@ -32,7 +32,7 @@ async def create(grid_in: GridIn, current_user: User = Depends(check_is_admin_us
         date_schedule=grid_in.date_schedule,
         time_preview=grid_in.time_preview,
         observation=grid_in.observation,
-        status=StatusGrid.IN_PROGRESS,
+        status=StatusGrid.SCHEDULED,
     )
     session.add(grid)
     session.commit()

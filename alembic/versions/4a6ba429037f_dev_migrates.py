@@ -1,8 +1,8 @@
-"""tables create - dev
+"""dev - migrates
 
-Revision ID: b97d2567abfb
+Revision ID: 4a6ba429037f
 Revises: 
-Create Date: 2023-06-24 10:14:16.065038
+Create Date: 2023-08-10 00:41:32.488855
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlalchemy_utils
 
 
 # revision identifiers, used by Alembic.
-revision = 'b97d2567abfb'
+revision = '4a6ba429037f'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -43,18 +43,18 @@ def upgrade():
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('company_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='statuscontract'), nullable=False),
+    sa.Column('status', sa.Enum('ACTIVE', 'IN_PREPARATION', 'INACTIVE', name='statuscontract'), nullable=False),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('programs',
+    op.create_table('skills',
     sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('deleted', sa.Boolean(), nullable=False),
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('company_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('title', sa.String(length=100), nullable=False),
-    sa.Column('description', sa.String(length=255), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
+    sa.Column('objective', sa.String(length=255), nullable=False),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -78,27 +78,13 @@ def upgrade():
     sa.Column('password_hash', sa.String(length=100), nullable=False),
     sa.Column('email', sa.String(length=50), nullable=False),
     sa.Column('document', sa.String(length=20), nullable=True),
-    sa.Column('permission', sa.Enum('ADMIN', 'INSTRUCTOR', 'PARENTS', 'STUDANTS', name='userpermission'), nullable=False),
+    sa.Column('permission', sa.Enum('ADMIN', 'INSTRUCTOR', 'PARENTS', name='userpermission'), nullable=False),
     sa.Column('image_path', sa.String(length=100), nullable=True),
     sa.Column('position', sa.String(length=100), nullable=True),
+    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='status'), nullable=False),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
-    )
-    op.create_table('contract_address',
-    sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('deleted', sa.Boolean(), nullable=False),
-    sa.Column('created_date', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('responsible_contract_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('address', sa.String(length=255), nullable=False),
-    sa.Column('complement', sa.String(length=10), nullable=False),
-    sa.Column('zip_code', sa.String(length=14), nullable=False),
-    sa.Column('district', sa.String(length=50), nullable=False),
-    sa.Column('city', sa.String(length=50), nullable=False),
-    sa.Column('state', sa.String(length=2), nullable=False),
-    sa.ForeignKeyConstraint(['responsible_contract_id'], ['contractors.id'], ),
-    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('contract_responsibles',
     sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
@@ -108,9 +94,15 @@ def upgrade():
     sa.Column('contractor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('user_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
     sa.Column('fullname', sa.String(length=100), nullable=False),
+    sa.Column('birthday', sa.Date(), nullable=True),
     sa.Column('document', sa.String(length=20), nullable=True),
-    sa.Column('indentity_number', sa.String(length=20), nullable=True),
-    sa.Column('email', sa.String(length=50), nullable=True),
+    sa.Column('indentity_number', sa.String(length=100), nullable=True),
+    sa.Column('org_exp', sa.String(length=10), nullable=True),
+    sa.Column('uf_exp', sa.String(length=5), nullable=True),
+    sa.Column('nationality', sa.String(length=20), nullable=True),
+    sa.Column('email', sa.String(length=50), nullable=False),
+    sa.Column('phone', sa.String(length=50), nullable=True),
+    sa.Column('main_contract', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['contractor_id'], ['contractors.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -139,7 +131,7 @@ def upgrade():
     sa.Column('value_hour', sa.String(length=50), nullable=True),
     sa.Column('value_mouth', sa.String(length=50), nullable=True),
     sa.Column('avatar', sa.String(length=255), nullable=True),
-    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='statusinstructor'), nullable=False),
+    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='status'), nullable=False),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.ForeignKeyConstraint(['specialty_instructor_id'], ['specialties_instructor.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
@@ -150,18 +142,19 @@ def upgrade():
     sa.Column('deleted', sa.Boolean(), nullable=False),
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('program_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('skill_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('tries', sa.Integer(), nullable=False),
+    sa.Column('time', sa.String(length=255), nullable=False),
+    sa.Column('goal', sa.Float(), nullable=False),
+    sa.Column('period', sa.String(length=255), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=True),
     sa.Column('objective', sa.String(length=1000), nullable=True),
     sa.Column('stimulus', sa.String(length=1000), nullable=True),
     sa.Column('answer', sa.String(length=1000), nullable=True),
     sa.Column('consequence', sa.String(length=1000), nullable=True),
-    sa.Column('material', sa.String(length=1000), nullable=True),
-    sa.Column('type_help', sa.String(length=1000), nullable=True),
-    sa.Column('attempts', sa.Integer(), nullable=True),
-    sa.Column('goal_value', sa.String(length=255), nullable=True),
-    sa.Column('description', sa.String(length=1000), nullable=True),
-    sa.ForeignKeyConstraint(['program_id'], ['programs.id'], ),
+    sa.Column('materials', sa.String(length=1000), nullable=True),
+    sa.Column('help', sa.String(length=1000), nullable=True),
+    sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('students',
@@ -170,12 +163,38 @@ def upgrade():
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('contractor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
-    sa.Column('instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
     sa.Column('fullname', sa.String(length=255), nullable=False),
     sa.Column('birthday', sa.Date(), nullable=True),
+    sa.Column('genere', sa.Enum('FEMALE', 'MALE', 'OTHERS', name='genere'), nullable=False),
+    sa.Column('document', sa.String(length=20), nullable=True),
+    sa.Column('indentity_number', sa.String(length=100), nullable=True),
+    sa.Column('org_exp', sa.String(length=10), nullable=True),
+    sa.Column('uf_exp', sa.String(length=5), nullable=True),
+    sa.Column('nationality', sa.String(length=20), nullable=True),
+    sa.Column('email', sa.String(length=50), nullable=False),
+    sa.Column('phone', sa.String(length=50), nullable=True),
     sa.Column('avatar', sa.String(length=255), nullable=True),
+    sa.Column('informations', sa.String(length=500), nullable=True),
+    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='status'), nullable=False),
     sa.ForeignKeyConstraint(['contractor_id'], ['contractors.id'], ),
-    sa.ForeignKeyConstraint(['instructor_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('contract_address',
+    sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('deleted', sa.Boolean(), nullable=False),
+    sa.Column('created_date', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('contractor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('responsible_contract_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('address', sa.String(length=255), nullable=False),
+    sa.Column('number', sa.Integer(), nullable=False),
+    sa.Column('complement', sa.String(length=60), nullable=True),
+    sa.Column('zip_code', sa.String(length=14), nullable=False),
+    sa.Column('district', sa.String(length=50), nullable=False),
+    sa.Column('city', sa.String(length=50), nullable=False),
+    sa.Column('state', sa.String(length=2), nullable=False),
+    sa.ForeignKeyConstraint(['contractor_id'], ['contractors.id'], ),
+    sa.ForeignKeyConstraint(['responsible_contract_id'], ['contract_responsibles.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('grids',
@@ -183,17 +202,17 @@ def upgrade():
     sa.Column('deleted', sa.Boolean(), nullable=False),
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('program_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('skill_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('student_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
-    sa.Column('date_schedule', sa.DateTime(), nullable=True),
-    sa.Column('time_preview', sa.String(length=20), nullable=True),
+    sa.Column('date_schedule', sa.DateTime(), nullable=False),
+    sa.Column('time_preview', sa.String(length=20), nullable=False),
     sa.Column('observation', sa.String(length=255), nullable=True),
     sa.Column('date_start', sa.DateTime(), nullable=True),
     sa.Column('date_finish', sa.DateTime(), nullable=True),
     sa.Column('status', sa.Enum('IN_PROGRESS', 'PAUSED', 'CANCELED', 'DONE', name='statusgrid'), nullable=False),
     sa.ForeignKeyConstraint(['instructor_id'], ['instructors.id'], ),
-    sa.ForeignKeyConstraint(['program_id'], ['programs.id'], ),
+    sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -210,21 +229,6 @@ def upgrade():
     sa.Column('district', sa.String(length=50), nullable=False),
     sa.Column('city', sa.String(length=50), nullable=False),
     sa.Column('state', sa.String(length=2), nullable=False),
-    sa.ForeignKeyConstraint(['instructor_id'], ['instructors.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('instructor_bank_accounts',
-    sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('deleted', sa.Boolean(), nullable=False),
-    sa.Column('created_date', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('bank_code', sa.Integer(), nullable=False),
-    sa.Column('bank_name', sa.String(length=255), nullable=False),
-    sa.Column('agency', sa.Integer(), nullable=False),
-    sa.Column('account_number', sa.Integer(), nullable=False),
-    sa.Column('account_type', sa.String(length=255), nullable=False),
-    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='statusbankaccount'), nullable=False),
     sa.ForeignKeyConstraint(['instructor_id'], ['instructors.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -252,17 +256,16 @@ def upgrade():
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('results')
-    op.drop_table('instructor_bank_accounts')
     op.drop_table('instructor_address')
     op.drop_table('grids')
+    op.drop_table('contract_address')
     op.drop_table('students')
     op.drop_table('procedures')
     op.drop_table('instructors')
     op.drop_table('contract_responsibles')
-    op.drop_table('contract_address')
     op.drop_table('users')
     op.drop_table('specialties_instructor')
-    op.drop_table('programs')
+    op.drop_table('skills')
     op.drop_table('contractors')
     op.drop_table('companies')
     # ### end Alembic commands ###

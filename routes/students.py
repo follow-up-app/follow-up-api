@@ -27,11 +27,13 @@ async def create(student_in: StudentIn, current_user: User = Depends(check_is_ad
         status=StatusContract.IN_PREPARATION
     )
     session.add(contract)
+    session.commit()
 
     student = Student(
         contractor_id=contract.id,
         fullname=student_in.fullname,
         birthday=student_in.birthday,
+        allergy=student_in.allergy,
         genere=student_in.genere,
         document=student_in.document,
         indentity_number=student_in.indentity_number,
@@ -73,6 +75,7 @@ async def update(id: UUID, student_in: StudentIn, current_user: User = Depends(c
 
     student.fullname = student_in.fullname
     student.birthday = student_in.birthday
+    student.allergy=student_in.allergy,
     student.genere = student_in.genere
     student.document = student_in.document
     student.indentity_number = student_in.indentity_number
@@ -124,7 +127,7 @@ async def create(id: UUID, responsable_in: ResponsibleContractIn, current_user: 
         nationality=responsable_in.nationality,
         email=responsable_in.email,
         phone=responsable_in.phone,
-        status=Status.ACTIVE
+        bond=responsable_in.bond
     )
     session.add(responsable)
     session.commit()
@@ -144,7 +147,7 @@ async def get_all(id: UUID, current_user: User = Depends(check_is_admin_user), s
     return [ResponsibleContractOut.from_orm(x) for x in all_itens]
 
 
-@router.get('/responsable/{id}', summary='Returns student', tags=[tags])
+@router.get('/responsable/{id}', summary='Returns responsables', tags=[tags])
 async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     responsable: ResponsibleContract = Student.query(
         session).filter(ResponsibleContract.id == id).first()
@@ -153,8 +156,32 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
 
     return ResponsibleContractOut.from_orm(responsable)
 
+@router.put('/address/{id}', summary='Update contract address', tags=[tags], response_model=AddressContractorOut)
+async def update(id: UUID, responsable_in: ResponsibleContractIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    responsable: ResponsibleContract = ResponsibleContract.query(
+        session).filter(ResponsibleContract.id == id).first()
+    if not responsable:
+        raise HTTPException(status_code=404, detail='route not found')
 
-@router.delete('/responsable/{id}', summary='Delete student', response_model=List[StudentOut], tags=[tags])
+    responsable.fullname = responsable_in.fullname,
+    responsable.birthday = responsable_in.birthday
+    responsable.document = responsable_in.document
+    responsable.indentity_number = responsable_in.indentity_number
+    responsable.org_exp = responsable_in.org_exp
+    responsable.uf_exp = responsable_in.uf_exp
+    responsable.nationality = responsable_in.nationality
+    responsable.email = responsable_in.email
+    responsable.nationality = responsable_in.nationality
+    responsable.phone = responsable_in.phone
+    responsable.bond = responsable_in.bond
+
+    session.add(responsable)
+    session.commit()
+
+    return ResponsibleContractOut.from_orm(responsable)
+
+
+@router.delete('/responsable/{id}', summary='Delete responsable', response_model=List[StudentOut], tags=[tags])
 async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     responsable: Student = ResponsibleContract.query(
         session).filter(ResponsibleContract.id == id).first()
@@ -171,7 +198,7 @@ async def create(id: UUID, file: bytes = File(...), current_user: User = Depends
     if not student:
         raise HTTPException(status_code=404, detail='route not found')
 
-    path = 'storage/student/avatar/' + str(student.id) + '.jpg'
+    path = 'storage/students/avatar/' + str(student.id) + '.jpg'
 
     with open(path, 'wb') as f:
         f.write(file)
@@ -190,6 +217,9 @@ async def get_id(id: UUID, session: Session = Depends(get_db)):
         session).filter(Student.id == id).first()
     if not student:
         raise HTTPException(status_code=404, detail='route not found')
+    
+    if student.avatar is None:
+        return StudentOut.from_orm(student)
 
     img = student.avatar
 

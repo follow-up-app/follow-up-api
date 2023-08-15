@@ -76,11 +76,6 @@ def check_permission(current_user: User, user_permission: UserPermission):
 
     if user_permission == UserPermission.PARENTS:
         list_permited.append(UserPermission.PARENTS)
-        list_permited.append(UserPermission.STUDANTS)
-    
-    if user_permission == UserPermission.STUDANTS:
-        list_permited.append(UserPermission.STUDANTS)
-
 
     if current_user.permission in list_permited:
         return current_user
@@ -97,5 +92,5 @@ def check_is_instructor_user(current_user: User = Depends(get_current_user)):
 def check_is_parents_user(current_user: User = Depends(get_current_user)):
     return check_permission(current_user, UserPermission.PARENTS)
 
-def check_is_student_user(current_user: User = Depends(get_current_user)):
-    return check_permission(current_user, UserPermission.STUDANTS)
+# def check_is_student_user(current_user: User = Depends(get_current_user)):
+#     return check_permission(current_user, UserPermission.STUDANTS)

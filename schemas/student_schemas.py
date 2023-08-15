@@ -2,7 +2,8 @@ from datetime import date
 from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel, constr, Field
-from db.models import Status, Genere
+from db.models import Status, Genere, BondPartenal
+
 
 class AddressContractorIn(BaseModel):
     responsible_contract_id: Optional[UUID]
@@ -13,6 +14,7 @@ class AddressContractorIn(BaseModel):
     district: str
     city: str
     state: str
+
 
 class AddressContractorOut(BaseModel):
     id: UUID
@@ -30,7 +32,6 @@ class AddressContractorOut(BaseModel):
 
 
 class ResponsibleContractIn(BaseModel):
-    user_id: UUID
     fullname: str
     birthday: date
     document: Optional[str]
@@ -39,16 +40,14 @@ class ResponsibleContractIn(BaseModel):
     uf_exp: Optional[str]
     nationality: Optional[str]
     email: Optional[str]
-    uf_exp: Optional[str]
     phone: Optional[str]
     main_contract: Optional[str]
-    status: Status
+    bond:  Optional[str]
 
 
 class ResponsibleContractOut(BaseModel):
     id: UUID
     contractor_id: UUID
-    user_id: UUID
     fullname: str
     birthday: date
     document: Optional[str]
@@ -57,19 +56,18 @@ class ResponsibleContractOut(BaseModel):
     uf_exp: Optional[str]
     nationality: Optional[str]
     email: Optional[str]
-    uf_exp: Optional[str]
     phone: Optional[str]
     main_contract: Optional[str]
-    status: Status
+    bond:  Optional[str]
 
     class Config:
         orm_mode = True
 
 
 class StudentIn(BaseModel):
-    contractor_id: UUID
     fullname: str
     birthday: date
+    allergy: Optional[str]
     genere: Genere
     document: Optional[str]
     indentity_number: Optional[str]
@@ -81,14 +79,14 @@ class StudentIn(BaseModel):
     phone: Optional[str]
     informations: Optional[str]
     avatar: Optional[str]
-    status: Status
-  
+
 
 class StudentOut(BaseModel):
     id: UUID
     contractor_id: UUID
     fullname: str
     birthday: date
+    allergy: Optional[str]
     genere: Genere
     document: Optional[str]
     indentity_number: Optional[str]

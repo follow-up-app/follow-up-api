@@ -35,7 +35,8 @@ async def create(instructor_in: InstructorIn, current_user: User = Depends(check
         email=instructor_in.email,
         document=instructor_in.document,
         permission=UserPermission.INSTRUCTOR,
-        position='APLICADOR'
+        position='APLICADOR',
+        status=Status.ACTIVE
     )
     session.add(user)
     session.commit()
@@ -138,6 +139,9 @@ async def get_id(id: UUID, session: Session = Depends(get_db)):
     if not instructor:
         raise HTTPException(status_code=404, detail='route not found')
 
+    if instructor.avatar is None:
+        return InstructorOut.from_orm(instructor)
+
     img = instructor.avatar
 
     return FileResponse(img, media_type="image/jpeg")
@@ -224,7 +228,6 @@ async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), se
         raise HTTPException(status_code=404, detail='route not found')
     session.delete(instructor)
     session.commit()
-    
 
 
 @router.get('/{id}/active', summary='active/desactive student', tags=[tags])

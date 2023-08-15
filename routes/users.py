@@ -1,24 +1,15 @@
-from datetime import timedelta
 from typing import List
 from uuid import UUID
 from sqlalchemy import or_
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from itsdangerous import URLSafeTimedSerializer
+from fastapi import APIRouter, Depends, HTTPException, File
 from sqlalchemy.orm import Session
 from starlette import status
-from starlette.background import BackgroundTasks
-import re
-import os
-import unidecode
-
 from config import get_settings, Settings
-from core.security import check_is_admin_user, hash_password, verify_password, create_access_token, get_current_user
+from core.security import check_is_admin_user, hash_password, get_current_user
 from db import get_db
-from db.models import User, UserPermission
-from schemas.user_schemas import UserOut, ResetPasswordSchemaIn, ResetPasswordSchemaOut, \
-    RecoveryPasswordSchemaIn, RecoveryPasswordSchemaOut, LoginSchemaIn, LoginSchemaOut, \
-    UserRegisterSchemaIn, UserStoreIn, UserUpdate
+from db.models import User, UserPermission, Status
+from schemas.user_schemas import UserOut, UserRegisterSchemaIn, UserStoreIn
+from fastapi.responses import FileResponse
 
 
 router = APIRouter()
@@ -53,13 +44,14 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
         email=user_schema.email,
         document=user_schema.document,
         permission=user_schema.permission,
-        position=user_schema.position,
-        image_path=user_schema.image_path,
+        position=user_schema.position.upper(),
+        status=Status.ACTIVE
     )
     session.add(user)
     session.commit()
 
     return UserOut.from_orm(user)
+
 
 @router.post('/', tags=[user_tag], summary='Create user', description='Method for create user')
 async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db),
@@ -79,9 +71,9 @@ async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depen
         fullname=user_schema.fullname,
         email=user_schema.email,
         document=user_schema.document,
-        permission=user_schema.permission,
+        permission=UserPermission.ADMIN,
         position=user_schema.position.upper(),
-        image_path=user_schema.image_path,
+        status=Status.ACTIVE
     )
     session.add(user)
     session.commit()
@@ -95,12 +87,6 @@ async def get_all(session: Session = Depends(get_db)):
     return [UserOut.from_orm(x) for x in all_itens]
 
 
-@router.get('/instructors', summary='Returns instuctors profile list', response_model=List[UserOut], tags=[user_tag])
-async def get_all(session: Session = Depends(get_db)):
-    all_itens = User.query(session).filter(User.permission == UserPermission.INSTRUCTOR).all()
-    return [UserOut.from_orm(x) for x in all_itens]
-
-
 @router.get('/{id}', summary='Returns user', response_model=List[UserOut], tags=[user_tag])
 async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     user: User = User.query(session).filter(User.id == id).first()
@@ -111,15 +97,16 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
 
 
 @router.put('/{id}', summary='Update user', response_model=UserOut, tags=[user_tag])
-async def update(id: UUID, user_schema: UserUpdate, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+async def update(id: UUID, user_schema: UserRegisterSchemaIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     user: User = User.query(session).filter(User.id == id).first()
     if not user:
         raise HTTPException(status_code=404, detail='route not found')
-    
+
     user.fullname = user_schema.fullname
     user.document = user_schema.document
     user.email = user_schema.email
     user.permission = user_schema.permission
+    user.image_path = user_schema.image_path
 
     session.add(user)
     session.commit()
@@ -127,11 +114,57 @@ async def update(id: UUID, user_schema: UserUpdate, current_user: User = Depends
     return UserOut.from_orm(user)
 
 
-@router.delete('/{id}', summary='Delete user', response_model=List[UserOut], tags=[user_tag])
-async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    pass
-
 @router.get("/me/", tags=[user_tag], summary="Return user logged", response_model=UserOut)
 async def me(current_user: User = Depends(get_current_user)):
     result = UserOut.from_orm(current_user)
     return result
+
+
+@router.get('/{id}/active', summary='Active or inactive user', response_model=List[UserOut], tags=[user_tag])
+async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    user: User = User.query(session).filter(User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='route not found')
+
+    if user.status == Status.ACTIVE:
+        user.status = Status.INACTIVE
+
+    if user.status == Status.INACTIVE:
+        user.status = Status.ACTIVE
+
+    session.add(user)
+    session.commit()
+
+    return UserOut.from_orm(user)
+
+
+@router.post('/{id}/avatar', summary='Upload avatar', tags=[user_tag])
+async def create(id: UUID, file: bytes = File(...), current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    user: User = User.query(session).filter(User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='route not found')
+
+    path = 'storage/users/avatar/' + str(user.id) + '.jpg'
+
+    with open(path, 'wb') as f:
+        f.write(file)
+
+    user.image_path = path
+
+    session.add(user)
+    session.commit()
+
+    return UserOut.from_orm(user)
+
+
+@router.get('/{id}/avatar', summary='Return avatar user',  tags=[user_tag])
+async def get_id(id: UUID, session: Session = Depends(get_db)):
+    user: User = User.query(session).filter(User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='route not found')
+    
+    if user.image_path is None:
+        return UserOut.from_orm(user)
+   
+    img = user.image_path
+    return FileResponse(img, media_type="image/jpeg")

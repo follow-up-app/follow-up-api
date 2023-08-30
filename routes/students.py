@@ -54,7 +54,9 @@ async def create(student_in: StudentIn, current_user: User = Depends(check_is_ad
 
 @router.get('/', summary='Returns all students list', response_model=List[StudentOut], tags=[tags])
 async def get_all(current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    all_itens = Student.query(session).all()
+    all_itens = Contractor.query(session).all()
+    
+    
     return [StudentOut.from_orm(x) for x in all_itens]
 
 

@@ -24,10 +24,10 @@ from routes.users import router as user_router
 from routes.students import router as student_router
 from routes.skills import router as skill_router
 from routes.procedures import router as procedure_router
-from routes.grid import router as grid_router
 from routes.results import router as result_router
 from routes.configurations import router as configuration_router
 from routes.instructors import router as instuctor_router
+from routes.schedule import router as schedule_router
 
 
 
@@ -63,7 +63,7 @@ app.include_router(instuctor_router, prefix='/instructors')
 app.include_router(student_router, prefix='/students')
 app.include_router(skill_router, prefix='/skills')
 app.include_router(procedure_router, prefix='/procedures')
-app.include_router(grid_router, prefix='/grids')
+app.include_router(schedule_router, prefix='/schedules')
 app.include_router(result_router, prefix='/results')
 app.include_router(configuration_router, prefix='/configurations')
 

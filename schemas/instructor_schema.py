@@ -28,7 +28,7 @@ class AddressInstructorOut(BaseModel):
         orm_mode = True
 
 class InstructorIn(BaseModel):
-    specialty: Optional[UUID]
+    # specialty: Optional[UUID]
     fullname: str
     document: str
     email: str
@@ -52,7 +52,7 @@ class InstructorOut(BaseModel):
     id: UUID
     company_id: UUID
     user_id: Optional[UUID]
-    specialty_instructor_id: Optional[UUID]
+    # specialty_instructor_id: Optional[UUID]
     specialty_name: Optional[str]
     fullname: str
     document: str

@@ -44,7 +44,7 @@ async def create(instructor_in: InstructorIn, current_user: User = Depends(check
     instructor = Instructor(
         company_id=current_user.company_id,
         user_id=user.id,
-        specialty_instructor_id=instructor_in.specialty,
+        # specialty_instructor_id=instructor_in.specialty,
         fullname=instructor_in.fullname,
         email=instructor_in.email,
         phone=instructor_in.phone,
@@ -86,9 +86,21 @@ async def update(id: UUID, instructor_in: InstructorIn, current_user: User = Dep
     instructor: Instructor = Instructor.query(
         session).filter(Instructor.id == id).first()
     if not instructor:
-        raise HTTPException(status_code=404, detail='route not found')
+        raise HTTPException(status_code=404, detail='instructor not found')
+    
+    user: User = User.query(session).filter(User.id == instructor.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='user not found')
+    
+    user.fullname = instructor_in.fullname
+    user.document = instructor_in.document
+    user.email = instructor_in.email
 
+    session.add(user)
+    session.commit()
+    
     instructor.fullname = instructor_in.fullname
+    # instructor.specialty_instructor_id = instructor.specialty_instructor_id
     instructor.document = instructor_in.document
     instructor.email = instructor_in.email
     instructor.phone = instructor_in.phone

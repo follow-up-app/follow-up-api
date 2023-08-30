@@ -12,6 +12,7 @@ from sqlalchemy.sql.schema import Table, UniqueConstraint
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.sql.sqltypes import Date, DateTime, Integer
 from sqlalchemy_utils import UUIDType
+import uuid
 
 import pytz
 
@@ -79,6 +80,14 @@ class StatusGrid(enum.Enum):
     DONE: str = 'CONCLUÍDO'
 
 
+class StatusSchedule(enum.Enum):
+    SCHEDULED: str = 'AGENDADO'
+    IN_PROGRESS: str = 'EM ANDAMENTO'
+    PAUSED: str = 'PAUSADO'
+    CANCELED: str = 'CANCELADO'
+    DONE: str = 'CONCLUÍDO'
+
+
 class Company(ModelBase):
     __tablename__ = 'companies'
 
@@ -122,8 +131,11 @@ class Contractor(ModelBase):
         'ResponsibleContract', back_populates='contractor')
 
     address = relationship('AddressContract', back_populates='contractor')
+    
     student = relationship('Student', back_populates='contractor')
-    student_name = association_proxy('student', 'fullname')
+    
+    student_id = association_proxy('student', 'id')
+    fullname = association_proxy('student', 'fullname')
 
 
 class Student(ModelBase):
@@ -148,7 +160,6 @@ class Student(ModelBase):
     status = Column(Enum(Status), nullable=False)
 
     contractor = relationship('Contractor', back_populates='student')
-    grids = relationship('Grid', back_populates='student')
 
 
 class ResponsibleContract(ModelBase):
@@ -170,6 +181,7 @@ class ResponsibleContract(ModelBase):
     phone = Column(String(50), nullable=True)
     bond = Column(String(50), nullable=True)
     main_contract = Column(Boolean(), nullable=True)
+    avatar = Column(String(255), nullable=True)
 
     contractor = relationship('Contractor', back_populates='responsable')
     address = relationship('AddressContract', back_populates='responsable')
@@ -214,7 +226,7 @@ class Instructor(ModelBase):
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=True)
     specialty_instructor_id = Column(UUIDType(binary=False),
-                                     ForeignKey(SpecialtyInstructor.id), nullable=False)
+                                     ForeignKey(SpecialtyInstructor.id), nullable=True)
 
     fullname = Column(String(100), nullable=False)
     document = Column(String(100), nullable=False)
@@ -235,7 +247,7 @@ class Instructor(ModelBase):
     avatar = Column(String(255), nullable=True)
     status = Column(Enum(Status), nullable=False)
 
-    grids = relationship('Grid', back_populates='instructor')
+    # schedule = relationship('Schedule', back_populates='instructor')
     address = relationship('AddressInctructor', back_populates='instructor')
 
     specialty = relationship('SpecialtyInstructor',
@@ -270,7 +282,7 @@ class Skill(ModelBase):
     objective = Column(String(255), nullable=False)
 
     procedures = relationship('Procedure', back_populates='skill')
-    grids = relationship('Grid', back_populates='skill')
+    # schedule = relationship('Schedule', back_populates='skill')
 
 
 class Procedure(ModelBase):
@@ -295,31 +307,27 @@ class Procedure(ModelBase):
     skill_name = association_proxy('skill', 'name')
 
 
-class Grid(ModelBase):
-    __tablename__ = 'grids'
+class Schedule(ModelBase):
+    __tablename__ = 'schedules'
 
-    skill_id = Column(UUIDType(binary=False),
-                      ForeignKey(Skill.id), nullable=False)
-    student_id = Column(UUIDType(binary=False),
-                        ForeignKey(Student.id), nullable=False)
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
     instructor_id = Column(UUIDType(binary=False),
                            ForeignKey(Instructor.id), nullable=True)
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=True)
+    skill_id = Column(UUIDType(binary=False),
+                      ForeignKey(Skill.id), nullable=True)
 
-    date_schedule = Column(DateTime, nullable=False)
-    time_preview = Column(String(20), nullable=False)
-    observation = Column(String(255), nullable=True)
-    date_start = Column(DateTime, nullable=True)
-    date_finish = Column(DateTime, nullable=True)
-    status = Column(Enum(StatusGrid), nullable=False)
+    title = Column(String(20), nullable=False)
+    start = Column(DateTime, nullable=False)
+    end = Column(DateTime, nullable=False)
+    status = Column(Enum(StatusSchedule), nullable=False)
+    details = Column(String(255), nullable=True)
 
-    skill = relationship('Skill', back_populates='grids')
-    skill_name = association_proxy('skill', 'name')
-
-    student = relationship('Student', back_populates='grids')
-    student_name = association_proxy('student', 'fullname')
-
-    instructor = relationship('Instructor', back_populates='grids')
-    instructor_name = association_proxy('instructor', 'fullname')
+    # instructor = relationship('Instructor', back_populates='schedule')
+    # # student = relationship('Student', back_populates='schedule')
+    # skill = relationship('Skill', back_populates='schedule')
 
 
 class Result(ModelBase):

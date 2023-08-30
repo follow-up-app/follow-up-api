@@ -106,6 +106,9 @@ class StudentOut(BaseModel):
 
 class ContractOut(BaseModel):
     id: UUID
-    students: List[StudentOut]
-    resposables: List[ResponsibleContractOut]
-    address: List[AddressContractorOut]
+    student: List[StudentOut]
+    resposables: Optional[List[ResponsibleContractOut]]
+    address: Optional[List[AddressContractorOut]]
+    
+    class Config:
+        orm_mode = True

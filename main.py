@@ -1,21 +1,8 @@
 # -*- coding: utf-8 -*-
-from logging import FATAL, info
-from xml.etree.ElementInclude import include
-from fastapi_utils.tasks import repeat_every
-from fastapi import FastAPI, Depends, BackgroundTasks, background
+from fastapi import FastAPI
 import uvicorn
 from starlette.middleware.cors import CORSMiddleware
 from config import get_settings
-from dotenv import load_dotenv
-from db.seeders.seeders import Seeders
-from threading import Thread
-from time import sleep
-from sqlalchemy.orm.session import Session
-from db import get_db
-from config import get_settings
-import pypeln as pl
-from fastapi import BackgroundTasks, FastAPI
-from multiprocessing import Process, Event
 import multiprocessing
 import sentry_sdk
 from routes.auth import router as auth_router
@@ -24,11 +11,12 @@ from routes.users import router as user_router
 from routes.students import router as student_router
 from routes.skills import router as skill_router
 from routes.procedures import router as procedure_router
-from routes.results import router as result_router
 from routes.configurations import router as configuration_router
 from routes.instructors import router as instuctor_router
 from routes.schedule import router as schedule_router
-
+from routes.notifications import router as notifications_router
+from routes.executions import router as execution_router
+from routes.follow_up import router as follow_up_router
 
 
 # sentry_sdk.init(
@@ -64,12 +52,17 @@ app.include_router(student_router, prefix='/students')
 app.include_router(skill_router, prefix='/skills')
 app.include_router(procedure_router, prefix='/procedures')
 app.include_router(schedule_router, prefix='/schedules')
-app.include_router(result_router, prefix='/results')
 app.include_router(configuration_router, prefix='/configurations')
+app.include_router(execution_router, prefix='/execution')
+app.include_router(follow_up_router, prefix='/follow-up')
+
+
+# routes provisional
+app.include_router(notifications_router, prefix='/notifications')
 
 
 
 if __name__ == "__main__":
     host_process = multiprocessing.Process(
-        target=uvicorn.run(app, host="0.0.0.0", port=settings.PORT))
+        target=uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=True))
     host_process.start()

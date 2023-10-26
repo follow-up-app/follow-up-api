@@ -86,6 +86,18 @@ class StatusSchedule(enum.Enum):
     PAUSED: str = 'PAUSADO'
     CANCELED: str = 'CANCELADO'
     DONE: str = 'CONCLUÍDO'
+    
+    
+class StatusExecuteProcedure(enum.Enum):
+    IN_PROGRESS: str = 'EM ANDAMENTO'
+    PAUSED: str = 'PAUSADO'
+    CANCELED: str = 'CANCELADO'
+    DONE: str = 'CONCLUÍDO'
+    
+    
+class HelpTypeExecution(enum.Enum):
+    DEPENDENT: str = 'DEPENDENTE'
+    INDEPENDENT: str = 'INDEPENDENTE'
 
 
 class Company(ModelBase):
@@ -160,6 +172,7 @@ class Student(ModelBase):
     status = Column(Enum(Status), nullable=False)
 
     contractor = relationship('Contractor', back_populates='student')
+    schedule = relationship('Schedule', back_populates='student')
 
 
 class ResponsibleContract(ModelBase):
@@ -193,7 +206,7 @@ class AddressContract(ModelBase):
     contractor_id = Column(
         UUIDType(binary=False), ForeignKey(Contractor.id), nullable=False)
     responsible_contract_id = Column(
-        UUIDType(binary=False), ForeignKey(ResponsibleContract.id), nullable=False)
+        UUIDType(binary=False), ForeignKey(ResponsibleContract.id), nullable=True)
 
     address = Column(String(255), nullable=False)
     number = Column(Integer(), nullable=False)
@@ -247,7 +260,7 @@ class Instructor(ModelBase):
     avatar = Column(String(255), nullable=True)
     status = Column(Enum(Status), nullable=False)
 
-    # schedule = relationship('Schedule', back_populates='instructor')
+    schedule = relationship('Schedule', back_populates='instructor')
     address = relationship('AddressInctructor', back_populates='instructor')
 
     specialty = relationship('SpecialtyInstructor',
@@ -282,7 +295,7 @@ class Skill(ModelBase):
     objective = Column(String(255), nullable=False)
 
     procedures = relationship('Procedure', back_populates='skill')
-    # schedule = relationship('Schedule', back_populates='skill')
+    schedule = relationship('Schedule', back_populates='skill')
 
 
 class Procedure(ModelBase):
@@ -305,6 +318,8 @@ class Procedure(ModelBase):
 
     skill = relationship('Skill', back_populates='procedures')
     skill_name = association_proxy('skill', 'name')
+    
+    executions = relationship('Execution', back_populates='procedure')
 
 
 class Schedule(ModelBase):
@@ -324,24 +339,32 @@ class Schedule(ModelBase):
     end = Column(DateTime, nullable=False)
     status = Column(Enum(StatusSchedule), nullable=False)
     details = Column(String(255), nullable=True)
+    
+    event_begin = Column(DateTime, nullable=True)
+    event_finish = Column(DateTime, nullable=True)
+    event_user_id = Column(UUIDType(binary=False),
+                     ForeignKey(User.id), nullable=True)
 
-    # instructor = relationship('Instructor', back_populates='schedule')
-    # # student = relationship('Student', back_populates='schedule')
-    # skill = relationship('Skill', back_populates='schedule')
+    instructor = relationship('Instructor', back_populates='schedule')
+    student = relationship('Student', back_populates='schedule')
+    skill = relationship('Skill', back_populates='schedule')
 
 
-class Result(ModelBase):
-    __tablename__ = 'results'
-
+class Execution(ModelBase):
+    __tablename__ = 'executions'
+    
+    schedule_id = Column(UUIDType(binary=False),
+                          ForeignKey(Schedule.id), nullable=False)
+    
     procedure_id = Column(UUIDType(binary=False),
                           ForeignKey(Procedure.id), nullable=False)
-    student_id = Column(UUIDType(binary=False),
-                        ForeignKey(Student.id), nullable=False)
-    instructor_id = Column(UUIDType(binary=False),
-                           ForeignKey(Instructor.id), nullable=True)
-
-    attempts = Column(Integer(), nullable=True)
-    points_made = Column(String(255), nullable=False)
-    anotations = Column(String(255), nullable=True)
-    date_start = Column(DateTime, nullable=True)
-    date_finish = Column(DateTime, nullable=True)
+    
+    trie = Column(Integer(), nullable=False)
+    time = Column(String(255), nullable=False)
+    success = Column(Boolean(), nullable=False)
+    user_id = Column(UUIDType(binary=False),
+                     ForeignKey(User.id), nullable=False)
+    help_type = Column(Enum(HelpTypeExecution), nullable=False)
+    
+    procedure = relationship('Procedure', back_populates='executions')
+    

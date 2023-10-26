@@ -2,10 +2,10 @@ from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, File
 from sqlalchemy.orm import Session
-from core.security import check_is_admin_user, hash_password
+from core.security import check_is_admin_user, hash_password, get_current_user
 from db import get_db
 from db.models import User, Instructor, UserPermission, Status, AddressInctructor
-from schemas.instructor_schema import InstructorOut, InstructorIn, AddressInstructorOut, AddressInstructorIn
+from schemas.instructor_schema import InstructorOut, InstructorIn, AddressInstructorOut, AddressInstructorIn, Filters
 import re
 from fastapi.responses import FileResponse
 
@@ -258,3 +258,9 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
     session.commit()
 
     return InstructorOut.from_orm(instructor)
+
+
+@router.post('/filters', summary='Return list with filters', tags=[tags])
+async def get_filters(filters: Filters, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+    all_itens = Instructor.query(session).filter(Instructor.id == filters.instructor_id).all()
+    return [InstructorOut.from_orm(x) for x in all_itens]

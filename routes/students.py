@@ -9,10 +9,10 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.background import BackgroundTasks
 from config import get_settings, Settings
-from core.security import check_is_admin_user
+from core.security import check_is_admin_user, get_current_user
 from db import get_db
 from db.models import Student, User, Contractor, StatusContract, Status, ResponsibleContract, AddressContract
-from schemas.student_schemas import StudentIn, StudentOut, AddressContractorOut, AddressContractorIn, ResponsibleContractIn, ResponsibleContractOut
+from schemas.student_schemas import StudentIn, StudentOut, AddressContractorOut, AddressContractorIn, ResponsibleContractIn, ResponsibleContractOut, Filters
 from fastapi.responses import FileResponse
 
 router = APIRouter()
@@ -54,10 +54,16 @@ async def create(student_in: StudentIn, current_user: User = Depends(check_is_ad
 
 @router.get('/', summary='Returns all students list', response_model=List[StudentOut], tags=[tags])
 async def get_all(current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    all_itens = Contractor.query(session).all()
-    
-    
-    return [StudentOut.from_orm(x) for x in all_itens]
+    students: Student = Student.query(session).all()
+    for student in students:
+        responsables: ResponsibleContract = ResponsibleContract.query(
+            session).filter(ResponsibleContract.contractor_id == student.contractor_id).all()
+        resps = []
+        for r in responsables:
+            resps.append(r)
+        student.responsable: ResponsibleContract = resps
+
+    return [StudentOut.from_orm(x) for x in students]
 
 
 @router.get('/{id}', summary='Returns student', tags=[tags])
@@ -77,7 +83,7 @@ async def update(id: UUID, student_in: StudentIn, current_user: User = Depends(c
 
     student.fullname = student_in.fullname
     student.birthday = student_in.birthday
-    student.allergy=student_in.allergy,
+    student.allergy = student_in.allergy,
     student.genere = student_in.genere
     student.document = student_in.document
     student.indentity_number = student_in.indentity_number
@@ -112,7 +118,7 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
     return StudentOut.from_orm(student)
 
 
-@router.post('/{id}/responsable', summary='create responsable', response_model=StudentOut, tags=[tags])
+@router.post('/{id}/responsable', summary='create responsable', response_model=ResponsibleContractOut, tags=[tags])
 async def create(id: UUID, responsable_in: ResponsibleContractIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     student: Student = Student.query(session).filter(Student.id == id).first()
     if not student:
@@ -134,14 +140,14 @@ async def create(id: UUID, responsable_in: ResponsibleContractIn, current_user: 
     session.add(responsable)
     session.commit()
 
-    return StudentOut.from_orm(responsable)
+    return ResponsibleContractOut.from_orm(responsable)
 
 
 @router.get('/{id}/responsable', summary='Returns all responsable list', response_model=List[ResponsibleContractOut], tags=[tags])
 async def get_all(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     student: Student = Student.query(session).filter(Student.id == id).first()
     if not student:
-        raise HTTPException(status_code=404, detail='route not found')
+        raise HTTPException(status_code=404, detail='student not found')
 
     all_itens = ResponsibleContract.query(session).filter(
         ResponsibleContract.contractor_id == student.contractor_id).all()
@@ -154,11 +160,12 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
     responsable: ResponsibleContract = Student.query(
         session).filter(ResponsibleContract.id == id).first()
     if not responsable:
-        raise HTTPException(status_code=404, detail='route not found')
+        raise HTTPException(status_code=404, detail='responsable not found')
 
     return ResponsibleContractOut.from_orm(responsable)
 
-@router.put('/address/{id}', summary='Update contract address', tags=[tags], response_model=AddressContractorOut)
+
+@router.put('/responsable/{id}', summary='Update contract address', tags=[tags], response_model=AddressContractorOut)
 async def update(id: UUID, responsable_in: ResponsibleContractIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     responsable: ResponsibleContract = ResponsibleContract.query(
         session).filter(ResponsibleContract.id == id).first()
@@ -213,13 +220,13 @@ async def create(id: UUID, file: bytes = File(...), current_user: User = Depends
     return StudentOut.from_orm(student)
 
 
-@router.get('/avatar/{id}', summary='Returns instructor avatar', tags=[tags])
+@router.get('/avatar/{id}', summary='Returns student avatar', tags=[tags])
 async def get_id(id: UUID, session: Session = Depends(get_db)):
     student: Student = Student.query(
         session).filter(Student.id == id).first()
     if not student:
         raise HTTPException(status_code=404, detail='route not found')
-    
+
     if student.avatar is None:
         return StudentOut.from_orm(student)
 
@@ -228,7 +235,7 @@ async def get_id(id: UUID, session: Session = Depends(get_db)):
     return FileResponse(img, media_type="image/jpeg")
 
 
-@router.delete('/{id}/avatar', summary='Upload avatar', tags=[tags])
+@router.delete('/{id}/avatar', summary='Delete avatar', tags=[tags])
 async def remove(id: UUID, file: bytes = File(...), current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     student: Student = Student.query(
         session).filter(Student.id == id).first()
@@ -279,7 +286,10 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
         raise HTTPException(status_code=404, detail='route not found')
 
     address: AddressContract = AddressContract.query(
-        session).filter(AddressContract.contractor_id)
+        session).filter(AddressContract.contractor_id == student.contractor_id).first()
+
+    if not address:
+        raise HTTPException(status_code=404, detail='address not found')
 
     return AddressContractorOut.from_orm(address)
 
@@ -291,7 +301,7 @@ async def update(id: UUID, address_in: AddressContractorIn, current_user: User =
     if not address:
         raise HTTPException(status_code=404, detail='route not found')
 
-    address.responsible_contract_id = address_in.responsible_contract_id,
+    # address.responsible_contract_id = address_in.responsible_contract_id,
     address.address = address_in.address
     address.number = address_in.number
     address.complement = address_in.complement
@@ -304,3 +314,20 @@ async def update(id: UUID, address_in: AddressContractorIn, current_user: User =
     session.commit()
 
     return AddressContractorOut.from_orm(address)
+
+@router.post('/filters', summary='Return list with filters', tags=[tags])
+async def get_filters(filters: Filters, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+    students: Student = Student.query(
+        session).filter(Student.id == filters.student_id).all()
+    for student in students:
+        responsables: ResponsibleContract = ResponsibleContract.query(
+            session).filter(ResponsibleContract.contractor_id == student.contractor_id).all()
+        resps = []
+        for r in responsables:
+            resps.append(r)
+        student.responsable: ResponsibleContract = resps
+
+    return [StudentOut.from_orm(x) for x in students]
+    
+    
+

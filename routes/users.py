@@ -8,9 +8,12 @@ from config import get_settings, Settings
 from core.security import check_is_admin_user, hash_password, get_current_user
 from db import get_db
 from db.models import User, UserPermission, Status
-from schemas.user_schemas import UserOut, UserRegisterSchemaIn, UserStoreIn
+from schemas.user_schemas import UserOut, UserRegisterSchemaIn, UserStoreIn, RecoveryPasswordSchemaIn, ResetPasswordSchemaIn
 from fastapi.responses import FileResponse
-
+from core.mailer import Mailer
+import random
+import string
+from db.mongo import Mongo
 
 router = APIRouter()
 
@@ -35,11 +38,9 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
         raise HTTPException(
             status_code=403, detail="user_already_exists")
 
-    password = '123'
-
     user = User(
         company_id=user_schema.company_id,
-        password_hash=hash_password(password),
+        password_hash=hash_password(random.choice(string.ascii_uppercase)),
         fullname=user_schema.fullname,
         email=user_schema.email,
         document=user_schema.document,
@@ -49,6 +50,12 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
     )
     session.add(user)
     session.commit()
+
+    mailer = Mailer()
+    mailer.welcome_user(user)
+
+    mongo = Mongo()
+    mongo.welcome_app(user)
 
     return UserOut.from_orm(user)
 
@@ -63,11 +70,9 @@ async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depen
         raise HTTPException(
             status_code=403, detail="user_already_exists")
 
-    password = '123'
-
     user = User(
         company_id=current_user.company_id,
-        password_hash=hash_password(password),
+        password_hash=hash_password(random.choice(string.ascii_uppercase)),
         fullname=user_schema.fullname,
         email=user_schema.email,
         document=user_schema.document,
@@ -77,6 +82,12 @@ async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depen
     )
     session.add(user)
     session.commit()
+
+    mailer = Mailer()
+    mailer.welcome_user(user)
+
+    mongo = Mongo()
+    mongo.welcome_app(user)
 
     return UserOut.from_orm(user)
 
@@ -162,9 +173,40 @@ async def get_id(id: UUID, session: Session = Depends(get_db)):
     user: User = User.query(session).filter(User.id == id).first()
     if not user:
         raise HTTPException(status_code=404, detail='route not found')
-    
+
     if user.image_path is None:
         return UserOut.from_orm(user)
-   
+
     img = user.image_path
     return FileResponse(img, media_type="image/jpeg")
+
+
+@router.post('/refresh-password', summary='sender link password',  tags=[user_tag])
+async def update(user_schema: RecoveryPasswordSchemaIn, session: Session = Depends(get_db)):
+    user: User = User.query(session).filter(
+        User.email == user_schema.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='user not found')
+
+    mailer = Mailer()
+    mailer.recovery_password(user)
+
+    return UserOut.from_orm(user)
+
+
+@router.put('/refresh-password/{id}', summary='password',  tags=[user_tag])
+async def update(id: UUID, user_schema: ResetPasswordSchemaIn, session: Session = Depends(get_db)):
+    user: User = User.query(session).filter(
+        User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='user not found')
+    
+    user.password_hash = hash_password(user_schema.password)
+    
+    session.add(user)
+    session.commit()
+
+    mongo = Mongo()
+    mongo.update_password(user)
+
+    return UserOut.from_orm(user)

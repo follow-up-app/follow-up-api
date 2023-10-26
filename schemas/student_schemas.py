@@ -6,7 +6,7 @@ from db.models import Status, Genere, BondPartenal
 
 
 class AddressContractorIn(BaseModel):
-    responsible_contract_id: Optional[UUID]
+    responsible_contract_id: UUID
     address: str
     number: int
     complement: Optional[str]
@@ -18,7 +18,7 @@ class AddressContractorIn(BaseModel):
 
 class AddressContractorOut(BaseModel):
     id: UUID
-    responsible_contract_id: Optional[UUID]
+    responsible_contract_id: UUID
     address: Optional[str]
     number: Optional[int]
     complement: Optional[str]
@@ -98,6 +98,7 @@ class StudentOut(BaseModel):
     phone: Optional[str]
     informations: Optional[str]
     avatar: Optional[str]
+    responsable: Optional[List[ResponsibleContractOut]]
     status: Status
 
     class Config:
@@ -109,6 +110,10 @@ class ContractOut(BaseModel):
     student: List[StudentOut]
     resposables: Optional[List[ResponsibleContractOut]]
     address: Optional[List[AddressContractorOut]]
-    
+
     class Config:
         orm_mode = True
+
+
+class Filters(BaseModel):
+    student_id: Optional[UUID] = None

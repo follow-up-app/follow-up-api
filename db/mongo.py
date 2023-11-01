@@ -27,7 +27,7 @@ class Mongo:
             'user_id':  str(user.id),
             'message': 'Bem-vindo ao Follow-UP!',
             'read': False,
-            'type': Type.WELCOME,
+            'type': Type.WELCOME.value,
             'uri': '/home'
         }
         self.collection.insert_one(notification)

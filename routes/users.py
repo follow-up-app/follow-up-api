@@ -40,7 +40,8 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
 
     user = User(
         company_id=user_schema.company_id,
-        password_hash=hash_password(random.choice(string.ascii_uppercase)),
+        # password_hash=hash_password(random.choice(string.ascii_uppercase)),
+        password_hash=hash_password('123'),
         fullname=user_schema.fullname,
         email=user_schema.email,
         document=user_schema.document,
@@ -72,7 +73,8 @@ async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depen
 
     user = User(
         company_id=current_user.company_id,
-        password_hash=hash_password(random.choice(string.ascii_uppercase)),
+        # password_hash=hash_password(random.choice(string.ascii_uppercase)),
+        password_hash=hash_password('123'),
         fullname=user_schema.fullname,
         email=user_schema.email,
         document=user_schema.document,

@@ -1,8 +1,8 @@
-"""dev - migrates
+"""create enum help in execution
 
-Revision ID: 4a6ba429037f
+Revision ID: d7f084c8136d
 Revises: 
-Create Date: 2023-08-10 00:41:32.488855
+Create Date: 2023-10-31 22:19:21.841782
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlalchemy_utils
 
 
 # revision identifiers, used by Alembic.
-revision = '4a6ba429037f'
+revision = 'd7f084c8136d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -102,7 +102,9 @@ def upgrade():
     sa.Column('nationality', sa.String(length=20), nullable=True),
     sa.Column('email', sa.String(length=50), nullable=False),
     sa.Column('phone', sa.String(length=50), nullable=True),
+    sa.Column('bond', sa.String(length=50), nullable=True),
     sa.Column('main_contract', sa.Boolean(), nullable=True),
+    sa.Column('avatar', sa.String(length=255), nullable=True),
     sa.ForeignKeyConstraint(['contractor_id'], ['contractors.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -114,7 +116,7 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('company_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('user_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
-    sa.Column('specialty_instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('specialty_instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
     sa.Column('fullname', sa.String(length=100), nullable=False),
     sa.Column('document', sa.String(length=100), nullable=False),
     sa.Column('indentity_number', sa.String(length=100), nullable=True),
@@ -165,13 +167,14 @@ def upgrade():
     sa.Column('contractor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
     sa.Column('fullname', sa.String(length=255), nullable=False),
     sa.Column('birthday', sa.Date(), nullable=True),
+    sa.Column('allergy', sa.String(length=20), nullable=True),
     sa.Column('genere', sa.Enum('FEMALE', 'MALE', 'OTHERS', name='genere'), nullable=False),
     sa.Column('document', sa.String(length=20), nullable=True),
     sa.Column('indentity_number', sa.String(length=100), nullable=True),
     sa.Column('org_exp', sa.String(length=10), nullable=True),
     sa.Column('uf_exp', sa.String(length=5), nullable=True),
     sa.Column('nationality', sa.String(length=20), nullable=True),
-    sa.Column('email', sa.String(length=50), nullable=False),
+    sa.Column('email', sa.String(length=50), nullable=True),
     sa.Column('phone', sa.String(length=50), nullable=True),
     sa.Column('avatar', sa.String(length=255), nullable=True),
     sa.Column('informations', sa.String(length=500), nullable=True),
@@ -185,7 +188,7 @@ def upgrade():
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('contractor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('responsible_contract_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('responsible_contract_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
     sa.Column('address', sa.String(length=255), nullable=False),
     sa.Column('number', sa.Integer(), nullable=False),
     sa.Column('complement', sa.String(length=60), nullable=True),
@@ -195,25 +198,6 @@ def upgrade():
     sa.Column('state', sa.String(length=2), nullable=False),
     sa.ForeignKeyConstraint(['contractor_id'], ['contractors.id'], ),
     sa.ForeignKeyConstraint(['responsible_contract_id'], ['contract_responsibles.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('grids',
-    sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('deleted', sa.Boolean(), nullable=False),
-    sa.Column('created_date', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('skill_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('student_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
-    sa.Column('date_schedule', sa.DateTime(), nullable=False),
-    sa.Column('time_preview', sa.String(length=20), nullable=False),
-    sa.Column('observation', sa.String(length=255), nullable=True),
-    sa.Column('date_start', sa.DateTime(), nullable=True),
-    sa.Column('date_finish', sa.DateTime(), nullable=True),
-    sa.Column('status', sa.Enum('IN_PROGRESS', 'PAUSED', 'CANCELED', 'DONE', name='statusgrid'), nullable=False),
-    sa.ForeignKeyConstraint(['instructor_id'], ['instructors.id'], ),
-    sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
-    sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('instructor_address',
@@ -232,22 +216,45 @@ def upgrade():
     sa.ForeignKeyConstraint(['instructor_id'], ['instructors.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('results',
+    op.create_table('schedules',
     sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('deleted', sa.Boolean(), nullable=False),
     sa.Column('created_date', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('procedure_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('student_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('company_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
-    sa.Column('attempts', sa.Integer(), nullable=True),
-    sa.Column('points_made', sa.String(length=255), nullable=False),
-    sa.Column('anotations', sa.String(length=255), nullable=True),
-    sa.Column('date_start', sa.DateTime(), nullable=True),
-    sa.Column('date_finish', sa.DateTime(), nullable=True),
+    sa.Column('student_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
+    sa.Column('skill_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
+    sa.Column('title', sa.String(length=20), nullable=False),
+    sa.Column('start', sa.DateTime(), nullable=False),
+    sa.Column('end', sa.DateTime(), nullable=False),
+    sa.Column('status', sa.Enum('SCHEDULED', 'IN_PROGRESS', 'PAUSED', 'CANCELED', 'DONE', name='statusschedule'), nullable=False),
+    sa.Column('details', sa.String(length=255), nullable=True),
+    sa.Column('event_begin', sa.DateTime(), nullable=True),
+    sa.Column('event_finish', sa.DateTime(), nullable=True),
+    sa.Column('event_user_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
+    sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
+    sa.ForeignKeyConstraint(['event_user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['instructor_id'], ['instructors.id'], ),
-    sa.ForeignKeyConstraint(['procedure_id'], ['procedures.id'], ),
+    sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('executions',
+    sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('deleted', sa.Boolean(), nullable=False),
+    sa.Column('created_date', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('schedule_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('procedure_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('trie', sa.Integer(), nullable=False),
+    sa.Column('time', sa.String(length=255), nullable=False),
+    sa.Column('success', sa.Boolean(), nullable=False),
+    sa.Column('user_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('help_type', sa.Enum('DEPENDENT', 'INDEPENDENT', name='helptypeexecution'), nullable=False),
+    sa.ForeignKeyConstraint(['procedure_id'], ['procedures.id'], ),
+    sa.ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
@@ -255,9 +262,9 @@ def upgrade():
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('results')
+    op.drop_table('executions')
+    op.drop_table('schedules')
     op.drop_table('instructor_address')
-    op.drop_table('grids')
     op.drop_table('contract_address')
     op.drop_table('students')
     op.drop_table('procedures')

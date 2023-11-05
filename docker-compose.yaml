@@ -5,7 +5,7 @@ services:
     build: .
     container_name: app_follow-up
     env_file:
-          - .env
+      - .env
     command: python main.py
     volumes:
       - .:/app
@@ -18,8 +18,23 @@ services:
       - alembic
     networks:
       - app-network
-   
-    
+
+  webserver:
+    image: nginx:alpine
+    container_name: webserver_follow_up
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./docker-compose/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./docker-compose/certificates:/etc/nginx/crtf
+    networks:
+      - app-network
+    depends_on:
+      - app-follow_up
+
   alembic:
     build: .
     container_name: alembic-follow-up

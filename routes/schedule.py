@@ -159,3 +159,16 @@ async def get_today(current_user: User = Depends(get_current_user), session: Ses
     all_itens: Schedule = Schedule.query(
         session).filter(Schedule.start >= start_of_day, Schedule.start <= end_of_day, Schedule.status == StatusSchedule.SCHEDULED).all()
     return [ScheduleOut.from_orm(x) for x in all_itens]
+
+
+@router.get('/avalible-instructor', summary='Return schedule list', response_model=List[ScheduleOut], tags=[tags])
+async def get_all(current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+    instructor: Instructor = Instructor.query(session).filter(
+        Instructor.user_id == current_user.id).first()
+    if not instructor:
+        raise HTTPException(status_code=404, detail='instructor not found')
+
+    all_itens: Schedule = Schedule.query(
+        session).filter(Schedule.instructor_id == instructor.id, Schedule.status == StatusSchedule.SCHEDULED).all()
+
+    return [ScheduleOut.from_orm(x) for x in all_itens]

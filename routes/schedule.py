@@ -9,6 +9,8 @@ from db.models import StatusSchedule, Student, User, Instructor, Schedule, Skill
 from schemas.schedule_schemas import ScheduleIn, ScheduleOut, ScheduleEvent
 from db.mongo import Mongo
 from datetime import datetime, date
+from sqlalchemy.sql.functions import func
+
 
 router = APIRouter()
 
@@ -161,14 +163,37 @@ async def get_today(current_user: User = Depends(get_current_user), session: Ses
     return [ScheduleOut.from_orm(x) for x in all_itens]
 
 
-@router.get('/avalible-instructor', summary='Return schedule list', response_model=List[ScheduleOut], tags=[tags])
+@router.get('/avalible-instructor', summary='Return schedule list', tags=[tags])
 async def get_all(current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     instructor: Instructor = Instructor.query(session).filter(
         Instructor.user_id == current_user.id).first()
     if not instructor:
         raise HTTPException(status_code=404, detail='instructor not found')
 
-    all_itens: Schedule = Schedule.query(
-        session).filter(Schedule.instructor_id == instructor.id, Schedule.status == StatusSchedule.SCHEDULED).all()
+    stmt = session.query(func.date(Schedule.start), func.count('*')).filter(
+        Schedule.instructor_id == instructor.id, Schedule.status == StatusSchedule.SCHEDULED).group_by(func.date(Schedule.start)).all()
 
-    return [ScheduleOut.from_orm(x) for x in all_itens]
+    response = []
+    for item in stmt:
+        schedules: Schedule = Schedule.query(session).filter(
+            Schedule.instructor_id == instructor.id,
+            Schedule.status == StatusSchedule.SCHEDULED,
+            func.date(Schedule.start) == item[0]
+        ).order_by(Schedule.start.asc()).all()
+        data = []
+        for schd in schedules:
+            lst = {
+                'day': schd.start.day,
+                'hour_start': schd.start.hour,
+                'min_start': schd.start.minute,
+                'hour_end': schd.end.hour,
+                'min_end': schd.end.minute,
+                'name': schd.student.fullname,
+                'avatar': schd.student.avatar,
+                'height': 80,
+            }
+            data.append(lst)
+        obj = {item[0]: data}
+        response.append(obj)
+
+    return response

@@ -1,9 +1,0 @@
----
-- model: db.models.User
-  fields:
-    fullname: dev
-    email: dev@icontact.com
-    permission: Admin
-    username: dev
-    document: 00000001
-

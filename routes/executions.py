@@ -34,7 +34,7 @@ async def create(execute_in: ExecutionIn, current_user: User = Depends(get_curre
         procedure_id=execute_in.procedure_id,
         trie=execute_in.trie,
         time=execute_in.time,
-        help=execute_in.help_type,
+        help_type=execute_in.help_type,
         user_id=current_user.id,
         success=execute_in.success,
     )

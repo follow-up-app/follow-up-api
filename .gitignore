@@ -7,7 +7,9 @@ __pycache__/
 *.so
 
 ### Folders ###
-storage/*
+storage/instructors/avatar/*
+storage/students/avatar/*
+storage/users/avatar/*
 
 # Distribution / packaging
 .Python

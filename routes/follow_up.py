@@ -37,15 +37,17 @@ async def get_id(id: UUID, current_user: User = Depends(get_current_user), sessi
 
     results = []
     for procedure in skil.procedures:
-        excutions: Execution = Execution.query(session).filter(
-            Execution.procedure_id == procedure.id, Execution.schedule_id == id)
-        procedure.points = excutions.filter(
-            Execution.success == True).count() / procedure.tries * 100
-        procedure.executions = excutions.all()
-        results.append(procedure)
-
-    schedule.results = results
-
+        procedure.points = 0
+        executions: Execution = Execution.query(session).filter(
+            Execution.procedure_id == procedure.id, Execution.schedule_id == id).all()
+        if executions:
+            procedure.points = round(Execution.query(session).filter(
+                Execution.procedure_id == procedure.id, 
+                Execution.schedule_id == id, 
+                Execution.success == True).count() / procedure.tries * 100, 2)
+            results.append(procedure)
+            
+    schedule.results = results  
     return ScheduleFollowUp.from_orm(schedule)
 
 
@@ -57,8 +59,9 @@ async def get_filters(filters: Filters, current_user: User = Depends(get_current
     schedules = Schedule.query(session).filter(Schedule.start >= start,
                                                Schedule.start <= end)
     if filters.student_id is not None:
-         all_itens = schedules.filter(Schedule.student_id == filters.student_id).all()
-        
+        all_itens = schedules.filter(
+            Schedule.student_id == filters.student_id).all()
+
     else:
         all_itens = schedules.all()
 

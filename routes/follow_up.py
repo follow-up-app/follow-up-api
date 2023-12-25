@@ -42,12 +42,38 @@ async def get_id(id: UUID, current_user: User = Depends(get_current_user), sessi
             Execution.procedure_id == procedure.id, Execution.schedule_id == id).all()
         if executions:
             procedure.points = round(Execution.query(session).filter(
-                Execution.procedure_id == procedure.id, 
-                Execution.schedule_id == id, 
+                Execution.procedure_id == procedure.id,
+                Execution.schedule_id == id,
                 Execution.success == True).count() / procedure.tries * 100, 2)
             results.append(procedure)
-            
-    schedule.results = results  
+
+    schedule.results = results
+    return ScheduleFollowUp.from_orm(schedule)
+
+
+@router.get('/mobile-schedule/{id}', summary='Return result details', tags=[tags])
+async def get_id(id: UUID, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+    schedule: Schedule = Schedule.query(
+        session).filter(Schedule.id == id).first()
+    if not schedule:
+        raise HTTPException(status_code=404, detail='schedule not found')
+
+    skil: Skill = Skill.query(session).filter(
+        Skill.id == schedule.skill_id).first()
+    if not skil:
+        raise HTTPException(status_code=404, detail='skill not found')
+
+    for procedure in skil.procedures:
+        executions: Execution = Execution.query(session).filter(
+            Execution.procedure_id == procedure.id, Execution.schedule_id == id).count()
+
+        procedure.total_exec = int(executions)
+        procedure.data_chart = round(executions / procedure.tries, 2)
+                       
+        procedure.app_active = True
+        if executions >= procedure.tries:
+            procedure.app_active = False
+
     return ScheduleFollowUp.from_orm(schedule)
 
 

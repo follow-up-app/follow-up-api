@@ -34,6 +34,10 @@ class ProcedureOut(BaseModel):
     consequence: Optional[str]
     materials: Optional[str]
     help: Optional[str]
+    points: Optional[float]
+    total_exec: Optional[int]
+    data_chart: Optional[float]
+    app_active: Optional[bool]
 
     class Config:
         orm_mode = True

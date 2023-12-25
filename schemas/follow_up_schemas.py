@@ -47,7 +47,7 @@ class ScheduleFollowUp(BaseModel):
     skill: Optional[SkillOut]
     created_date: datetime
     updated_at: datetime
-    results: List[FollowUpResult]
+    results: Optional[List[FollowUpResult]]
 
     class Config:
         orm_mode = True

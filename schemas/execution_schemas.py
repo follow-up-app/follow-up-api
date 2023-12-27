@@ -3,14 +3,14 @@ from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel
 from schemas.procedure_schemas import ProcedureOut
-from db.models import HelpTypeExecution
+from db.models import TypeHelp
 
 class ExecutionIn(BaseModel):
     schedule_id: UUID
     procedure_id: UUID
     trie: int
     time: str
-    help_type: HelpTypeExecution
+    help_type: TypeHelp
     success: bool
 
 
@@ -20,7 +20,7 @@ class ExecutionOut(BaseModel):
     procedure_id: UUID
     trie: int
     time: str
-    # help_type: Optional[HelpTypeExecution]
+    help_type: Optional[TypeHelp]
     success: bool
     user_id: UUID
     created_date: datetime

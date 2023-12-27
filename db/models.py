@@ -86,18 +86,23 @@ class StatusSchedule(enum.Enum):
     PAUSED: str = 'PAUSADO'
     CANCELED: str = 'CANCELADO'
     DONE: str = 'CONCLUÍDO'
-    
+        
     
 class StatusExecuteProcedure(enum.Enum):
     IN_PROGRESS: str = 'EM ANDAMENTO'
     PAUSED: str = 'PAUSADO'
     CANCELED: str = 'CANCELADO'
     DONE: str = 'CONCLUÍDO'
+  
     
-    
-class HelpTypeExecution(enum.Enum):
+class TypeHelp(enum.Enum):
     DEPENDENT: str = 'DEPENDENTE'
     INDEPENDENT: str = 'INDEPENDENTE'
+    POSITIONAL: str = 'POSICIONAL'
+    GESTURE: str = 'GESTUAL'
+    VERBAL: str = 'VERBAL'
+    PHYSICAL: str = 'FÍSICA'
+    VISUAL: str = 'VISUAL'
 
 
 class Company(ModelBase):
@@ -358,13 +363,12 @@ class Execution(ModelBase):
     
     procedure_id = Column(UUIDType(binary=False),
                           ForeignKey(Procedure.id), nullable=False)
-    
     trie = Column(Integer(), nullable=False)
     time = Column(String(255), nullable=False)
     success = Column(Boolean(), nullable=False)
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=False)
-    help_type = Column(Enum(HelpTypeExecution), nullable=False)
+    help_type = Column(Enum(TypeHelp), nullable=False)
     
     procedure = relationship('Procedure', back_populates='executions')
     

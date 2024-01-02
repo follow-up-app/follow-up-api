@@ -180,9 +180,9 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
             Schedule.status == StatusSchedule.SCHEDULED,
             func.date(Schedule.start) == item[0]
         ).order_by(Schedule.start.asc()).all()
-        
+
         response[item[0]] = []
-        
+
         for schd in schedules:
             lst = {
                 'id': schd.id,
@@ -191,11 +191,12 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
                 'min_start': schd.start.minute,
                 'hour_end': schd.end.hour,
                 'min_end': schd.end.minute,
+                'student': schd.student.id,
                 'name': schd.student.fullname,
                 'avatar': schd.student.avatar,
                 'height': 80,
             }
-            
+
             response[item[0]].append(lst)
 
     return response

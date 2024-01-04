@@ -18,8 +18,7 @@ tags: str = "Follow-up"
 
 @router.get('/', summary='Return follow-up list', response_model=List[ScheduleOut], tags=[tags])
 async def get_all(current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
-    all_itens = Schedule.query(session).filter(~Schedule.status.in_(
-        [StatusSchedule.SCHEDULED])).order_by(Schedule.updated_at.desc()).all()
+    all_itens = Schedule.query(session).order_by(Schedule.updated_at.desc()).all()
     return [ScheduleOut.from_orm(x) for x in all_itens]
 
 

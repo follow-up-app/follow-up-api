@@ -36,7 +36,7 @@ async def create(execute_in: ExecutionIn, current_user: User = Depends(get_curre
         time=execute_in.time,
         help_type=execute_in.help_type,
         user_id=current_user.id,
-        success=execute_in.success,
+        success=True,
     )
     session.add(execution)
     session.commit()

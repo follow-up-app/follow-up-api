@@ -43,6 +43,7 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
         title=schedule_in.title,
         instructor_id=schedule_in.instructor_id,
         details=schedule_in.details,
+        color=schedule_in.color,
         status=StatusSchedule.SCHEDULED
     )
     session.add(schedule)
@@ -108,6 +109,7 @@ async def update(id: UUID, schedule_in: ScheduleIn, current_user: User = Depends
     schedule.start = schedule_in.schedule_in
     schedule.end = schedule_in.schedule_out
     schedule.details = schedule_in.details
+    schedule.color = schedule_in.color
 
     session.add(schedule)
     session.commit()

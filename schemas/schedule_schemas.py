@@ -13,6 +13,7 @@ class ScheduleIn(BaseModel):
     skill_id:Optional[UUID]
     title: str
     details: Optional[str]
+    color: Optional[str]
     status: Optional[StatusSchedule]
     schedule_in: datetime
     schedule_out: datetime
@@ -29,6 +30,7 @@ class ScheduleOut(BaseModel):
     title: str
     start: datetime
     end: datetime
+    color: Optional[str]
     details: Optional[str]
     event_begin: Optional[datetime]
     event_finish: Optional[datetime]

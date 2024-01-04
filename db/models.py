@@ -349,6 +349,7 @@ class Schedule(ModelBase):
     event_finish = Column(DateTime, nullable=True)
     event_user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=True)
+    color = Column(String(255), nullable=True)
 
     instructor = relationship('Instructor', back_populates='schedule')
     student = relationship('Student', back_populates='schedule')

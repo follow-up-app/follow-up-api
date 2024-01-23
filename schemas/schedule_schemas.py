@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, constr, Field
-from db.models import StatusSchedule
+from db.models import StatusSchedule, EventRepeat
 from schemas.instructor_schema import InstructorOut
 from schemas.student_schemas import StudentOut
 from schemas.skill_schemas import SkillOut
@@ -10,13 +10,14 @@ from schemas.skill_schemas import SkillOut
 class ScheduleIn(BaseModel):
     student_id: Optional[UUID]
     instructor_id: Optional[UUID]
-    skill_id:Optional[UUID]
-    title: str
+    skill_id: Optional[UUID]
+    start_hour: str
+    end_hour: str
+    repeat: EventRepeat
+    period: Optional[int]
     details: Optional[str]
     color: Optional[str]
-    status: Optional[StatusSchedule]
-    schedule_in: datetime
-    schedule_out: datetime
+    schedule_in: date
     
 class ScheduleEvent(BaseModel):
     status: StatusSchedule
@@ -27,9 +28,14 @@ class ScheduleOut(BaseModel):
     student_id: Optional[UUID]
     instructor_id: Optional[UUID]
     skill_id:Optional[UUID]
+    event_id: Optional[UUID]
     title: str
     start: datetime
     end: datetime
+    start_hour: Optional[str]
+    end_hour: Optional[str]
+    repeat: Optional[EventRepeat]
+    period: Optional[str]
     color: Optional[str]
     details: Optional[str]
     event_begin: Optional[datetime]

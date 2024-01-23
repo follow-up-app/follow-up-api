@@ -104,6 +104,11 @@ class TypeHelp(enum.Enum):
     PHYSICAL: str = 'FÍSICA'
     VISUAL: str = 'VISUAL'
 
+class EventRepeat(enum.Enum):
+    NO: str = 'NÃO'
+    WEEK: str = 'SEMANALMENTE'
+    MOUTH: str = 'MENSALMENTE'
+
 
 class Company(ModelBase):
     __tablename__ = 'companies'
@@ -324,7 +329,7 @@ class Procedure(ModelBase):
     skill = relationship('Skill', back_populates='procedures')
     skill_name = association_proxy('skill', 'name')
     
-    executions = relationship('Execution', back_populates='procedure')
+    # executions = relationship('Execution', back_populates='procedure')
 
 
 class Schedule(ModelBase):
@@ -339,9 +344,14 @@ class Schedule(ModelBase):
     skill_id = Column(UUIDType(binary=False),
                       ForeignKey(Skill.id), nullable=True)
 
+    event_id = Column(UUIDType(binary=False), nullable=True)
     title = Column(String(20), nullable=False)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
+    start_hour = Column(String(20), nullable=True)
+    end_hour = Column(String(20), nullable=True)
+    repeat = Column(Enum(EventRepeat), nullable=True)
+    period = Column(String(20), nullable=True)
     status = Column(Enum(StatusSchedule), nullable=False)
     details = Column(String(255), nullable=True)
     
@@ -371,5 +381,5 @@ class Execution(ModelBase):
                      ForeignKey(User.id), nullable=False)
     help_type = Column(Enum(TypeHelp), nullable=False)
     
-    procedure = relationship('Procedure', back_populates='executions')
+    # procedure = relationship('Procedure', back_populates='executions')
     

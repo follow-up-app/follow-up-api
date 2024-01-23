@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel
+from schemas.execution_schemas import ExecutionOut
 
 class ProcedureIn(BaseModel):
     skill_id: UUID
@@ -38,6 +39,7 @@ class ProcedureOut(BaseModel):
     total_exec: Optional[int]
     data_chart: Optional[float]
     app_active: Optional[bool]
+    executions: Optional[List[ExecutionOut]]
 
     class Config:
         orm_mode = True

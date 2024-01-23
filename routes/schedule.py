@@ -2,14 +2,14 @@ from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from starlette import status
 from core.security import check_is_admin_user, get_current_user
 from db import get_db
-from db.models import StatusSchedule, Student, User, Instructor, Schedule, Skill
+from db.models import StatusSchedule, Student, User, Instructor, Schedule, Skill, EventRepeat, Execution
 from schemas.schedule_schemas import ScheduleIn, ScheduleOut, ScheduleEvent
 from db.mongo import Mongo
 from datetime import datetime, date
 from sqlalchemy.sql.functions import func
+from core.event import Event
 
 
 router = APIRouter()
@@ -34,32 +34,48 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
     if not skill:
         raise HTTPException(status_code=404, detail='skill not found')
 
-    schedule: Schedule = Schedule(
-        company_id=current_user.company_id,
-        skill_id=schedule_in.skill_id,
-        student_id=schedule_in.student_id,
-        start=schedule_in.schedule_in,
-        end=schedule_in.schedule_out,
-        title=schedule_in.title,
-        instructor_id=schedule_in.instructor_id,
-        details=schedule_in.details,
-        color=schedule_in.color,
-        status=StatusSchedule.SCHEDULED
-    )
-    session.add(schedule)
-    session.commit()
+    if schedule_in.repeat == EventRepeat.WEEK:
+        event = Event()
+        events = event.weeks(
+            current_user=current_user,
+            session=session,
+            event=schedule_in,
+            instructor=instructor,
+            student=student,
+            skill=skill)
+
+    if schedule_in.repeat == EventRepeat.MOUTH:
+        event = Event()
+        events = event.mouths(
+            current_user=current_user,
+            session=session,
+            event=schedule_in,
+            instructor=instructor,
+            student=student,
+            skill=skill)
+
+    if schedule_in.repeat == EventRepeat.NO:
+        event = Event()
+        events = event.unique(
+            current_user=current_user,
+            session=session,
+            event=schedule_in,
+            instructor=instructor,
+            student=student,
+            skill=skill)
 
     # save notifications
-    mongo = Mongo()
-    mongo.create_schedule_notitification(instructor.user_id, schedule.id)
-    mongo.create_event_admin(session, schedule.id)
+    # mongo = Mongo()
+    # mongo.create_schedule_notitification(instructor.user_id, schedule.id)
+    # mongo.create_event_admin(session, schedule.id)
 
-    return ScheduleOut.from_orm(schedule)
+    return [ScheduleOut.from_orm(x) for x in events]
 
 
 @router.get('/', summary='Return schedule list', response_model=List[ScheduleOut], tags=[tags])
 async def get_all(current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
-    all_itens = Schedule.query(session).all()
+    all_itens = Schedule.query(session).filter(
+        Schedule.status == StatusSchedule.SCHEDULED).all()
     return [ScheduleOut.from_orm(x) for x in all_itens]
 
 
@@ -80,46 +96,21 @@ async def get_id(id: UUID, current_user: User = Depends(get_current_user), sessi
     return ScheduleOut.from_orm(schedule)
 
 
-@router.put('/{id}', summary='Update schedule', tags=[tags], response_model=ScheduleOut)
-async def update(id: UUID, schedule_in: ScheduleIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    schedule: Schedule = Schedule.query(
-        session).filter(Schedule.id == id).first()
-    if not schedule:
+@router.delete('/events/{event_id}', summary='Remove all schedules', tags=[tags])
+async def delete_all(event_id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    schedules: Schedule = Schedule.query(
+        session).filter(Schedule.event_id == event_id).all()
+    if not schedules:
         raise HTTPException(status_code=404, detail='schedule not found')
 
-    student: Student = Student.query(session).filter(
-        Student.id == schedule_in.student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail='student not found')
+    for schedule in schedules:
+        executions: Execution = Execution.query(session).filter(
+            Execution.schedule_id == schedule.id).first()
+        if not executions:
+            session.delete(schedule)
+            session.commit()
 
-    instructor: Instructor = Instructor.query(session).filter(
-        Instructor.id == schedule_in.instructor_id).first()
-    if not instructor:
-        raise HTTPException(status_code=404, detail='instructor not found')
-
-    skill: Skill = Skill.query(session).filter(
-        Skill.id == schedule_in.skill_id).first()
-    if not skill:
-        raise HTTPException(status_code=404, detail='skill not found')
-
-    schedule.title = schedule_in.title
-    schedule.skill_id = schedule_in.skill_id
-    schedule.instructor_id = schedule_in.instructor_id
-    schedule.student_id = schedule_in.student_id
-    schedule.start = schedule_in.schedule_in
-    schedule.end = schedule_in.schedule_out
-    schedule.details = schedule_in.details
-    schedule.color = schedule_in.color
-
-    session.add(schedule)
-    session.commit()
-
-    # save notifications
-    mongo = Mongo()
-    mongo.update_schedule_notitification(instructor.user_id, schedule.id)
-    mongo.update_event_admin(session, schedule.id)
-
-    return ScheduleOut.from_orm(schedule)
+    return {'status_code': 200, 'message': 'Events deleteds'}
 
 
 @router.delete('/{id}', summary='Delete schedule', tags=[tags])
@@ -130,6 +121,8 @@ async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), se
         raise HTTPException(status_code=404, detail='schedule not found')
     session.delete(schedule)
     session.commit()
+
+    return {'status_code': 200, 'message': 'Events deleteds'}
 
 
 @router.put('/{id}/update', summary='Update status schedule', tags=[tags])
@@ -173,7 +166,8 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
         raise HTTPException(status_code=404, detail='instructor not found')
 
     stmt = session.query(func.date(Schedule.start)).filter(
-        Schedule.instructor_id == instructor.id, Schedule.status == StatusSchedule.SCHEDULED).group_by(func.date(Schedule.start)).all()
+        Schedule.instructor_id == instructor.id, Schedule.status == StatusSchedule.SCHEDULED
+    ).group_by(func.date(Schedule.start)).order_by(func.date(Schedule.start)).all()
 
     response = {}
     for item in stmt:
@@ -198,7 +192,6 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
                 'avatar': schd.student.avatar,
                 'height': 80,
             }
-
             response[item[0]].append(lst)
 
     return response

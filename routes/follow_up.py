@@ -2,14 +2,12 @@ from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from starlette import status
-from core.security import check_is_admin_user, get_current_user
+from core.security import get_current_user
 from db import get_db
-from db.models import StatusSchedule, Student, User, Instructor, Schedule, Skill, Procedure, Execution
-from schemas.schedule_schemas import ScheduleIn, ScheduleOut, ScheduleEvent
-from db.mongo import Mongo
-from datetime import datetime, date
-from schemas.follow_up_schemas import FollowUpResult, ScheduleFollowUp, Filters
+from db.models import User, Schedule, Skill, Execution, TypeHelp
+from schemas.schedule_schemas import ScheduleOut
+from datetime import datetime
+from schemas.follow_up_schemas import ScheduleFollowUp, Filters
 
 router = APIRouter()
 
@@ -18,7 +16,8 @@ tags: str = "Follow-up"
 
 @router.get('/', summary='Return follow-up list', response_model=List[ScheduleOut], tags=[tags])
 async def get_all(current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
-    all_itens = Schedule.query(session).order_by(Schedule.updated_at.desc()).all()
+    all_itens = Schedule.query(session).order_by(
+        Schedule.updated_at.desc()).all()
     return [ScheduleOut.from_orm(x) for x in all_itens]
 
 
@@ -35,15 +34,18 @@ async def get_id(id: UUID, current_user: User = Depends(get_current_user), sessi
         raise HTTPException(status_code=404, detail='skill not found')
 
     results = []
+    executions = []
     for procedure in skil.procedures:
         procedure.points = 0
         executions: Execution = Execution.query(session).filter(
-            Execution.procedure_id == procedure.id, Execution.schedule_id == id).all()
+            Execution.procedure_id == procedure.id, 
+            Execution.schedule_id == id).order_by(Execution.trie).all()
         if executions:
             procedure.points = round(Execution.query(session).filter(
                 Execution.procedure_id == procedure.id,
                 Execution.schedule_id == id,
-                Execution.success == True).count() / procedure.tries * 100, 2)
+                Execution.help_type == TypeHelp.INDEPENDENT).count() / procedure.tries * 100, 2)
+            procedure.executions = executions
             results.append(procedure)
 
     schedule.results = results
@@ -68,7 +70,7 @@ async def get_id(id: UUID, current_user: User = Depends(get_current_user), sessi
 
         procedure.total_exec = int(executions)
         procedure.data_chart = round(executions / procedure.tries, 2)
-                       
+
         procedure.app_active = True
         if executions >= procedure.tries:
             procedure.app_active = False

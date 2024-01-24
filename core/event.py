@@ -31,8 +31,8 @@ class Event:
 
             instructor_e: Schedule = Schedule.query(session).filter(
                 Schedule.instructor_id == instructor.id,
-                ((date_schedule_in >= Schedule.start) & (date_schedule_in <= Schedule.end)) | (
-                    (date_schedule_out >= Schedule.start) & (date_schedule_out <= Schedule.end))
+                ((date_schedule_in >= Schedule.start) & (date_schedule_in < Schedule.end)) | (
+                    (date_schedule_out > Schedule.start) & (date_schedule_out <= Schedule.end))
             ).first()
             if instructor_e:
                 raise HTTPException(
@@ -40,8 +40,8 @@ class Event:
 
             student_e: Schedule = Schedule.query(session).filter(
                 Schedule.student_id == student.id,
-                ((date_schedule_in >= Schedule.start) & (date_schedule_in <= Schedule.end)) | (
-                    (date_schedule_out >= Schedule.start) & (date_schedule_out <= Schedule.end))
+                ((date_schedule_in >= Schedule.start) & (date_schedule_in < Schedule.end)) | (
+                    (date_schedule_out > Schedule.start) & (date_schedule_out <= Schedule.end))
             ).first()
             if student_e:
                 raise HTTPException(
@@ -95,8 +95,8 @@ class Event:
 
             instructor_e: Schedule = Schedule.query(session).filter(
                 Schedule.instructor_id == instructor.id,
-                ((date_schedule_in >= Schedule.start) & (date_schedule_in <= Schedule.end)) | (
-                    (date_schedule_out >= Schedule.start) & (date_schedule_out <= Schedule.end))
+                ((date_schedule_in >= Schedule.start) & (date_schedule_in < Schedule.end)) | (
+                    (date_schedule_out > Schedule.start) & (date_schedule_out <= Schedule.end))
             ).first()
             if instructor_e:
                 raise HTTPException(
@@ -104,8 +104,8 @@ class Event:
 
             student_e: Schedule = Schedule.query(session).filter(
                 Schedule.student_id == student.id,
-                ((date_schedule_in >= Schedule.start) & (date_schedule_in <= Schedule.end)) | (
-                    (date_schedule_out >= Schedule.start) & (date_schedule_out <= Schedule.end))
+                ((date_schedule_in >= Schedule.start) & (date_schedule_in < Schedule.end)) | (
+                    (date_schedule_out > Schedule.start) & (date_schedule_out <= Schedule.end))
             ).first()
             if student_e:
                 raise HTTPException(
@@ -158,15 +158,18 @@ class Event:
 
         instructor_e: Schedule = Schedule.query(session).filter(
             Schedule.instructor_id == instructor.id,
-            Schedule.start == date_schedule_in
+            ((date_schedule_in >= Schedule.start) & (date_schedule_in < Schedule.end)) | (
+                (date_schedule_out > Schedule.start) & (date_schedule_out <= Schedule.end))
         ).first()
+        
         if instructor_e:
             raise HTTPException(
                 status_code=504, detail='Profissional não esta disponível para estas datas')
 
         student_e: Schedule = Schedule.query(session).filter(
             Schedule.student_id == student.id,
-            Schedule.start == date_schedule_in
+            ((date_schedule_in >= Schedule.start) & (date_schedule_in < Schedule.end)) | (
+                (date_schedule_out > Schedule.start) & (date_schedule_out <= Schedule.end))
         ).first()
 
         if student_e:

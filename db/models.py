@@ -345,7 +345,7 @@ class Schedule(ModelBase):
                       ForeignKey(Skill.id), nullable=True)
 
     event_id = Column(UUIDType(binary=False), nullable=True)
-    title = Column(String(20), nullable=False)
+    title = Column(String(255), nullable=False)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
     start_hour = Column(String(20), nullable=True)

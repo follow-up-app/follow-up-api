@@ -11,8 +11,6 @@ services:
       - .:/app
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - "8081:8081"
     restart: unless-stopped
     depends_on:
       - alembic

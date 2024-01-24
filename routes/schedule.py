@@ -36,7 +36,7 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
 
     if schedule_in.repeat == EventRepeat.WEEK:
         event = Event()
-        events = event.weeks(
+        event.weeks(
             current_user=current_user,
             session=session,
             event=schedule_in,
@@ -46,7 +46,7 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
 
     if schedule_in.repeat == EventRepeat.MOUTH:
         event = Event()
-        events = event.mouths(
+        event.mouths(
             current_user=current_user,
             session=session,
             event=schedule_in,
@@ -56,7 +56,7 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
 
     if schedule_in.repeat == EventRepeat.NO:
         event = Event()
-        events = event.unique(
+        event.unique(
             current_user=current_user,
             session=session,
             event=schedule_in,
@@ -69,7 +69,7 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
     # mongo.create_schedule_notitification(instructor.user_id, schedule.id)
     # mongo.create_event_admin(session, schedule.id)
 
-    return [ScheduleOut.from_orm(x) for x in events]
+    return {'status': 200, 'message': 'Events created'}
 
 
 @router.get('/', summary='Return schedule list', response_model=List[ScheduleOut], tags=[tags])
@@ -110,7 +110,7 @@ async def delete_all(event_id: UUID, current_user: User = Depends(check_is_admin
             session.delete(schedule)
             session.commit()
 
-    return {'status_code': 200, 'message': 'Events deleteds'}
+    return {'status': 200, 'message': 'Events deleteds'}
 
 
 @router.delete('/{id}', summary='Delete schedule', tags=[tags])
@@ -122,7 +122,7 @@ async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), se
     session.delete(schedule)
     session.commit()
 
-    return {'status_code': 200, 'message': 'Events deleteds'}
+    return {'status': 200, 'message': 'Events deleteds'}
 
 
 @router.put('/{id}/update', summary='Update status schedule', tags=[tags])

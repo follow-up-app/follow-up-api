@@ -67,6 +67,7 @@ async def update(id: UUID, procedure_in: ProcedureIn, current_user: User = Depen
         raise HTTPException(status_code=404, detail='route not found')
 
     procedure.skill_id = procedure_in.skill_id
+    procedure.tries = procedure_in.tries
     procedure.name = procedure_in.name
     procedure.objective = procedure_in.objective
     procedure.stimulus = procedure_in.stimulus

@@ -67,13 +67,9 @@ async def get_id(id: UUID, current_user: User = Depends(get_current_user), sessi
     for procedure in skil.procedures:
         executions: Execution = Execution.query(session).filter(
             Execution.procedure_id == procedure.id, Execution.schedule_id == id).count()
-        
-        if executions == 0:
-            procedure.data_chart = round(0, 2)
-            
-        else:
-            procedure.total_exec = int(executions)
-            procedure.data_chart = round(executions / procedure.tries, 2)
+
+        procedure.total_exec = int(executions)
+        procedure.data_chart = round(executions / procedure.tries, 2)
 
         procedure.app_active = True
         if executions >= procedure.tries:

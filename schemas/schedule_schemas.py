@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel, constr, Field
 from db.models import StatusSchedule, EventRepeat
@@ -10,7 +10,7 @@ from schemas.skill_schemas import SkillOut
 class ScheduleIn(BaseModel):
     student_id: Optional[UUID]
     instructor_id: Optional[UUID]
-    skill_id: Optional[UUID]
+    skill_id: List[UUID]
     start_hour: str
     end_hour: str
     repeat: EventRepeat
@@ -23,11 +23,19 @@ class ScheduleEvent(BaseModel):
     status: StatusSchedule
 
 
+class SkillScehduleOut(BaseModel):
+    id: UUID
+    schedule_id: UUID
+    skill_id: UUID
+    skill_name: str
+    
+    class Config:
+        orm_mode = True
+
 class ScheduleOut(BaseModel):
     id: UUID
     student_id: Optional[UUID]
     instructor_id: Optional[UUID]
-    skill_id:Optional[UUID]
     event_id: Optional[UUID]
     title: str
     start: datetime
@@ -44,10 +52,12 @@ class ScheduleOut(BaseModel):
     status: Optional[StatusSchedule]
     student: Optional[StudentOut]
     instructor: Optional[InstructorOut]
-    skill: Optional[SkillOut]
+    skills:  Optional[List[SkillScehduleOut]]
     created_date: datetime
     updated_at: datetime
 
     class Config:
         orm_mode = True
+
+
 

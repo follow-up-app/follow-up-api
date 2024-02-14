@@ -1,20 +1,21 @@
-from db.models import Schedule, Skill, Instructor, Student, StatusSchedule
+from db.models import Schedule, Skill, Instructor, Student, StatusSchedule, SkillsSchedule
 from sqlalchemy.orm import Session
-from schemas.schedule_schemas import ScheduleIn, ScheduleOut, ScheduleEvent
+from schemas.schedule_schemas import ScheduleIn
 from fastapi import HTTPException
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import uuid
 
 
 class Event:
     @staticmethod
-    def weeks(current_user, session: Session, event: ScheduleIn, instructor: Instructor, student: Student, skill: Skill):
+    def weeks(current_user, session: Session, event: ScheduleIn, instructor: Instructor, student: Student):
         uuid.uuid4()
         days = event.period * 30
         max_date = event.schedule_in + timedelta(days=round(days))
         period_ = max_date - event.schedule_in
         period = round(period_.days / 7)
         events = []
+        skills_schedules = []
         event_id = uuid.uuid4()
         for _ in range(period):
             date_i = f'{event.schedule_in} {event.start_hour}'
@@ -25,9 +26,9 @@ class Event:
 
             if date_schedule_out <= date_schedule_in:
                 raise HTTPException(
-                    status_code=506, detail='A hora inicial deve ser menor que a hora final')
+                    status_code=406, detail='A hora inicial deve ser menor que a hora final')
 
-            title = student.fullname + ' - ' + skill.name
+            title = student.fullname + ' | ' + instructor.fullname
 
             instructor_e: Schedule = Schedule.query(session).filter(
                 Schedule.instructor_id == instructor.id,
@@ -36,7 +37,7 @@ class Event:
             ).first()
             if instructor_e:
                 raise HTTPException(
-                    status_code=504, detail='Profissional não esta disponível para estas datas')
+                    status_code=503, detail='Profissional não esta disponível para estas datas')
 
             student_e: Schedule = Schedule.query(session).filter(
                 Schedule.student_id == student.id,
@@ -45,11 +46,10 @@ class Event:
             ).first()
             if student_e:
                 raise HTTPException(
-                    status_code=505, detail='Cliente não esta disponível para estas datas')
+                    status_code=503, detail='Cliente não esta disponível para estas datas')
 
             schedule: Schedule = Schedule(
                 company_id=current_user.company_id,
-                skill_id=event.skill_id,
                 student_id=event.student_id,
                 event_id=event_id,
                 start=date_schedule_in,
@@ -66,20 +66,28 @@ class Event:
             )
             events.append(schedule)
             event.schedule_in += timedelta(days=7)
-        try:
-            session.add_all(events)
-            session.commit()
-        except:
-            raise HTTPException(status_code=500, detail="System error")
+        session.add_all(events)
+        session.flush()
+
+        for sch in events:
+            for skill in event.skill_id:
+                skill_schedule: SkillsSchedule = SkillsSchedule(
+                    schedule_id=sch.id,
+                    skill_id=skill,
+                )
+                skills_schedules.append(skill_schedule)
+
+        session.add_all(skills_schedules)
+        session.commit()
 
         return events
 
     @staticmethod
-    def mouths(current_user, session: Session, event: ScheduleIn, instructor: Instructor, student: Student, skill: Skill):
+    def mouths(current_user, session: Session, event: ScheduleIn, instructor: Instructor, student: Student):
         uuid.uuid4()
         event_id = uuid.uuid4()
+        skills_schedules = []
         events = []
-
         for _ in range(event.period):
             date_i = f'{event.schedule_in} {event.start_hour}'
             date_schedule_in = datetime.strptime(date_i, '%Y-%m-%d %H:%M')
@@ -89,9 +97,9 @@ class Event:
 
             if date_schedule_out <= date_schedule_in:
                 raise HTTPException(
-                    status_code=506, detail='A hora inicial deve ser menor que a hora final')
+                    status_code=406, detail='A hora inicial deve ser menor que a hora final')
 
-            title = student.fullname + ' - ' + skill.name
+            title = student.fullname + ' | ' + instructor.fullname
 
             instructor_e: Schedule = Schedule.query(session).filter(
                 Schedule.instructor_id == instructor.id,
@@ -100,7 +108,7 @@ class Event:
             ).first()
             if instructor_e:
                 raise HTTPException(
-                    status_code=504, detail='Profissional não esta disponível para estas datas')
+                    status_code=503, detail='Profissional não esta disponível para estas datas')
 
             student_e: Schedule = Schedule.query(session).filter(
                 Schedule.student_id == student.id,
@@ -109,11 +117,10 @@ class Event:
             ).first()
             if student_e:
                 raise HTTPException(
-                    status_code=505, detail='Cliente não esta disponível para estas datas')
+                    status_code=503, detail='Cliente não esta disponível para estas datas')
 
             schedule: Schedule = Schedule(
                 company_id=current_user.company_id,
-                skill_id=event.skill_id,
                 student_id=event.student_id,
                 event_id=event_id,
                 start=date_schedule_in,
@@ -130,19 +137,28 @@ class Event:
             )
             events.append(schedule)
             event.schedule_in += timedelta(days=30)
-        try:
-            session.add_all(events)
-            session.commit()
-        except:
-            raise HTTPException(status_code=500, detail="System error")
+        session.add_all(events)
+        session.flush()
+
+        for sch in events:
+            for skill in event.skill_id:
+                skill_schedule: SkillsSchedule = SkillsSchedule(
+                    schedule_id=sch.id,
+                    skill_id=skill,
+                )
+                skills_schedules.append(skill_schedule)
+
+        session.add_all(skills_schedules)
+        session.commit()
 
         return events
 
     @staticmethod
-    def unique(current_user, session: Session, event: ScheduleIn, instructor: Instructor, student: Student, skill: Skill):
+    def unique(current_user, session: Session, event: ScheduleIn, instructor: Instructor, student: Student):
         uuid.uuid4()
         event_id = uuid.uuid4()
         events = []
+        skills_schedules = []
 
         date_i = f'{event.schedule_in} {event.start_hour}'
         date_schedule_in = datetime.strptime(date_i, '%Y-%m-%d %H:%M')
@@ -154,14 +170,14 @@ class Event:
             raise HTTPException(
                 status_code=506, detail='A hora inicial deve ser menor que a hora final')
 
-        title = student.fullname + ' - ' + skill.name
+        title = student.fullname + ' | ' + instructor.fullname
 
         instructor_e: Schedule = Schedule.query(session).filter(
             Schedule.instructor_id == instructor.id,
             ((date_schedule_in >= Schedule.start) & (date_schedule_in < Schedule.end)) | (
                 (date_schedule_out > Schedule.start) & (date_schedule_out <= Schedule.end))
         ).first()
-        
+
         if instructor_e:
             raise HTTPException(
                 status_code=504, detail='Profissional não esta disponível para estas datas')
@@ -178,7 +194,6 @@ class Event:
 
         schedule: Schedule = Schedule(
             company_id=current_user.company_id,
-            skill_id=event.skill_id,
             student_id=event.student_id,
             event_id=event_id,
             start=date_schedule_in,
@@ -194,10 +209,18 @@ class Event:
             status=StatusSchedule.SCHEDULED
         )
         events.append(schedule)
-        try:
-            session.add_all(events)
-            session.commit()
-        except:
-            raise HTTPException(status_code=500, detail="System error")
+
+        session.add_all(events)
+        session.flush()
+        for sch in events:
+            for skill in event.skill_id:
+                skill_schedule: SkillsSchedule = SkillsSchedule(
+                    schedule_id=sch.id,
+                    skill_id=skill,
+                )
+                skills_schedules.append(skill_schedule)
+
+        session.add_all(skills_schedules)
+        session.commit()
 
         return events

@@ -10,8 +10,6 @@ class ExecutionIn(BaseModel):
     trie: int
     time: str
     help_type: TypeHelp
-    # success: bool
-
 
 class ExecutionOut(BaseModel):
     id: UUID

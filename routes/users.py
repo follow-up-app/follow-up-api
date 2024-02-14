@@ -85,11 +85,11 @@ async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depen
     session.add(user)
     session.commit()
 
-    mailer = Mailer()
-    mailer.welcome_user(user)
+    # mailer = Mailer()
+    # mailer.welcome_user(user)
 
-    mongo = Mongo()
-    mongo.welcome_app(user)
+    # mongo = Mongo()
+    # mongo.welcome_app(user)
 
     return UserOut.from_orm(user)
 
@@ -118,8 +118,7 @@ async def update(id: UUID, user_schema: UserRegisterSchemaIn, current_user: User
     user.fullname = user_schema.fullname
     user.document = user_schema.document
     user.email = user_schema.email
-    user.permission = user_schema.permission
-    user.image_path = user_schema.image_path
+    user.position = user_schema.position.upper(),
 
     session.add(user)
     session.commit()

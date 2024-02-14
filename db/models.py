@@ -85,16 +85,17 @@ class StatusSchedule(enum.Enum):
     IN_PROGRESS: str = 'EM ANDAMENTO'
     PAUSED: str = 'PAUSADO'
     CANCELED: str = 'CANCELADO'
+    DID_NOT_ATTEND: str = 'NÃO COMPARECEU'
     DONE: str = 'CONCLUÍDO'
-        
-    
+
+
 class StatusExecuteProcedure(enum.Enum):
     IN_PROGRESS: str = 'EM ANDAMENTO'
     PAUSED: str = 'PAUSADO'
     CANCELED: str = 'CANCELADO'
     DONE: str = 'CONCLUÍDO'
-  
-    
+
+
 class TypeHelp(enum.Enum):
     DEPENDENT: str = 'DEPENDENTE'
     INDEPENDENT: str = 'INDEPENDENTE'
@@ -104,11 +105,12 @@ class TypeHelp(enum.Enum):
     PHYSICAL: str = 'FÍSICA'
     VISUAL: str = 'VISUAL'
 
+
 class EventRepeat(enum.Enum):
     NO: str = 'NÃO'
     WEEK: str = 'SEMANALMENTE'
     MOUTH: str = 'MENSALMENTE'
-
+    
 
 class Company(ModelBase):
     __tablename__ = 'companies'
@@ -153,9 +155,9 @@ class Contractor(ModelBase):
         'ResponsibleContract', back_populates='contractor')
 
     address = relationship('AddressContract', back_populates='contractor')
-    
+
     student = relationship('Student', back_populates='contractor')
-    
+
     student_id = association_proxy('student', 'id')
     fullname = association_proxy('student', 'fullname')
 
@@ -183,6 +185,7 @@ class Student(ModelBase):
 
     contractor = relationship('Contractor', back_populates='student')
     schedule = relationship('Schedule', back_populates='student')
+    procedures = relationship('Procedure', back_populates='student')
 
 
 class ResponsibleContract(ModelBase):
@@ -266,7 +269,7 @@ class Instructor(ModelBase):
     whats_app = Column(Boolean(), nullable=True)
     value_hour = Column(String(50), nullable=True)
     value_mouth = Column(String(50), nullable=True)
-    comission: Column(String(50), nullable=True)
+    comission = Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
     status = Column(Enum(Status), nullable=False)
 
@@ -304,8 +307,8 @@ class Skill(ModelBase):
     name = Column(String(100), nullable=False)
     objective = Column(String(255), nullable=False)
 
+    schedule = relationship('SkillsSchedule', back_populates='skills')
     procedures = relationship('Procedure', back_populates='skill')
-    schedule = relationship('Schedule', back_populates='skill')
 
 
 class Procedure(ModelBase):
@@ -315,7 +318,6 @@ class Procedure(ModelBase):
                       ForeignKey(Skill.id), nullable=False)
 
     tries = Column(Integer(), nullable=False)
-    time = Column(String(255), nullable=False)
     goal = Column(Float(), nullable=False)
     period = Column(String(255), nullable=False)
     name = Column(String(255), nullable=True)
@@ -325,11 +327,13 @@ class Procedure(ModelBase):
     consequence = Column(String(1000), nullable=True)
     materials = Column(String(1000), nullable=True)
     help = Column(String(1000), nullable=True)
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=True)
 
     skill = relationship('Skill', back_populates='procedures')
     skill_name = association_proxy('skill', 'name')
     
-    # executions = relationship('Execution', back_populates='procedure')
+    student = relationship('Student', back_populates='procedures')
 
 
 class Schedule(ModelBase):
@@ -341,8 +345,6 @@ class Schedule(ModelBase):
                            ForeignKey(Instructor.id), nullable=True)
     student_id = Column(UUIDType(binary=False),
                         ForeignKey(Student.id), nullable=True)
-    skill_id = Column(UUIDType(binary=False),
-                      ForeignKey(Skill.id), nullable=True)
 
     event_id = Column(UUIDType(binary=False), nullable=True)
     title = Column(String(255), nullable=False)
@@ -354,24 +356,24 @@ class Schedule(ModelBase):
     period = Column(String(20), nullable=True)
     status = Column(Enum(StatusSchedule), nullable=False)
     details = Column(String(255), nullable=True)
-    
+    student_arrival = Column(DateTime, nullable=True)
     event_begin = Column(DateTime, nullable=True)
     event_finish = Column(DateTime, nullable=True)
     event_user_id = Column(UUIDType(binary=False),
-                     ForeignKey(User.id), nullable=True)
+                           ForeignKey(User.id), nullable=True)
     color = Column(String(255), nullable=True)
 
     instructor = relationship('Instructor', back_populates='schedule')
     student = relationship('Student', back_populates='schedule')
-    skill = relationship('Skill', back_populates='schedule')
+    event = relationship('SkillsSchedule', back_populates='event')
 
 
 class Execution(ModelBase):
     __tablename__ = 'executions'
-    
+
     schedule_id = Column(UUIDType(binary=False),
-                          ForeignKey(Schedule.id), nullable=False)
-    
+                         ForeignKey(Schedule.id), nullable=False)
+
     procedure_id = Column(UUIDType(binary=False),
                           ForeignKey(Procedure.id), nullable=False)
     trie = Column(Integer(), nullable=False)
@@ -380,6 +382,18 @@ class Execution(ModelBase):
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=False)
     help_type = Column(Enum(TypeHelp), nullable=False)
+
+
+class SkillsSchedule(ModelBase):
+    __tablename__ = 'skills_schedules'
+
+    schedule_id = Column(UUIDType(binary=False),
+                         ForeignKey(Schedule.id), nullable=False)
+    skill_id = Column(UUIDType(binary=False),
+                      ForeignKey(Skill.id), nullable=False)
+    finished = Column(Boolean, default=False, nullable=True)
+
+    skills = relationship('Skill', back_populates='schedule')
+    event = relationship('Schedule', back_populates='event')
     
-    # procedure = relationship('Procedure', back_populates='executions')
-    
+    skill_name = association_proxy('skills', 'name')

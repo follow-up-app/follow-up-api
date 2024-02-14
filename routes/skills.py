@@ -7,23 +7,32 @@ from db import get_db
 from db.models import User, Instructor, Skill, Procedure
 from schemas.skill_schemas import SkillIn, SkillOut
 from schemas.procedure_schemas import ProcedureOut
+import logging
 
 router = APIRouter()
 
 tags: str = "Skills"
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 @router.post('/', summary='Create skill', response_model=SkillOut, tags=[tags])
 async def create(skill_in: SkillIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    skill = Skill(
-        company_id=current_user.company_id,
-        name=skill_in.name,
-        objective=skill_in.objective,
-    )
-    session.add(skill)
-    session.commit()
+    try:
+        skill = Skill(
+            company_id=current_user.company_id,
+            name=skill_in.name,
+            objective=skill_in.objective,
+        )
+        session.add(skill)
+        session.commit()
 
-    return SkillOut.from_orm(skill)
+        return SkillOut.from_orm(skill)
+
+    except Exception as e:
+        logger.error(f"Error in create skill: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.get('/', summary='Return skills list', response_model=List[SkillOut], tags=[tags])
@@ -41,12 +50,12 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
 
     return SkillOut.from_orm(skill)
 
+
 @router.get('/{id}/procedures', summary='Return list procedure reference skill', tags=[tags])
 async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     all_itens: Procedure = Procedure.query(
         session).filter(Procedure.skill_id == id).all()
     return [ProcedureOut.from_orm(x) for x in all_itens]
-
 
 
 @router.put('/{id}', summary='Update skill', tags=[tags], response_model=SkillOut)
@@ -55,14 +64,18 @@ async def update(id: UUID, skill_in: SkillIn, current_user: User = Depends(check
         session).filter(Skill.id == id).first()
     if not skill:
         raise HTTPException(status_code=404, detail='route not found')
-    
-    skill.name = skill_in.name,
-    skill.objective = skill.objective
 
-    session.add(skill)
-    session.commit()
+    try:
+        skill.name = skill_in.name,
+        skill.objective = skill.objective
+        
+        session.add(skill)
+        session.commit()
 
-    return SkillOut.from_orm(skill)
+        return SkillOut.from_orm(skill)
+    except Exception as e:
+        logger.error(f"Error in update skill: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.delete('/{id}', summary='Delete skill',  tags=[tags])

@@ -1,11 +1,10 @@
 from core.security import hash_password
 from uuid import UUID
 from typing import Optional
-from pydantic import BaseModel, constr, Field
+from pydantic import BaseModel
 from db.models import UserPermission, Status
 
 
-# REMOVER DEPOIS
 class UserStoreIn(BaseModel):
     company_id: UUID
     fullname: str
@@ -52,7 +51,7 @@ class ResetPasswordSchemaOut(BaseModel):
 
 class UserOut(BaseModel):
     id: UUID
-    fullname: constr(max_length=255)
+    fullname: str
     email: str
     permission: UserPermission
     document: str

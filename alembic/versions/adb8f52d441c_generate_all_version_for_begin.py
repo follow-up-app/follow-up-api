@@ -1,8 +1,8 @@
-"""create enum help in execution
+"""generate all version for begin
 
-Revision ID: d7f084c8136d
+Revision ID: adb8f52d441c
 Revises: 
-Create Date: 2023-10-31 22:19:21.841782
+Create Date: 2024-02-11 01:29:11.761224
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlalchemy_utils
 
 
 # revision identifiers, used by Alembic.
-revision = 'd7f084c8136d'
+revision = 'adb8f52d441c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -132,31 +132,12 @@ def upgrade():
     sa.Column('whats_app', sa.Boolean(), nullable=True),
     sa.Column('value_hour', sa.String(length=50), nullable=True),
     sa.Column('value_mouth', sa.String(length=50), nullable=True),
+    sa.Column('comission', sa.String(length=50), nullable=True),
     sa.Column('avatar', sa.String(length=255), nullable=True),
     sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', name='status'), nullable=False),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.ForeignKeyConstraint(['specialty_instructor_id'], ['specialties_instructor.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('procedures',
-    sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('deleted', sa.Boolean(), nullable=False),
-    sa.Column('created_date', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('skill_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('tries', sa.Integer(), nullable=False),
-    sa.Column('time', sa.String(length=255), nullable=False),
-    sa.Column('goal', sa.Float(), nullable=False),
-    sa.Column('period', sa.String(length=255), nullable=False),
-    sa.Column('name', sa.String(length=255), nullable=True),
-    sa.Column('objective', sa.String(length=1000), nullable=True),
-    sa.Column('stimulus', sa.String(length=1000), nullable=True),
-    sa.Column('answer', sa.String(length=1000), nullable=True),
-    sa.Column('consequence', sa.String(length=1000), nullable=True),
-    sa.Column('materials', sa.String(length=1000), nullable=True),
-    sa.Column('help', sa.String(length=1000), nullable=True),
-    sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('students',
@@ -216,6 +197,27 @@ def upgrade():
     sa.ForeignKeyConstraint(['instructor_id'], ['instructors.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('procedures',
+    sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('deleted', sa.Boolean(), nullable=False),
+    sa.Column('created_date', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('skill_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('tries', sa.Integer(), nullable=False),
+    sa.Column('goal', sa.Float(), nullable=False),
+    sa.Column('period', sa.String(length=255), nullable=False),
+    sa.Column('name', sa.String(length=255), nullable=True),
+    sa.Column('objective', sa.String(length=1000), nullable=True),
+    sa.Column('stimulus', sa.String(length=1000), nullable=True),
+    sa.Column('answer', sa.String(length=1000), nullable=True),
+    sa.Column('consequence', sa.String(length=1000), nullable=True),
+    sa.Column('materials', sa.String(length=1000), nullable=True),
+    sa.Column('help', sa.String(length=1000), nullable=True),
+    sa.Column('student_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
+    sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
+    sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('schedules',
     sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('deleted', sa.Boolean(), nullable=False),
@@ -224,19 +226,24 @@ def upgrade():
     sa.Column('company_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
     sa.Column('instructor_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
     sa.Column('student_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
-    sa.Column('skill_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
-    sa.Column('title', sa.String(length=20), nullable=False),
+    sa.Column('event_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
+    sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('start', sa.DateTime(), nullable=False),
     sa.Column('end', sa.DateTime(), nullable=False),
-    sa.Column('status', sa.Enum('SCHEDULED', 'IN_PROGRESS', 'PAUSED', 'CANCELED', 'DONE', name='statusschedule'), nullable=False),
+    sa.Column('start_hour', sa.String(length=20), nullable=True),
+    sa.Column('end_hour', sa.String(length=20), nullable=True),
+    sa.Column('repeat', sa.Enum('NO', 'WEEK', 'MOUTH', name='eventrepeat'), nullable=True),
+    sa.Column('period', sa.String(length=20), nullable=True),
+    sa.Column('status', sa.Enum('SCHEDULED', 'IN_PROGRESS', 'PAUSED', 'CANCELED', 'DID_NOT_ATTEND', 'DONE', name='statusschedule'), nullable=False),
     sa.Column('details', sa.String(length=255), nullable=True),
+    sa.Column('student_arrival', sa.DateTime(), nullable=True),
     sa.Column('event_begin', sa.DateTime(), nullable=True),
     sa.Column('event_finish', sa.DateTime(), nullable=True),
     sa.Column('event_user_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=True),
+    sa.Column('color', sa.String(length=255), nullable=True),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.ForeignKeyConstraint(['event_user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['instructor_id'], ['instructors.id'], ),
-    sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -251,10 +258,22 @@ def upgrade():
     sa.Column('time', sa.String(length=255), nullable=False),
     sa.Column('success', sa.Boolean(), nullable=False),
     sa.Column('user_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
-    sa.Column('help_type', sa.Enum('DEPENDENT', 'INDEPENDENT', name='helptypeexecution'), nullable=False),
+    sa.Column('help_type', sa.Enum('DEPENDENT', 'INDEPENDENT', 'POSITIONAL', 'GESTURE', 'VERBAL', 'PHYSICAL', 'VISUAL', name='typehelp'), nullable=False),
     sa.ForeignKeyConstraint(['procedure_id'], ['procedures.id'], ),
     sa.ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('skills_schedules',
+    sa.Column('id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('deleted', sa.Boolean(), nullable=False),
+    sa.Column('created_date', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('schedule_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('skill_id', sqlalchemy_utils.types.uuid.UUIDType(binary=False), nullable=False),
+    sa.Column('finished', sa.Boolean(), nullable=True),
+    sa.ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ),
+    sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
@@ -262,12 +281,13 @@ def upgrade():
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('skills_schedules')
     op.drop_table('executions')
     op.drop_table('schedules')
+    op.drop_table('procedures')
     op.drop_table('instructor_address')
     op.drop_table('contract_address')
     op.drop_table('students')
-    op.drop_table('procedures')
     op.drop_table('instructors')
     op.drop_table('contract_responsibles')
     op.drop_table('users')

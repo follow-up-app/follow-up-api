@@ -2,12 +2,13 @@ from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel
 from schemas.execution_schemas import ExecutionOut
+from schemas.student_schemas import StudentOut
 
 class ProcedureIn(BaseModel):
     skill_id: UUID
+    student_id: Optional[UUID]
     name: str
     tries: int    
-    time: str
     goal: float
     period: str
     name: str
@@ -22,10 +23,10 @@ class ProcedureIn(BaseModel):
 class ProcedureOut(BaseModel):
     id: UUID
     skill_id: UUID
+    student_id: Optional[UUID]
     skill_name = str
     name: str
     tries: int    
-    time: str
     goal: float
     period: str
     name: str
@@ -40,6 +41,7 @@ class ProcedureOut(BaseModel):
     data_chart: Optional[float]
     app_active: Optional[bool]
     executions: Optional[List[ExecutionOut]]
+    student: Optional[StudentOut]
 
     class Config:
         orm_mode = True

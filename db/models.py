@@ -110,7 +110,7 @@ class EventRepeat(enum.Enum):
     NO: str = 'NÃO'
     WEEK: str = 'SEMANALMENTE'
     MOUTH: str = 'MENSALMENTE'
-    
+
 
 class Company(ModelBase):
     __tablename__ = 'companies'
@@ -308,7 +308,6 @@ class Skill(ModelBase):
     objective = Column(String(255), nullable=False)
 
     schedule = relationship('SkillsSchedule', back_populates='skills')
-    procedures = relationship('Procedure', back_populates='skill')
 
 
 class Procedure(ModelBase):
@@ -330,9 +329,6 @@ class Procedure(ModelBase):
     student_id = Column(UUIDType(binary=False),
                         ForeignKey(Student.id), nullable=True)
 
-    skill = relationship('Skill', back_populates='procedures')
-    skill_name = association_proxy('skill', 'name')
-    
     student = relationship('Student', back_populates='procedures')
 
 
@@ -395,5 +391,5 @@ class SkillsSchedule(ModelBase):
 
     skills = relationship('Skill', back_populates='schedule')
     event = relationship('Schedule', back_populates='event')
-    
+
     skill_name = association_proxy('skills', 'name')

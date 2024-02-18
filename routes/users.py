@@ -52,11 +52,11 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
     session.add(user)
     session.commit()
 
-    mailer = Mailer()
-    mailer.welcome_user(user)
+    # mailer = Mailer()
+    # mailer.welcome_user(user)
 
-    mongo = Mongo()
-    mongo.welcome_app(user)
+    # mongo = Mongo()
+    # mongo.welcome_app(user)
 
     return UserOut.from_orm(user)
 

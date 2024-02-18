@@ -80,7 +80,7 @@ async def get_id(id: UUID, skill_schedule_id: UUID, current_user: User = Depends
         raise HTTPException(status_code=404, detail='skill not found')
 
     procedures: Procedure = Procedure.query(session).filter(
-        Procedure.skill_id == skill.id).all()
+        Procedure.skill_id == skill.id, Procedure.student_id == schedule.student_id).all()
 
     skill.procedures = procedures
     schedule.skill = skill

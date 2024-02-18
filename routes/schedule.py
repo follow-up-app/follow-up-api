@@ -246,6 +246,7 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
                 lst = {
                     'id': schd.id,
                     'skill_schedule_id': skill.id,
+                    'skill_name': skill.skill_name,
                     'day': schd.start.day,
                     'hour_start': schd.start.hour,
                     'min_start': schd.start.minute,

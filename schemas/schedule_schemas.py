@@ -49,6 +49,7 @@ class ScheduleOut(BaseModel):
     event_begin: Optional[datetime]
     event_finish: Optional[datetime]
     event_user_id: Optional[UUID]
+    student_arrival: Optional[datetime]
     status: Optional[StatusSchedule]
     student: Optional[StudentOut]
     instructor: Optional[InstructorOut]

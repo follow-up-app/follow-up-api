@@ -44,6 +44,8 @@ class ScheduleFollowUp(BaseModel):
 
 
 class ScheduleFollowUpMobile(BaseModel):
+    id: UUID
+    student_arrival: Optional[datetime]
     student: Optional[StudentOut]
     instructor: Optional[InstructorOut]
     skill: Optional[SkillOut]

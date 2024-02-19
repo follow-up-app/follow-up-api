@@ -268,11 +268,13 @@ async def get_all(id: UUID, current_user: User = Depends(get_current_user), sess
         session).filter(Schedule.id == id).first()
     if not schedule:
         raise HTTPException(status_code=404, detail='schedule not found')
-
+    
     try:
         schedule.student_arrival = datetime.utcnow()
         session.add(schedule)
         session.commit()
+        
+        return ScheduleOut.from_orm(schedule)
 
     except Exception as e:
         logger.error(f"Error in create schedule: {e}")

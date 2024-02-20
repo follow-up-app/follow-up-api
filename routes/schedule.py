@@ -232,7 +232,7 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
     for item in stmt:
         schedules: Schedule = Schedule.query(session).filter(
             Schedule.instructor_id == instructor.id,
-            Schedule.status == StatusSchedule.SCHEDULED,
+            Schedule.status.in_([StatusSchedule.SCHEDULED, StatusSchedule.IN_PROGRESS, StatusSchedule.PAUSED]),
             func.date(Schedule.start) == item[0]
         ).order_by(Schedule.start.asc()).all()
 

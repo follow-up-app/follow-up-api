@@ -225,7 +225,7 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
         raise HTTPException(status_code=404, detail='instructor not found')
 
     stmt = session.query(func.date(Schedule.start)).filter(
-        Schedule.instructor_id == instructor.id, Schedule.status == StatusSchedule.SCHEDULED
+        Schedule.instructor_id == instructor.id, Schedule.status.in_([StatusSchedule.SCHEDULED, StatusSchedule.IN_PROGRESS, StatusSchedule.PAUSED])
     ).group_by(func.date(Schedule.start)).order_by(func.date(Schedule.start)).all()
 
     response = {}
@@ -268,12 +268,12 @@ async def get_all(id: UUID, current_user: User = Depends(get_current_user), sess
         session).filter(Schedule.id == id).first()
     if not schedule:
         raise HTTPException(status_code=404, detail='schedule not found')
-    
+
     try:
         schedule.student_arrival = datetime.utcnow()
         session.add(schedule)
         session.commit()
-        
+
         return ScheduleOut.from_orm(schedule)
 
     except Exception as e:

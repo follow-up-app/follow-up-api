@@ -185,7 +185,7 @@ async def update(id: UUID, skill_schedule_id: UUID, schedule_in: ScheduleEvent, 
 
         if schedule_in.status == StatusSchedule.DONE:
             skills: SkillsSchedule = SkillsSchedule.query(session).filter(
-                SkillsSchedule.schedule_id == schedule.id, SkillsSchedule.finished == None).all()
+                SkillsSchedule.schedule_id == schedule.id, SkillsSchedule.finished == False).all()
 
             if not skills:
                 schedule.event_finish = datetime.utcnow()
@@ -277,5 +277,5 @@ async def get_all(id: UUID, current_user: User = Depends(get_current_user), sess
         return ScheduleOut.from_orm(schedule)
 
     except Exception as e:
-        logger.error(f"Error in update date arrival schedule: {e}")
+        logger.error(f"Error in date arrival schedule: {e}")
         raise HTTPException(status_code=e.status_code, detail=e.detail)

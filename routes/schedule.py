@@ -194,7 +194,6 @@ async def update(id: UUID, skill_schedule_id: UUID, schedule_in: ScheduleEvent, 
 
             skill_schedule.finished = True
 
-        schedule.status = schedule_in.status
         session.add(schedule)
         session.add(skill_schedule)
         session.commit()

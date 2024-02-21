@@ -7,6 +7,7 @@ from schemas.instructor_schema import InstructorOut
 from schemas.student_schemas import StudentOut
 from schemas.skill_schemas import SkillOut
 
+
 class ScheduleIn(BaseModel):
     student_id: Optional[UUID]
     instructor_id: Optional[UUID]
@@ -18,7 +19,8 @@ class ScheduleIn(BaseModel):
     details: Optional[str]
     color: Optional[str]
     schedule_in: date
-    
+
+
 class ScheduleEvent(BaseModel):
     status: StatusSchedule
 
@@ -28,9 +30,10 @@ class SkillScehduleOut(BaseModel):
     schedule_id: UUID
     skill_id: UUID
     skill_name: str
-    
+
     class Config:
         orm_mode = True
+
 
 class ScheduleOut(BaseModel):
     id: UUID
@@ -59,6 +62,3 @@ class ScheduleOut(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-

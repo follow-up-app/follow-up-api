@@ -29,6 +29,7 @@ class ScheduleFollowUp(BaseModel):
     start: datetime
     end: datetime
     details: Optional[str]
+    student_arrival: Optional[datetime]
     event_begin: Optional[datetime]
     event_finish: Optional[datetime]
     event_user_id: Optional[UUID]
@@ -46,6 +47,7 @@ class ScheduleFollowUp(BaseModel):
 class ScheduleFollowUpMobile(BaseModel):
     id: UUID
     student_arrival: Optional[datetime]
+    status: Optional[StatusSchedule]
     student: Optional[StudentOut]
     instructor: Optional[InstructorOut]
     skill: Optional[SkillOut]

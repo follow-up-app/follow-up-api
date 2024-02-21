@@ -277,5 +277,5 @@ async def get_all(id: UUID, current_user: User = Depends(get_current_user), sess
         return ScheduleOut.from_orm(schedule)
 
     except Exception as e:
-        logger.error(f"Error in create schedule: {e}")
+        logger.error(f"Error in update date arrival schedule: {e}")
         raise HTTPException(status_code=e.status_code, detail=e.detail)

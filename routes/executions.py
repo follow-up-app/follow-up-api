@@ -31,7 +31,7 @@ async def create(execute_in: ExecutionIn, current_user: User = Depends(get_curre
     
     if not schedule:
         raise HTTPException(status_code=404, detail='schedule not found')
-
+    
     tries: Execution = Execution.query(session).filter(
         Execution.schedule_id == execute_in.schedule_id, Execution.procedure_id == execute_in.procedure_id).count()
 
@@ -44,6 +44,8 @@ async def create(execute_in: ExecutionIn, current_user: User = Depends(get_curre
             schedule.event_begin = datetime.utcnow()
             schedule.event_user_id = current_user.id
             schedule.status = StatusSchedule.IN_PROGRESS
+        if schedule.student_arrival == None:
+            schedule.student_arrival = datetime.utcnow()
         
         execution = Execution(
             schedule_id=execute_in.schedule_id,
@@ -68,7 +70,8 @@ async def create(execute_in: ExecutionIn, current_user: User = Depends(get_curre
 @router.get('/{schedule_id}/{procedure_id}', summary='Return execution list for scheduled', response_model=List[ExecutionOut], tags=[tags])
 async def get_all(schedule_id: UUID, procedure_id: UUID, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     all_itens: Execution = Execution.query(session).filter(
-        Execution.schedule_id == schedule_id, Execution.procedure_id == procedure_id).all()
+        Execution.schedule_id == schedule_id, Execution.procedure_id == procedure_id).order_by(
+        Execution.trie.asc()).all()
     return [ExecutionOut.from_orm(x) for x in all_itens]
 
 

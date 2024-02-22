@@ -96,6 +96,26 @@ async def get_id(id: UUID, skill_schedule_id: UUID, current_user: User = Depends
         if executions >= procedure.tries:
             procedure.app_active = False
 
+    others_skills: SkillsSchedule = SkillsSchedule.query(session).filter(
+        SkillsSchedule.schedule_id == id
+    ).all()
+    
+    outhers = []
+    for skl in others_skills:
+        prcs: Procedure = Procedure.query(session).filter(
+            Procedure.skill_id == skl.skill_id, Procedure.student_id == schedule.student_id).all()
+
+        for pr in prcs:
+            excs: Execution = Execution.query(session).filter(
+                Execution.procedure_id == pr.id, Execution.schedule_id == id).count()
+                 
+            pr.app_active = True
+            if excs >= pr.tries:
+                pr.app_active = False
+            outhers.append(pr)
+    
+    schedule.outhers = outhers
+    
     return ScheduleFollowUpMobile.from_orm(schedule)
 
 

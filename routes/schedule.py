@@ -163,39 +163,24 @@ async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), se
         raise HTTPException(status_code=500, detail='Server error')
 
 
-@router.put('/{id}/update/{skill_schedule_id}', summary='Update status schedule', tags=[tags])
-async def update(id: UUID, skill_schedule_id: UUID, schedule_in: ScheduleEvent, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+@router.put('/{id}/update', summary='Update status schedule', tags=[tags])
+async def update(id: UUID, schedule_in: ScheduleEvent, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     schedule: Schedule = Schedule.query(
         session).filter(Schedule.id == id).first()
     if not schedule:
         raise HTTPException(status_code=404, detail='schedule not found')
-    skill_schedule: SkillsSchedule = SkillsSchedule.query(session).filter(
-        SkillsSchedule.schedule_id == id
-    ).first()
-    if not skill_schedule:
-        raise HTTPException(status_code=404, detail='skill-schedule not found')
+    
     try:
-        if schedule_in.status == StatusSchedule.CANCELED or schedule_in.status == StatusSchedule.PAUSED or schedule_in.status == StatusSchedule.DID_NOT_ATTEND:
-            schedule.status = schedule_in.status
-
         if schedule_in.status == StatusSchedule.IN_PROGRESS:
-            schedule.status = schedule_in.status
             schedule.event_begin = datetime.utcnow()
             schedule.event_user_id = current_user.id
 
         if schedule_in.status == StatusSchedule.DONE:
-            skills: SkillsSchedule = SkillsSchedule.query(session).filter(
-                SkillsSchedule.schedule_id == schedule.id, SkillsSchedule.finished == False).all()
+            schedule.event_finish = datetime.utcnow()
+            schedule.event_user_id = current_user.id
 
-            if not skills:
-                schedule.event_finish = datetime.utcnow()
-                schedule.event_user_id = current_user.id
-                schedule.status = schedule_in.status
-
-            skill_schedule.finished = True
-
+        schedule.status = schedule_in.status
         session.add(schedule)
-        session.add(skill_schedule)
         session.commit()
 
         return ScheduleOut.from_orm(schedule)
@@ -224,14 +209,16 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
         raise HTTPException(status_code=404, detail='instructor not found')
 
     stmt = session.query(func.date(Schedule.start)).filter(
-        Schedule.instructor_id == instructor.id, Schedule.status.in_([StatusSchedule.SCHEDULED, StatusSchedule.IN_PROGRESS, StatusSchedule.PAUSED])
+        Schedule.instructor_id == instructor.id, Schedule.status.in_(
+            [StatusSchedule.SCHEDULED, StatusSchedule.IN_PROGRESS, StatusSchedule.PAUSED])
     ).group_by(func.date(Schedule.start)).order_by(func.date(Schedule.start)).all()
 
     response = {}
     for item in stmt:
         schedules: Schedule = Schedule.query(session).filter(
             Schedule.instructor_id == instructor.id,
-            Schedule.status.in_([StatusSchedule.SCHEDULED, StatusSchedule.IN_PROGRESS, StatusSchedule.PAUSED]),
+            Schedule.status.in_(
+                [StatusSchedule.SCHEDULED, StatusSchedule.IN_PROGRESS, StatusSchedule.PAUSED]),
             func.date(Schedule.start) == item[0]
         ).order_by(Schedule.start.asc()).all()
 

@@ -51,6 +51,7 @@ class ScheduleFollowUpMobile(BaseModel):
     student: Optional[StudentOut]
     instructor: Optional[InstructorOut]
     skill: Optional[SkillOut]
+    outhers: Optional[List[ProcedureOut]]
 
     class Config:
         orm_mode = True

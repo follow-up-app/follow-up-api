@@ -37,7 +37,7 @@ class Event:
             ).first()
             if instructor_e:
                 raise HTTPException(
-                    status_code=503, detail='Profissional não esta disponível para estas datas')
+                    status_code=409, detail='Profissional não esta disponível para estas datas')
 
             student_e: Schedule = Schedule.query(session).filter(
                 Schedule.student_id == student.id,
@@ -46,7 +46,7 @@ class Event:
             ).first()
             if student_e:
                 raise HTTPException(
-                    status_code=503, detail='Cliente não esta disponível para estas datas')
+                    status_code=409, detail='Cliente não esta disponível para estas datas')
 
             schedule: Schedule = Schedule(
                 company_id=current_user.company_id,
@@ -108,7 +108,7 @@ class Event:
             ).first()
             if instructor_e:
                 raise HTTPException(
-                    status_code=503, detail='Profissional não esta disponível para estas datas')
+                    status_code=409, detail='Profissional não esta disponível para estas datas')
 
             student_e: Schedule = Schedule.query(session).filter(
                 Schedule.student_id == student.id,
@@ -117,7 +117,7 @@ class Event:
             ).first()
             if student_e:
                 raise HTTPException(
-                    status_code=503, detail='Cliente não esta disponível para estas datas')
+                    status_code=409, detail='Cliente não esta disponível para estas datas')
 
             schedule: Schedule = Schedule(
                 company_id=current_user.company_id,
@@ -168,7 +168,7 @@ class Event:
 
         if date_schedule_out <= date_schedule_in:
             raise HTTPException(
-                status_code=506, detail='A hora inicial deve ser menor que a hora final')
+                status_code=406, detail='A hora inicial deve ser menor que a hora final')
 
         title = student.fullname + ' | ' + instructor.fullname
 
@@ -177,10 +177,10 @@ class Event:
             ((date_schedule_in >= Schedule.start) & (date_schedule_in < Schedule.end)) | (
                 (date_schedule_out > Schedule.start) & (date_schedule_out <= Schedule.end))
         ).first()
-
+        
         if instructor_e:
             raise HTTPException(
-                status_code=504, detail='Profissional não esta disponível para estas datas')
+                status_code=409, detail='Profissional não esta disponível para estas datas')
 
         student_e: Schedule = Schedule.query(session).filter(
             Schedule.student_id == student.id,
@@ -190,7 +190,7 @@ class Event:
 
         if student_e:
             raise HTTPException(
-                status_code=505, detail='Cliente não esta disponível para estas datas')
+                status_code=409, detail='Cliente não esta disponível para estas datas')
 
         schedule: Schedule = Schedule(
             company_id=current_user.company_id,

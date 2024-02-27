@@ -8,6 +8,7 @@ from db.models import User, Instructor, Skill, Procedure
 from schemas.skill_schemas import SkillIn, SkillOut
 from schemas.procedure_schemas import ProcedureOut
 import logging
+from sqlalchemy.sql.functions import func
 
 router = APIRouter()
 
@@ -86,3 +87,12 @@ async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), se
         raise HTTPException(status_code=404, detail='route not found')
     session.delete(skill)
     session.commit()
+
+
+@router.get('/student/{student_id}', summary='Return skill list for student', tags=[tags])
+async def get_id(student_id: UUID, session: Session = Depends(get_db)):
+    unique_skills = session.query(Procedure.skill_id).filter(Procedure.student_id == student_id).distinct().all()
+    skill_ids = [result[0] for result in unique_skills]
+    skills: Skill = Skill.query(session).filter(Skill.id.in_(skill_ids)).all()
+
+    return [SkillOut.from_orm(x) for x in skills]

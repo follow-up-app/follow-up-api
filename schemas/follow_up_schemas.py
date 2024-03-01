@@ -28,6 +28,8 @@ class ScheduleFollowUp(BaseModel):
     title: str
     start: datetime
     end: datetime
+    start_hour: Optional[str]
+    end_hour: Optional[str]
     details: Optional[str]
     student_arrival: Optional[datetime]
     event_begin: Optional[datetime]

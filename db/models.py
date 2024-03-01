@@ -96,6 +96,7 @@ class TypeHelp(enum.Enum):
     VERBAL: str = 'VERBAL'
     PHYSICAL: str = 'FÍSICA'
     VISUAL: str = 'VISUAL'
+    NOT_EXECUTED: str = 'NÃO EXECUTADO'
 
 
 class EventRepeat(enum.Enum):

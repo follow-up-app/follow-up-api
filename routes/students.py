@@ -14,54 +14,61 @@ from db import get_db
 from db.models import Student, User, Contractor, StatusContract, Status, ResponsibleContract, AddressContract
 from schemas.student_schemas import StudentIn, StudentOut, AddressContractorOut, AddressContractorIn, ResponsibleContractIn, ResponsibleContractOut, Filters
 from fastapi.responses import FileResponse
+import logging
 
 router = APIRouter()
 
 tags: str = "Student"
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @router.post('/', summary='create student', response_model=StudentOut, tags=[tags])
 async def create(student_in: StudentIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    contract = Contractor(
-        company_id=current_user.company_id,
-        status=StatusContract.IN_PREPARATION
-    )
-    session.add(contract)
-    session.commit()
+    try:
+        contract = Contractor(
+            company_id=current_user.company_id,
+            status=StatusContract.IN_PREPARATION
+        )
+        session.add(contract)
+        session.commit()
 
-    student = Student(
-        contractor_id=contract.id,
-        fullname=student_in.fullname,
-        birthday=student_in.birthday,
-        allergy=student_in.allergy,
-        genere=student_in.genere,
-        document=student_in.document,
-        indentity_number=student_in.indentity_number,
-        org_exp=student_in.org_exp,
-        uf_exp=student_in.uf_exp,
-        nationality=student_in.nationality,
-        email=student_in.email,
-        phone=student_in.phone,
-        avatar=student_in.avatar,
-        informations=student_in.informations,
-        status=Status.ACTIVE
-    )
-    session.add(student)
-    session.commit()
+        student = Student(
+            contractor_id=contract.id,
+            fullname=student_in.fullname,
+            birthday=student_in.birthday,
+            allergy=student_in.allergy,
+            genere=student_in.genere,
+            document=student_in.document,
+            indentity_number=student_in.indentity_number,
+            org_exp=student_in.org_exp,
+            uf_exp=student_in.uf_exp,
+            nationality=student_in.nationality,
+            email=student_in.email,
+            phone=student_in.phone,
+            avatar=student_in.avatar,
+            informations=student_in.informations,
+            status=Status.ACTIVE
+        )
+        session.add(student)
+        session.commit()
 
-    return StudentOut.from_orm(student)
+        return StudentOut.from_orm(student)
 
+    except Exception as e:
+        logger.error(f"Error in create student: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 @router.get('/', summary='Returns all students list', response_model=List[StudentOut], tags=[tags])
 async def get_all(current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     students: Student = Student.query(session).all()
     for student in students:
-        responsables: ResponsibleContract = ResponsibleContract.query(
-            session).filter(ResponsibleContract.contractor_id == student.contractor_id).all()
-        resps = []
-        for r in responsables:
-            resps.append(r)
-        student.responsable: ResponsibleContract = resps
+            responsables: ResponsibleContract = ResponsibleContract.query(
+                session).filter(ResponsibleContract.contractor_id == student.contractor_id).all()
+            resps = []
+            for r in responsables:
+                resps.append(r)
+            student.responsable: ResponsibleContract = resps # type: ignore
 
     return [StudentOut.from_orm(x) for x in students]
 
@@ -81,24 +88,29 @@ async def update(id: UUID, student_in: StudentIn, current_user: User = Depends(c
     if not student:
         raise HTTPException(status_code=404, detail='route not found')
 
-    student.fullname = student_in.fullname
-    student.birthday = student_in.birthday
-    student.allergy = student_in.allergy,
-    student.genere = student_in.genere
-    student.document = student_in.document
-    student.indentity_number = student_in.indentity_number
-    student.org_exp = student_in.org_exp
-    student.uf_exp = student_in.uf_exp
-    student.nationality = student_in.nationality
-    student.email = student_in.email
-    student.phone = student_in.phone
-    student.avatar = student_in.avatar
-    student.informations = student_in.informations
+    try:
+        student.fullname = student_in.fullname
+        student.birthday = student_in.birthday
+        student.allergy = student_in.allergy,
+        student.genere = student_in.genere
+        student.document = student_in.document
+        student.indentity_number = student_in.indentity_number
+        student.org_exp = student_in.org_exp
+        student.uf_exp = student_in.uf_exp
+        student.nationality = student_in.nationality
+        student.email = student_in.email
+        student.phone = student_in.phone
+        student.avatar = student_in.avatar
+        student.informations = student_in.informations
 
-    session.add(student)
-    session.commit()
+        session.add(student)
+        session.commit()
 
-    return StudentOut.from_orm(student)
+        return StudentOut.from_orm(student)
+    
+    except Exception as e:
+        logger.error(f"Error in update student: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.get('/{id}/active', summary='active/desactive student', tags=[tags])
@@ -111,12 +123,16 @@ async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), se
         student.status = Status.INACTIVE
     else:
         student.status = Status.ACTIVE
+        
+    try:
+        session.add(student)
+        session.commit()
 
-    session.add(student)
-    session.commit()
-
-    return StudentOut.from_orm(student)
-
+        return StudentOut.from_orm(student)
+    
+    except Exception as e:
+        logger.error(f"Error in active student: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 @router.post('/{id}/responsable', summary='create responsable', response_model=ResponsibleContractOut, tags=[tags])
 async def create(id: UUID, responsable_in: ResponsibleContractIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
@@ -124,24 +140,28 @@ async def create(id: UUID, responsable_in: ResponsibleContractIn, current_user: 
     if not student:
         raise HTTPException(status_code=404, detail='route not found')
 
-    responsable = ResponsibleContract(
-        contractor_id=student.contractor_id,
-        fullname=responsable_in.fullname,
-        birthday=responsable_in.birthday,
-        document=responsable_in.document,
-        indentity_number=responsable_in.indentity_number,
-        org_exp=responsable_in.org_exp,
-        uf_exp=responsable_in.uf_exp,
-        nationality=responsable_in.nationality,
-        email=responsable_in.email,
-        phone=responsable_in.phone,
-        bond=responsable_in.bond
-    )
-    session.add(responsable)
-    session.commit()
+    try:
+        responsable = ResponsibleContract(
+            contractor_id=student.contractor_id,
+            fullname=responsable_in.fullname,
+            birthday=responsable_in.birthday,
+            document=responsable_in.document,
+            indentity_number=responsable_in.indentity_number,
+            org_exp=responsable_in.org_exp,
+            uf_exp=responsable_in.uf_exp,
+            nationality=responsable_in.nationality,
+            email=responsable_in.email,
+            phone=responsable_in.phone,
+            bond=responsable_in.bond
+        )
+        session.add(responsable)
+        session.commit()
 
-    return ResponsibleContractOut.from_orm(responsable)
+        return ResponsibleContractOut.from_orm(responsable)
 
+    except Exception as e:
+        logger.error(f"Error in create responsable student: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 @router.get('/{id}/responsable', summary='Returns all responsable list', response_model=List[ResponsibleContractOut], tags=[tags])
 async def get_all(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
@@ -172,22 +192,27 @@ async def update(id: UUID, responsable_in: ResponsibleContractIn, current_user: 
     if not responsable:
         raise HTTPException(status_code=404, detail='route not found')
 
-    responsable.fullname = responsable_in.fullname,
-    responsable.birthday = responsable_in.birthday
-    responsable.document = responsable_in.document
-    responsable.indentity_number = responsable_in.indentity_number
-    responsable.org_exp = responsable_in.org_exp
-    responsable.uf_exp = responsable_in.uf_exp
-    responsable.nationality = responsable_in.nationality
-    responsable.email = responsable_in.email
-    responsable.nationality = responsable_in.nationality
-    responsable.phone = responsable_in.phone
-    responsable.bond = responsable_in.bond
+    try:
+        responsable.fullname = responsable_in.fullname,
+        responsable.birthday = responsable_in.birthday
+        responsable.document = responsable_in.document
+        responsable.indentity_number = responsable_in.indentity_number
+        responsable.org_exp = responsable_in.org_exp
+        responsable.uf_exp = responsable_in.uf_exp
+        responsable.nationality = responsable_in.nationality
+        responsable.email = responsable_in.email
+        responsable.nationality = responsable_in.nationality
+        responsable.phone = responsable_in.phone
+        responsable.bond = responsable_in.bond
 
-    session.add(responsable)
-    session.commit()
+        session.add(responsable)
+        session.commit()
 
-    return ResponsibleContractOut.from_orm(responsable)
+        return ResponsibleContractOut.from_orm(responsable)
+    
+    except Exception as e:
+        logger.error(f"Error in update responsable: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.delete('/responsable/{id}', summary='Delete responsable', response_model=List[StudentOut], tags=[tags])
@@ -207,17 +232,22 @@ async def create(id: UUID, file: bytes = File(...), current_user: User = Depends
     if not student:
         raise HTTPException(status_code=404, detail='route not found')
 
-    path = 'storage/students/avatar/' + str(student.id) + '.jpg'
+    path = 'public/avatars/students/' + str(student.id) + '.jpg'
 
-    with open(path, 'wb') as f:
-        f.write(file)
+    try:
+        with open(path, 'wb') as f:
+            f.write(file)
 
-    student.avatar = path
+        student.avatar = path
 
-    session.add(student)
-    session.commit()
+        session.add(student)
+        session.commit()
 
-    return StudentOut.from_orm(student)
+        return StudentOut.from_orm(student)
+    
+    except Exception as e:
+        logger.error(f"Error in upload avatar student: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.get('/avatar/{id}', summary='Returns student avatar', tags=[tags])
@@ -260,23 +290,27 @@ async def create(id: UUID, address: AddressContractorIn, current_user: User = De
         session).filter(Student.id == id).first()
     if not student:
         raise HTTPException(status_code=404, detail='route not found')
+    
+    try:
+        address = AddressContract(
+            contractor_id=student.contractor_id,
+            responsible_contract_id=address.responsible_contract_id,
+            address=address.address,
+            number=address.number,
+            complement=address.complement,
+            zip_code=address.zip_code,
+            district=address.district,
+            city=address.city,
+            state=address.state,
+        )
+        session.add(address)
+        session.commit()
 
-    address = AddressContract(
-        contractor_id=student.contractor_id,
-        responsible_contract_id=address.responsible_contract_id,
-        address=address.address,
-        number=address.number,
-        complement=address.complement,
-        zip_code=address.zip_code,
-        district=address.district,
-        city=address.city,
-        state=address.state,
-    )
-    session.add(address)
-    session.commit()
+        return AddressContractorOut.from_orm(address)
 
-    return AddressContractorOut.from_orm(address)
-
+    except Exception as e:
+        logger.error(f"Error in create student address: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 @router.get('/{id}/address/', summary='Return contract address', tags=[tags])
 async def get_id(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
@@ -300,20 +334,25 @@ async def update(id: UUID, address_in: AddressContractorIn, current_user: User =
         session).filter(AddressContract.id == id).first()
     if not address:
         raise HTTPException(status_code=404, detail='route not found')
+    
+    try:
+        # address.responsible_contract_id = address_in.responsible_contract_id,
+        address.address = address_in.address
+        address.number = address_in.number
+        address.complement = address_in.complement
+        address.zip_code = address_in.zip_code
+        address.district = address_in.district
+        address.city = address_in.city
+        address.state = address_in.state
 
-    # address.responsible_contract_id = address_in.responsible_contract_id,
-    address.address = address_in.address
-    address.number = address_in.number
-    address.complement = address_in.complement
-    address.zip_code = address_in.zip_code
-    address.district = address_in.district
-    address.city = address_in.city
-    address.state = address_in.state
+        session.add(address)
+        session.commit()
 
-    session.add(address)
-    session.commit()
-
-    return AddressContractorOut.from_orm(address)
+        return AddressContractorOut.from_orm(address)
+    
+    except Exception as e:
+        logger.error(f"Error in update address student: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 @router.post('/filters', summary='Return list with filters', tags=[tags])
 async def get_filters(filters: Filters, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
@@ -325,7 +364,7 @@ async def get_filters(filters: Filters, current_user: User = Depends(get_current
         resps = []
         for r in responsables:
             resps.append(r)
-        student.responsable: ResponsibleContract = resps
+        student.responsable = resps
 
     return [StudentOut.from_orm(x) for x in students]
     

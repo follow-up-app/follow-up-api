@@ -1,17 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Recuperação de senha</title>
-  </head>
-
-  <body>
-    <div id="content">
-        <h1>Recuperação de senha</h1>=<p>Olá, {{ data.fullname }}</p>
-        <p>Crie uma nova senha de acesso para plataforma</p>
-        <p>Por favor, clique no link abaixo:</p>
-        <p>
-        <a href="http://locahost:3000/recovery/create/{data.id}">nova senha</a>
-      </p>
-    </div>
-  </body>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    
+    .header {
+      text-align: center;
+      padding: 20px 0;
+    }
+    
+    .header h1 {
+      margin-top: 10px;
+      font-size: 24px;
+    }
+    
+    .content {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #068798;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    
+    .button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+  <div class="header">
+    <img src="cid:image_file" height="80px" />
+    <h1>Recuperação de senha</h1>
+  </div>
+  <div class="content">
+    <p>Olá {{ data.fullname }}!</p>
+    <p>Você solicitou sua recuperação de senha.</p>
+    <p>Por favor, clique no botão abaixo para cadastrar sua nova senha de acesso a plaforma.</p>
+    <a href="{{ url }}/register-password/{{ token }}" class="button">Cadastrar senha</a>
+  </div>
 </html>

@@ -36,18 +36,9 @@ class RecoveryPasswordSchemaIn(BaseModel):
     email: str
 
 
-class RecoveryPasswordSchemaOut(BaseModel):
-    message: str
-
-
 class ResetPasswordSchemaIn(BaseModel):
     password: str
     token: Optional[str]
-
-
-class ResetPasswordSchemaOut(BaseModel):
-    message: str
-
 
 class UserOut(BaseModel):
     id: UUID

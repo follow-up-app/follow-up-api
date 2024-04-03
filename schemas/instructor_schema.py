@@ -30,8 +30,8 @@ class AddressInstructorOut(BaseModel):
 class InstructorIn(BaseModel):
     # specialty: Optional[UUID]
     fullname: str
-    document: str
-    email: str
+    document: Optional[str]
+    email: Optional[str]
     phone: Optional[str]
     indentity_number: Optional[str]
     org_exp: Optional[str]

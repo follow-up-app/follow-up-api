@@ -1,30 +1,16 @@
 from datetime import timedelta
-from typing import List
-from uuid import UUID
-from sqlalchemy import or_
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy.orm import Session
 from starlette import status
-from starlette.background import BackgroundTasks
-import re
-import os
-import unidecode
-
 from config import get_settings, Settings
-from core.security import check_is_admin_user, hash_password, verify_password, create_access_token, get_current_user
+from core.security import verify_password, create_access_token, get_current_user
 from db import get_db
-from db.models import User, UserPermission
-from schemas.user_schemas import UserOut, ResetPasswordSchemaIn, ResetPasswordSchemaOut, \
-    RecoveryPasswordSchemaIn, RecoveryPasswordSchemaOut, LoginSchemaIn, LoginSchemaOut, \
-    UserRegisterSchemaIn, UserStoreIn
-
+from db.models import User
+from schemas.user_schemas import UserOut, LoginSchemaIn, LoginSchemaOut
 
 router = APIRouter()
 
 tag: str = "Auth"
-
 
 @router.post('/', tags=[tag], summary="Authentication in app",
              response_model=LoginSchemaOut)

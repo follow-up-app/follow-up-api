@@ -17,6 +17,7 @@ from routes.schedule import router as schedule_router
 from routes.notifications import router as notifications_router
 from routes.executions import router as execution_router
 from routes.follow_up import router as follow_up_router
+from routes.profile import router as profile_router
 
 
 # sentry_sdk.init(
@@ -55,6 +56,7 @@ app.include_router(schedule_router, prefix='/schedules')
 app.include_router(configuration_router, prefix='/configurations')
 app.include_router(execution_router, prefix='/execution')
 app.include_router(follow_up_router, prefix='/follow-up')
+app.include_router(profile_router, prefix='/profile')
 
 
 # routes provisional

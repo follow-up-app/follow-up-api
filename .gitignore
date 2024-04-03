@@ -10,6 +10,8 @@ __pycache__/
 storage/instructors/avatar/*
 storage/students/avatar/*
 storage/users/avatar/*
+public/avatars/students/*
+public/avatars/users/*
 
 # Distribution / packaging
 .Python

@@ -1,72 +1,78 @@
-from requests.sessions import session
-import io
-from fastapi.param_functions import File
-from db import get_db
-from fastapi import Depends
-from smtplib import SMTP
+from smtplib import SMTP_SSL
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from jinja2 import Environment, FileSystemLoader
 import os
-from sqlalchemy.orm.session import Session
-from config import Settings, get_settings
+from config import get_settings
 from db.models import User
+import logging
+from fastapi import HTTPException
+from core.crypt import Crypt
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Mailer:
     def __init__(self):
         self._settings = get_settings()
-        path: str = '%s/templates/' % os.getcwd()
-        self.env = Environment(loader=FileSystemLoader(path))
-        
+        self.path: str = '%s/templates/' % os.getcwd()
+        self.env = Environment(loader=FileSystemLoader(self.path))
+        self.image_path = os.path.join(self.path, 'img', 'follow_up.png')
+                
         
     def welcome_user(self, user: User):
         message = MIMEMultipart()
-        message['subject'] = 'Follow UP|app - Bem-vindo ao Follow-UP'
+        message['subject'] = 'Follow UP | app -Recuperação de Senha'
         message['From'] = self._settings.SMTP_EMAIL_FROM
         message['To'] = user.email
-        body_content = self.env.get_template('welcome.html')
-        body_content = body_content.render(data=user)
-        message.attach(MIMEText(body_content, "html"))
-        msg_body = message.as_string()
-        server = SMTP(self._settings.SMTP_HOST, self._settings.SMTP_PORT)
-        server.starttls()
-        server.login(self._settings.SMTP_EMAIL_FROM,
-                        self._settings.SMTP_EMAIL_PASSWORD)
-        server.sendmail(self._settings.SMTP_EMAIL_FROM, user.email, msg_body)
-        server.quit()
         
+        token =  Crypt.encrypt(user.id, user.email)
+        
+        body_content = self.env.get_template('welcome.html')
+        body_content = body_content.render(data=user, url=self._settings.PANEL_URL, token=token, image='templates/img/follow_up.png')
+        message.attach(MIMEText(body_content, "html"))
+        
+        with open(self.image_path, 'rb') as file:
+                image_data = file.read()
+                image = MIMEImage(image_data, name=os.path.basename(self.image_path))
+                image.add_header('Content-ID', '<image_file>')
+                message.attach(image)
+        
+        self.sender(user.email, message)
+                
         
     
     def recovery_password(self, user: User):
         message = MIMEMultipart()
-        message['subject'] = 'Follow UP|app -Recuperação de Senha'
+        message['subject'] = 'Follow UP | app -Recuperação de Senha'
         message['From'] = self._settings.SMTP_EMAIL_FROM
         message['To'] = user.email
+        
+        token =  Crypt.encrypt(user.id, user.email)      
+        
         body_content = self.env.get_template('recovery.html')
-        body_content = body_content.render(data=user)
+        body_content = body_content.render(data=user, url=self._settings.PANEL_URL, token=token, image='templates/img/follow_up.png')
         message.attach(MIMEText(body_content, "html"))
-        msg_body = message.as_string()
-        server = SMTP(self._settings.SMTP_HOST, self._settings.SMTP_PORT)
-        server.starttls()
-        server.login(self._settings.SMTP_EMAIL_FROM,
-                        self._settings.SMTP_EMAIL_PASSWORD)
-        server.sendmail(self._settings.SMTP_EMAIL_FROM, user.email, msg_body)
-        server.quit()
+               
+        with open(self.image_path, 'rb') as file:
+                image_data = file.read()
+                image = MIMEImage(image_data, name=os.path.basename(self.image_path))
+                image.add_header('Content-ID', '<image_file>')
+                message.attach(image)
         
-        
-    def send_generic_message(self, to: str, subject:str, template:str, data:dict)->None:
-        message = MIMEMultipart()
-        message['subject'] = subject
-        message['From'] = self._settings.SMTP_EMAIL_FROM
-        message['To'] = to
-        body_content = self.env.get_template(template)
-        body_content = body_content.render(data=data)
-        message.attach(MIMEText(body_content, "html"))
-        msg_body = message.as_string()
-        server = SMTP(self._settings.SMTP_HOST, self._settings.SMTP_PORT)
-        server.starttls()
-        server.login(self._settings.SMTP_EMAIL_FROM,
+        self.sender(user.email, message)
+    
+    
+    def sender(self, email, message):
+        try:
+            server = SMTP_SSL(self._settings.SMTP_HOST, self._settings.SMTP_PORT)
+            server.login(self._settings.SMTP_EMAIL_FROM,
                         self._settings.SMTP_EMAIL_PASSWORD)
-        server.sendmail(self._settings.SMTP_EMAIL_FROM, to, msg_body)
-        server.quit()
+            server.sendmail(self._settings.SMTP_EMAIL_FROM, email, message.as_string())
+            server.quit()
+            
+        except Exception as e:
+            logger.error(f"Error in sender email: {e}")
+            raise HTTPException(status_code=500, detail='Server error')

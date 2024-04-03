@@ -5,19 +5,23 @@ from fastapi import APIRouter, Depends, HTTPException, File
 from sqlalchemy.orm import Session
 from starlette import status
 from config import get_settings, Settings
-from core.security import check_is_admin_user, hash_password, get_current_user
+from core.security import check_is_admin_user, hash_password
 from db import get_db
-from db.models import User, UserPermission, Status
-from schemas.user_schemas import UserOut, UserRegisterSchemaIn, UserStoreIn, RecoveryPasswordSchemaIn, ResetPasswordSchemaIn
+from db.models import User, UserPermission, Status, Instructor
+from schemas.user_schemas import UserOut, UserRegisterSchemaIn, UserStoreIn
 from fastapi.responses import FileResponse
 from core.mailer import Mailer
+import logging
 import random
 import string
-from db.mongo import Mongo
+
 
 router = APIRouter()
 
 user_tag: str = "Users"
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 async def get_user(session: Session, email: str) -> User:
@@ -37,28 +41,26 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
     if user:
         raise HTTPException(
             status_code=403, detail="user_already_exists")
+        
+    try:
+        user = User(
+            company_id=user_schema.company_id,
+            password_hash=hash_password('123'),
+            fullname=user_schema.fullname,
+            email=user_schema.email,
+            document=user_schema.document,
+            permission=user_schema.permission,
+            position=user_schema.position.upper(),
+            status=Status.ACTIVE
+        )
+        session.add(user)
+        session.commit()
 
-    user = User(
-        company_id=user_schema.company_id,
-        # password_hash=hash_password(random.choice(string.ascii_uppercase)),
-        password_hash=hash_password('123'),
-        fullname=user_schema.fullname,
-        email=user_schema.email,
-        document=user_schema.document,
-        permission=user_schema.permission,
-        position=user_schema.position.upper(),
-        status=Status.ACTIVE
-    )
-    session.add(user)
-    session.commit()
-
-    # mailer = Mailer()
-    # mailer.welcome_user(user)
-
-    # mongo = Mongo()
-    # mongo.welcome_app(user)
-
-    return UserOut.from_orm(user)
+        return UserOut.from_orm(user)
+    
+    except Exception as e:
+        logger.error(f"Error in create user: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.post('/', tags=[user_tag], summary='Create user', description='Method for create user')
@@ -69,30 +71,30 @@ async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depen
         User.email == user_schema.email)).first()
     if user:
         raise HTTPException(
-            status_code=403, detail="user_already_exists")
+            status_code=403, detail="Já existe um usuário para este e-mail")
 
-    user = User(
-        company_id=current_user.company_id,
-        # password_hash=hash_password(random.choice(string.ascii_uppercase)),
-        password_hash=hash_password('123'),
-        fullname=user_schema.fullname,
-        email=user_schema.email,
-        document=user_schema.document,
-        permission=UserPermission.ADMIN,
-        position=user_schema.position.upper(),
-        status=Status.ACTIVE
-    )
-    session.add(user)
-    session.commit()
+    try:
+        user = User(
+            company_id=current_user.company_id,
+            password_hash=hash_password(random.choice(string.ascii_uppercase)),
+            fullname=user_schema.fullname,
+            email=user_schema.email,
+            document=user_schema.document,
+            permission=UserPermission.ADMIN,
+            position=user_schema.position.upper(),
+            status=Status.ACTIVE
+        )
+        session.add(user)
+        session.commit()
 
-    # mailer = Mailer()
-    # mailer.welcome_user(user)
+        mailer = Mailer()
+        mailer.welcome_user(user)
 
-    # mongo = Mongo()
-    # mongo.welcome_app(user)
-
-    return UserOut.from_orm(user)
-
+        return UserOut.from_orm(user)
+    
+    except Exception as e:
+        logger.error(f"Error in create user: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 @router.get('/', summary='Returns users list', response_model=List[UserOut], tags=[user_tag])
 async def get_all(session: Session = Depends(get_db)):
@@ -115,24 +117,23 @@ async def update(id: UUID, user_schema: UserRegisterSchemaIn, current_user: User
     if not user:
         raise HTTPException(status_code=404, detail='route not found')
 
-    user.fullname = user_schema.fullname
-    user.document = user_schema.document
-    user.email = user_schema.email
-    user.position = user_schema.position.upper(),
+    try:
+        user.fullname = user_schema.fullname
+        user.document = user_schema.document
+        user.email = user_schema.email
+        user.position = user_schema.position.upper(),
 
-    session.add(user)
-    session.commit()
+        session.add(user)
+        session.commit()
 
-    return UserOut.from_orm(user)
-
-
-@router.get("/me/", tags=[user_tag], summary="Return user logged", response_model=UserOut)
-async def me(current_user: User = Depends(get_current_user)):
-    result = UserOut.from_orm(current_user)
-    return result
+        return UserOut.from_orm(user)
+    
+    except Exception as e:
+        logger.error(f"Error in update user: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
-@router.get('/{id}/active', summary='Active or inactive user', response_model=List[UserOut], tags=[user_tag])
+@router.put('/{id}/active', summary='Active or inactive user', response_model=List[UserOut], tags=[user_tag])
 async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
     user: User = User.query(session).filter(User.id == id).first()
     if not user:
@@ -144,10 +145,15 @@ async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), se
     if user.status == Status.INACTIVE:
         user.status = Status.ACTIVE
 
-    session.add(user)
-    session.commit()
-
-    return UserOut.from_orm(user)
+    try:
+        session.add(user)
+        session.commit()
+        
+        return UserOut.from_orm(user)
+    
+    except Exception as e:
+        logger.error(f"Error in active user: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.post('/{id}/avatar', summary='Upload avatar', tags=[user_tag])
@@ -156,17 +162,27 @@ async def create(id: UUID, file: bytes = File(...), current_user: User = Depends
     if not user:
         raise HTTPException(status_code=404, detail='route not found')
 
-    path = 'storage/users/avatar/' + str(user.id) + '.jpg'
+    path = 'public/avatars/users/' + str(user.id) + '.jpg'
 
-    with open(path, 'wb') as f:
-        f.write(file)
+    try:
+        with open(path, 'wb') as f:
+            f.write(file)
 
-    user.image_path = path
+        user.image_path = path
+        
+        if user.permission == UserPermission.INSTRUCTOR:
+            instructor: Instructor = User.query(session).filter(Instructor.user_id == user.id).first()
+            instructor.avatar = path
+            session.add(instructor)
 
-    session.add(user)
-    session.commit()
-
-    return UserOut.from_orm(user)
+        session.add(user)
+        session.commit()
+        
+        return UserOut.from_orm(user)
+    
+    except Exception as e:
+        logger.error(f"Error in upload image in user: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.get('/{id}/avatar', summary='Return avatar user',  tags=[user_tag])
@@ -180,34 +196,3 @@ async def get_id(id: UUID, session: Session = Depends(get_db)):
 
     img = user.image_path
     return FileResponse(img, media_type="image/jpeg")
-
-
-@router.post('/refresh-password', summary='sender link password',  tags=[user_tag])
-async def update(user_schema: RecoveryPasswordSchemaIn, session: Session = Depends(get_db)):
-    user: User = User.query(session).filter(
-        User.email == user_schema.email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail='user not found')
-
-    mailer = Mailer()
-    mailer.recovery_password(user)
-
-    return UserOut.from_orm(user)
-
-
-@router.put('/refresh-password/{id}', summary='password',  tags=[user_tag])
-async def update(id: UUID, user_schema: ResetPasswordSchemaIn, session: Session = Depends(get_db)):
-    user: User = User.query(session).filter(
-        User.id == id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail='user not found')
-    
-    user.password_hash = hash_password(user_schema.password)
-    
-    session.add(user)
-    session.commit()
-
-    mongo = Mongo()
-    mongo.update_password(user)
-
-    return UserOut.from_orm(user)

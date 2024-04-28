@@ -24,7 +24,7 @@ class Mailer:
         
     def welcome_user(self, user: User):
         message = MIMEMultipart()
-        message['subject'] = 'Follow UP | app -Recuperação de Senha'
+        message['subject'] = 'Follow UP | app - Cadastre a sua senha'
         message['From'] = self._settings.SMTP_EMAIL_FROM
         message['To'] = user.email
         
@@ -46,7 +46,7 @@ class Mailer:
     
     def recovery_password(self, user: User):
         message = MIMEMultipart()
-        message['subject'] = 'Follow UP | app -Recuperação de Senha'
+        message['subject'] = 'Follow UP | app - Recuperação de Senha'
         message['From'] = self._settings.SMTP_EMAIL_FROM
         message['To'] = user.email
         

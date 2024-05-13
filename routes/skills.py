@@ -67,8 +67,8 @@ async def update(id: UUID, skill_in: SkillIn, current_user: User = Depends(check
         raise HTTPException(status_code=404, detail='route not found')
 
     try:
-        skill.name = skill_in.name,
-        skill.objective = skill.objective
+        skill.name = skill_in.name
+        skill.objective = skill_in.objective
         
         session.add(skill)
         session.commit()

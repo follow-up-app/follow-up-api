@@ -47,7 +47,7 @@ async def register(user_schema: UserStoreIn, session: Session = Depends(get_db),
             company_id=user_schema.company_id,
             password_hash=hash_password('123'),
             fullname=user_schema.fullname,
-            email=user_schema.email,
+            email=user_schema.email.lower(),
             document=user_schema.document,
             permission=user_schema.permission,
             position=user_schema.position.upper(),
@@ -78,7 +78,7 @@ async def register(user_schema: UserRegisterSchemaIn, current_user: User = Depen
             company_id=current_user.company_id,
             password_hash=hash_password(random.choice(string.ascii_uppercase)),
             fullname=user_schema.fullname,
-            email=user_schema.email,
+            email=user_schema.email.lower(),
             document=user_schema.document,
             permission=UserPermission.ADMIN,
             position=user_schema.position.upper(),
@@ -120,7 +120,7 @@ async def update(id: UUID, user_schema: UserRegisterSchemaIn, current_user: User
     try:
         user.fullname = user_schema.fullname
         user.document = user_schema.document
-        user.email = user_schema.email
+        user.email = user_schema.email.lower()
         user.position = user_schema.position.upper(),
 
         session.add(user)

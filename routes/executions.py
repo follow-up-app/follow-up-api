@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from core.security import get_current_user
 from db import get_db
-from db.models import Execution, User, Procedure, Schedule, StatusSchedule
+from db.models import Execution, ProcedureSchedule, User, Procedure, Schedule, StatusSchedule
 from schemas.execution_schemas import ExecutionIn, ExecutionOut
 from datetime import datetime
 import logging
@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 @router.post('/', summary='Create execution', tags=[tags], response_model=ExecutionOut)
 async def create(execute_in: ExecutionIn, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
-    procedure: Procedure = Procedure.query(session).filter(
-        Procedure.id == execute_in.procedure_id).first()
+    procedure_schedule: ProcedureSchedule = ProcedureSchedule.query(session).filter(
+        ProcedureSchedule.id == execute_in.procedure_id).first()
 
-    if not procedure:
+    if not procedure_schedule:
         raise HTTPException(status_code=404, detail='procedure not found')
     
     schedule: Schedule = Schedule.query(session).filter(
@@ -35,7 +35,7 @@ async def create(execute_in: ExecutionIn, current_user: User = Depends(get_curre
     tries: Execution = Execution.query(session).filter(
         Execution.schedule_id == execute_in.schedule_id, Execution.procedure_id == execute_in.procedure_id).count()
 
-    if tries >= execute_in.trie or execute_in.trie > procedure.tries:
+    if tries >= execute_in.trie or execute_in.trie > procedure_schedule.tries:
         raise HTTPException(
             status_code=406, detail='tries of procedure exceeded')
 
@@ -48,8 +48,9 @@ async def create(execute_in: ExecutionIn, current_user: User = Depends(get_curre
             schedule.student_arrival = datetime.utcnow()
         
         execution = Execution(
-            schedule_id=execute_in.schedule_id,
-            procedure_id=execute_in.procedure_id,
+            schedule_id=schedule.id,
+            procedure_id=procedure_schedule.procedure_id,
+            procedure_schedule_id=procedure_schedule.id,
             trie=execute_in.trie,
             time=execute_in.time,
             help_type=execute_in.help_type,

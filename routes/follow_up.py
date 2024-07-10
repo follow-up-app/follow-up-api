@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from core.security import get_current_user
 from db import get_db
-from db.models import User, Schedule, Skill, Execution, TypeHelp, SkillsSchedule, Procedure
+from db.models import ProcedureSchedule, User, Schedule, Skill, Execution, TypeHelp, SkillsSchedule
 from schemas.schedule_schemas import ScheduleOut
 from datetime import datetime
 from schemas.follow_up_schemas import ScheduleFollowUp, Filters, ScheduleFollowUpMobile
@@ -38,26 +38,26 @@ async def get_id(id: UUID, current_user: User = Depends(get_current_user), sessi
 
     for skill in skills:
         executions = []
-        procedures: Procedure = Procedure.query(session).filter(
-            Procedure.skill_id == skill.skill_id,
-            Procedure.student_id == schedule.student_id
+        procedures: ProcedureSchedule = ProcedureSchedule.query(session).filter(
+            ProcedureSchedule.skill_id == skill.skill_id,
+            ProcedureSchedule.student_id == schedule.student_id,
+            ProcedureSchedule.schedule_id == schedule.id
         ).all()
 
         for procedure in procedures:
             procedure.points = 0
             executions: Execution = Execution.query(session).filter(
-                Execution.procedure_id == procedure.id,
+                Execution.procedure_schedule_id == procedure.id,
                 Execution.schedule_id == id).order_by(Execution.trie).all()
             if executions:
                 procedure.points = round(Execution.query(session).filter(
-                    Execution.procedure_id == procedure.id,
+                    Execution.procedure_schedule_id == procedure.id,
                     Execution.schedule_id == id,
                     Execution.help_type == TypeHelp.INDEPENDENT).count() / procedure.tries * 100, 2)
                 procedure.executions = executions
         skill.procedures = procedures
 
     schedule.skills = skills
-    # return schedule
 
     return ScheduleFollowUp.from_orm(schedule)
 
@@ -69,25 +69,27 @@ async def get_id(id: UUID, skill_schedule_id: UUID, current_user: User = Depends
     if not schedule:
         raise HTTPException(status_code=404, detail='schedule not found')
 
-    skillSchedule: SkillsSchedule = SkillsSchedule.query(session).filter(
-        SkillsSchedule.id == skill_schedule_id,
-    ).first()
+    skills_schedules: SkillsSchedule = SkillsSchedule.query(session).filter(
+        SkillsSchedule.id == skill_schedule_id).first()
 
     skill: Skill = Skill.query(session).filter(
-        Skill.id == skillSchedule.skill_id).first()
+        Skill.id == skills_schedules.skill_id).first()
 
     if not skill:
         raise HTTPException(status_code=404, detail='skill not found')
 
-    procedures: Procedure = Procedure.query(session).filter(
-        Procedure.skill_id == skill.id, Procedure.student_id == schedule.student_id).all()
+    procedures: ProcedureSchedule = ProcedureSchedule.query(session).filter(
+        ProcedureSchedule.skill_id == skill.id, 
+        ProcedureSchedule.student_id == schedule.student_id,
+        ProcedureSchedule.schedule_id == schedule.id).all()
 
     skill.procedures = procedures
     schedule.skill = skill
 
     for procedure in skill.procedures:
         executions: Execution = Execution.query(session).filter(
-            Execution.procedure_id == procedure.id, Execution.schedule_id == id).count()
+            Execution.procedure_schedule_id == procedure.id, 
+            Execution.schedule_id == id).count()
 
         procedure.total_exec = int(executions)
         procedure.data_chart = round(executions / procedure.tries, 2)
@@ -102,12 +104,15 @@ async def get_id(id: UUID, skill_schedule_id: UUID, current_user: User = Depends
     
     outhers = []
     for skl in others_skills:
-        prcs: Procedure = Procedure.query(session).filter(
-            Procedure.skill_id == skl.skill_id, Procedure.student_id == schedule.student_id).all()
+        prcs: ProcedureSchedule = ProcedureSchedule.query(session).filter(
+            ProcedureSchedule.skill_id == skl.skill_id, 
+            ProcedureSchedule.student_id == schedule.student_id,
+            ProcedureSchedule.schedule_id == schedule.id).all()
 
         for pr in prcs:
             excs: Execution = Execution.query(session).filter(
-                Execution.procedure_id == pr.id, Execution.schedule_id == id).count()
+                Execution.procedure_schedule_id == pr.id, 
+                Execution.schedule_id == id).count()
                  
             pr.app_active = True
             if excs >= pr.tries:

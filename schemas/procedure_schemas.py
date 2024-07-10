@@ -5,8 +5,7 @@ from schemas.execution_schemas import ExecutionOut
 from schemas.student_schemas import StudentOut
 
 class ProcedureIn(BaseModel):
-    skill_id: UUID
-    student_id: Optional[UUID]
+    skill_id: Optional[UUID]
     name: str
     tries: int    
     goal: float
@@ -22,9 +21,10 @@ class ProcedureIn(BaseModel):
 
 class ProcedureOut(BaseModel):
     id: UUID
+    schedule_id: Optional[UUID]
     skill_id: UUID
-    student_id: Optional[UUID]
-    skill_name = str
+    procedure_id: Optional[UUID]
+    skill_name: Optional[str]
     name: str
     tries: int    
     goal: float

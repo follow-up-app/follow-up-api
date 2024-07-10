@@ -18,11 +18,6 @@ logger = logging.getLogger(__name__)
 
 @router.post('/', summary='Create procedure', tags=[tags], response_model=ProcedureOut)
 async def create(procedure_in: ProcedureIn, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    student: Student = Student.query(session).filter(
-        Student.id == procedure_in.student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail='student not found')
-
     skill: Skill = Skill.query(session).filter(
         Skill.id == procedure_in.skill_id
     ).first()
@@ -32,7 +27,6 @@ async def create(procedure_in: ProcedureIn, current_user: User = Depends(check_i
     try:
         procedure = Procedure(
             skill_id=procedure_in.skill_id,
-            student_id=procedure_in.student_id,
             tries=procedure_in.tries,
             goal=procedure_in.goal,
             period=procedure_in.period,
@@ -85,7 +79,6 @@ async def update(id: UUID, procedure_in: ProcedureIn, current_user: User = Depen
     
     try:
         procedure.skill_id = procedure_in.skill_id
-        procedure.student_id = procedure_in.student_id
         procedure.tries = procedure_in.tries
         procedure.name = procedure_in.name
         procedure.objective = procedure_in.objective

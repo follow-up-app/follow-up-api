@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from core.security import check_is_admin_user, get_current_user
 from db import get_db
-from db.models import StatusSchedule, Student, User, Instructor, Schedule, EventRepeat, Execution, SkillsSchedule
+from db.models import ProcedureSchedule, StatusSchedule, Student, User, Instructor, Schedule, EventRepeat, Execution, SkillsSchedule
+from schemas.procedure_schemas import ProcedureIn, ProcedureOut
 from schemas.schedule_schemas import ScheduleIn, ScheduleOut, ScheduleEvent
 from db.mongo import Mongo
 from datetime import datetime, date
@@ -33,19 +34,10 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
     if not instructor:
         raise HTTPException(status_code=404, detail='instructor not found')
 
-    if schedule_in.repeat == EventRepeat.WEEK:
-        event = Event()
-        event.weeks(
-            current_user=current_user,
-            session=session,
-            event=schedule_in,
-            instructor=instructor,
-            student=student)
-
     try:
         if schedule_in.repeat == EventRepeat.WEEK:
             event = Event()
-            event.weeks(
+            schedules = event.weeks(
                 current_user=current_user,
                 session=session,
                 event=schedule_in,
@@ -54,7 +46,7 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
 
         if schedule_in.repeat == EventRepeat.MOUTH:
             event = Event()
-            event.mouths(
+            schedules= event.mouths(
                 current_user=current_user,
                 session=session,
                 event=schedule_in,
@@ -63,7 +55,7 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
 
         if schedule_in.repeat == EventRepeat.NO:
             event = Event()
-            event.unique(
+            schedules = event.unique(
                 current_user=current_user,
                 session=session,
                 event=schedule_in,
@@ -75,8 +67,8 @@ async def create(schedule_in: ScheduleIn, current_user: User = Depends(check_is_
         # mongo.create_schedule_notitification(instructor.user_id, schedule.id)
         # mongo.create_event_admin(session, schedule.id)
 
-        return {'status': 200, 'message': 'Events created'}
-
+        return [ScheduleOut.from_orm(x) for x in schedules]
+    
     except Exception as e:
         logger.error(f"Error in create schedule: {e}")
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -103,22 +95,30 @@ async def get_id(instructor_id: UUID, current_user: User = Depends(get_current_u
     return [ScheduleOut.from_orm(x) for x in all_itens]
 
 
-@router.get('detail/{id}', summary='Return schedule', tags=[tags])
+@router.get('/details/{id}', summary='Return schedule', tags=[tags])
 async def get_id(id: UUID, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     schedule: Schedule = Schedule.query(
         session).filter(Schedule.id == id).first()
     if not schedule:
         raise HTTPException(status_code=404, detail='schedule not found')
+    
+    skills: SkillsSchedule = SkillsSchedule.query(session).filter(
+            SkillsSchedule.schedule_id == schedule.id
+        ).all()
+    schedule.skills = skills
 
     return ScheduleOut.from_orm(schedule)
 
 
-@router.delete('/events/{event_id}', summary='Remove all schedules', tags=[tags])
-async def delete_all(event_id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
-    schedules: Schedule = Schedule.query(
-        session).filter(Schedule.event_id == event_id).all()
-    if not schedules:
+@router.delete('/events/{schedule_id}', summary='Remove all schedules', tags=[tags])
+async def delete_all(schedule_id: UUID, current_user: User = Depends(check_is_admin_user), session: Session = Depends(get_db)):
+    schedule: Schedule = Schedule.query(
+        session).filter(Schedule.id == schedule_id).first()
+    if not schedule:
         raise HTTPException(status_code=404, detail='schedule not found')
+    
+    schedules: Schedule = Schedule.query(
+        session).filter(Schedule.event_id == schedule.event_id).all()
 
     try:
         for schedule in schedules:
@@ -127,6 +127,13 @@ async def delete_all(event_id: UUID, current_user: User = Depends(check_is_admin
             if not executions:
                 skills: SkillsSchedule = SkillsSchedule.query(session).filter(
                     SkillsSchedule.schedule_id == schedule.id).all()
+                
+                procedures: ProcedureSchedule = ProcedureSchedule.query(session).filter(
+                    ProcedureSchedule.schedule_id == schedule.id).all()
+                
+                for procedure in procedures:
+                    session.delete(procedure)
+                
                 for skill in skills:
                     session.delete(skill)
 
@@ -149,6 +156,12 @@ async def delete(id: UUID, current_user: User = Depends(check_is_admin_user), se
     try:
         skills: SkillsSchedule = SkillsSchedule.query(session).filter(
             SkillsSchedule.schedule_id == schedule.id).all()
+        
+        procedures: ProcedureSchedule =  ProcedureSchedule.query(session).filter(
+            ProcedureSchedule.schedule_id == schedule.id).all()
+        
+        for procedure in procedures:
+            session.delete(procedure)
 
         for skill in skills:
             session.delete(skill)
@@ -198,11 +211,13 @@ async def get_today(current_user: User = Depends(get_current_user), session: Ses
 
     all_itens: Schedule = Schedule.query(
         session).filter(Schedule.start >= start_of_day, Schedule.start <= end_of_day, Schedule.status == StatusSchedule.SCHEDULED).all()
+    
+   
     return [ScheduleOut.from_orm(x) for x in all_itens]
 
 
 @router.get('/avalible-instructor', summary='Return schedule list', tags=[tags])
-async def get_all(current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+async def get_avalible(current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     instructor: Instructor = Instructor.query(session).filter(
         Instructor.user_id == current_user.id).first()
     if not instructor:
@@ -249,7 +264,7 @@ async def get_all(current_user: User = Depends(get_current_user), session: Sessi
 
 
 @router.get('/{id}/student-arrival', summary='Return schedule list', tags=[tags])
-async def get_all(id: UUID, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
+async def studente_arrival(id: UUID, current_user: User = Depends(get_current_user), session: Session = Depends(get_db)):
     schedule: Schedule = Schedule.query(
         session).filter(Schedule.id == id).first()
     if not schedule:
@@ -264,4 +279,62 @@ async def get_all(id: UUID, current_user: User = Depends(get_current_user), sess
 
     except Exception as e:
         logger.error(f"Error in date arrival schedule: {e}")
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+
+
+
+@router.get('/{id}/{skill_id}/procedures', summary='Return schedule list', tags=[tags])
+async def get_produre(id: UUID, skill_id: UUID, session: Session = Depends(get_db)):
+    try:
+        schedule: Schedule = Schedule.query(
+        session).filter(Schedule.id == id).first()
+        if not schedule:
+            raise HTTPException(status_code=404, detail='schedule not found')
+        
+        procedures: ProcedureSchedule = ProcedureSchedule.query(session).filter(
+            ProcedureSchedule.schedule_id == id,
+            ProcedureSchedule.skill_id == skill_id
+        ).all()
+        
+        return [ProcedureOut.from_orm(x) for x in procedures]
+
+    except Exception as e:
+        logger.error(f"Error in procedure list in schedule: {e}")
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    
+
+@router.put('/procedure/{procedure_schedule_id}', summary='Return schedule list', tags=[tags])
+async def update(procedure_schedule_id: UUID, procedure_in: ProcedureIn , session: Session = Depends(get_db)):
+    try:
+        procedure_schedule: ProcedureSchedule = ProcedureSchedule.query(session).filter(
+            ProcedureSchedule.id == procedure_schedule_id
+        ).first()
+        if not procedure_schedule:
+            raise HTTPException(status_code=404, detail='procedure_schedule not found')
+        
+        all_procedures: ProcedureSchedule = ProcedureSchedule.query(session).filter(
+            ProcedureSchedule.procedure_id == procedure_schedule.procedure_id,
+            ProcedureSchedule.student_id == procedure_schedule.student_id,
+        ).all()
+        
+        for procedure in all_procedures:
+            procedure.tries = procedure_in.tries
+            procedure.goal = procedure_in.goal
+            procedure.period = procedure_in.period
+            procedure.name = procedure_in.name
+            procedure.objective = procedure_in.objective
+            procedure.stimulus = procedure_in.stimulus
+            procedure.answer = procedure_in.answer
+            procedure.consequence = procedure_in.consequence
+            procedure.materials = procedure_in.materials
+            procedure.help = procedure_in.help
+            
+            session.add(procedure)
+            session.commit()
+
+        return ProcedureOut.from_orm(procedure_schedule)
+       
+               
+    except Exception as e:
+        logger.error(f"Error in procedure update in schedule: {e}")
         raise HTTPException(status_code=e.status_code, detail=e.detail)

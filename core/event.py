@@ -1,4 +1,5 @@
-from db.models import Schedule, Skill, Instructor, Student, StatusSchedule, SkillsSchedule
+from core.objective import Objective
+from db.models import Procedure, Schedule, Skill, Instructor, Student, StatusSchedule, SkillsSchedule
 from sqlalchemy.orm import Session
 from schemas.schedule_schemas import ScheduleIn
 from fastapi import HTTPException
@@ -71,6 +72,11 @@ class Event:
 
         for sch in events:
             for skill in event.skill_id:
+                procedures: Procedure = Procedure.query(session).filter(Procedure.skill_id == skill).all()
+                for prc in procedures:
+                    objetive = Objective(session)
+                    objetive.save(sch.id, event.student_id, skill, prc)                
+                
                 skill_schedule: SkillsSchedule = SkillsSchedule(
                     schedule_id=sch.id,
                     skill_id=skill,
@@ -142,6 +148,10 @@ class Event:
 
         for sch in events:
             for skill in event.skill_id:
+                procedures: Procedure = Procedure.query(session).filter(Procedure.skill_id == skill).all()
+                for prc in procedures:
+                    objetive = Objective(session)
+                    objetive.save(sch.id, event.student_id, skill, prc)  
                 skill_schedule: SkillsSchedule = SkillsSchedule(
                     schedule_id=sch.id,
                     skill_id=skill,
@@ -212,8 +222,15 @@ class Event:
 
         session.add_all(events)
         session.flush()
+        
+        
         for sch in events:
             for skill in event.skill_id:
+                procedures: Procedure = Procedure.query(session).filter(Procedure.skill_id == skill).all()
+                for prc in procedures:
+                    objetive = Objective(session)
+                    objetive.save(sch.id, event.student_id, skill, prc)  
+                    
                 skill_schedule: SkillsSchedule = SkillsSchedule(
                     schedule_id=sch.id,
                     skill_id=skill,

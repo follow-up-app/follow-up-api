@@ -301,6 +301,7 @@ class Skill(ModelBase):
     objective = Column(String(255), nullable=False)
 
     schedule = relationship('SkillsSchedule', back_populates='skills')
+    procedure = relationship('ProcedureSchedule', back_populates='skills')
 
 
 class Procedure(ModelBase):
@@ -355,16 +356,45 @@ class Schedule(ModelBase):
     instructor = relationship('Instructor', back_populates='schedule')
     student = relationship('Student', back_populates='schedule')
     event = relationship('SkillsSchedule', back_populates='event')
+    
 
+class ProcedureSchedule(ModelBase):
+    __tablename__ = 'procedures_schedueles'
+    schedule_id = Column(UUIDType(binary=False),
+                         ForeignKey(Schedule.id), nullable=False)
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=False)
+    skill_id = Column(UUIDType(binary=False),
+                      ForeignKey(Skill.id), nullable=False)
+    procedure_id = Column(UUIDType(binary=False),
+                      ForeignKey(Procedure.id), nullable=False)
+    
+    tries = Column(Integer(), nullable=False)
+    goal = Column(Float(), nullable=False)
+    period = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=True)
+    objective = Column(String(1000), nullable=True)
+    stimulus = Column(String(1000), nullable=True)
+    answer = Column(String(1000), nullable=True)
+    consequence = Column(String(1000), nullable=True)
+    materials = Column(String(1000), nullable=True)
+    help = Column(String(1000), nullable=True)
+    
+    skills = relationship('Skill', back_populates='procedure')
+    
+    skill_name = association_proxy('skills', 'name')
+    
 
 class Execution(ModelBase):
     __tablename__ = 'executions'
 
     schedule_id = Column(UUIDType(binary=False),
                          ForeignKey(Schedule.id), nullable=False)
-
     procedure_id = Column(UUIDType(binary=False),
-                          ForeignKey(Procedure.id), nullable=False)
+                          ForeignKey(Procedure.id), nullable=True)
+    procedure_schedule_id = Column(UUIDType(binary=False),
+                          ForeignKey(ProcedureSchedule.id), nullable=False)
+    
     trie = Column(Integer(), nullable=False)
     time = Column(String(255), nullable=False)
     success = Column(Boolean(), nullable=False)

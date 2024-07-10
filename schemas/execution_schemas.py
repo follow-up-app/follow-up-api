@@ -15,6 +15,7 @@ class ExecutionOut(BaseModel):
     id: UUID
     schedule_id: UUID
     procedure_id: UUID
+    procedure_schedule_id: Optional[UUID]
     trie: int
     time: str
     help_type: Optional[TypeHelp]

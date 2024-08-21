@@ -1,11 +1,10 @@
 import os
 import sys
-
-sys.path.append(os.getcwd())
 from starlette.testclient import TestClient
-
 from main import app
 from config import Settings, get_settings
+
+sys.path.append(os.getcwd())
 
 
 def delete_db():

@@ -1,8 +1,9 @@
 from pymongo import MongoClient
+from app.constants.enums.permission_enum import PermissionEnum
 from config import get_settings
 from fastapi import Depends
 from uuid import UUID
-from db.models import User, UserPermission
+from db.models import User
 from sqlalchemy.orm import Session
 import enum
 
@@ -101,7 +102,7 @@ class Mongo:
     # ADMIN EVENTS
     def create_event_admin(self, session: Session, event_id):
         users = User.query(session).filter(
-            User.permission == UserPermission.ADMIN).all()
+            User.permission == PermissionEnum.ADMIN).all()
 
         for user in users:
             notification = {
@@ -118,7 +119,7 @@ class Mongo:
 
     def update_event_admin(self, session: Session, event_id):
         users = User.query(session).filter(
-            User.permission == UserPermission.ADMIN).all()
+            User.permission == PermissionEnum.ADMIN).all()
         for user in users:
             notification = {
                 'user_id':  str(user.id),
@@ -134,7 +135,7 @@ class Mongo:
     
     def finish_event_admin(self, session: Session, event_id):
         users = User.query(session).filter(
-            User.permission == UserPermission.ADMIN).all()
+            User.permission == PermissionEnum.ADMIN).all()
         for user in users:
             notification = {
                 'user_id':  str(user.id),
@@ -150,7 +151,7 @@ class Mongo:
     
     def generate_result_admin(self, session: Session, event_id):
         users = User.query(session).filter(
-            User.permission == UserPermission.ADMIN).all()
+            User.permission == PermissionEnum.ADMIN).all()
         for user in users:
             notification = {
                 'user_id':  str(user.id),

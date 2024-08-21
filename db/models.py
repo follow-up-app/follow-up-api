@@ -1,12 +1,20 @@
 import datetime
-import enum
-from uuid import UUID, uuid4
+from uuid import uuid4
 from sqlalchemy import Column, Float, String, Boolean, Enum, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, Query, relationship
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.sql.sqltypes import Date, DateTime, Integer
 from sqlalchemy_utils import UUIDType
+from app.constants.enums.company_enum import CompanyEnum
+from app.constants.enums.contract_enum import ContractEnum
+from app.constants.enums.genere_enum import GenereEnum
+from app.constants.enums.help_enum import HelpEnum
+from app.constants.enums.partenal_enum import PartenalEnum
+from app.constants.enums.permission_enum import PermissionEnum
+from app.constants.enums.repeat_enum import RepeatEnum
+from app.constants.enums.schedule_enum import ScheduleEnum
+from app.constants.enums.status_enum import StatusEnum
 
 
 Base = declarative_base()
@@ -26,91 +34,13 @@ class ModelBase(Base):
         return session.query(cls).filter(cls.deleted == False)
 
 
-class UserPermission(enum.Enum):
-    ADMIN: str = 'ADMIN'
-    INSTRUCTOR: str = 'INSTRUCTOR'
-    PARENTS: str = 'PARENTS'
-
-
-class Status(enum.Enum):
-    ACTIVE: str = 'ATIVO'
-    INACTIVE: str = 'INATIVO'
-
-
-class BondPartenal(enum.Enum):
-    FATHER: str = 'PAI'
-    MOTHER: str = 'MÃE'
-    UNCLES: str = 'TIOS'
-    GRANDPARENTS: str = 'AVÓS'
-    OTHERS: str = 'OUTROS'
-
-
-class Genere(enum.Enum):
-    FEMALE: str = 'FEMININO'
-    MALE: str = 'MASCULINO'
-    OTHERS: str = 'OUTRO'
-
-
-class StatusContract(enum.Enum):
-    ACTIVE: str = 'ATIVO'
-    IN_PREPARATION: str = 'EM PREPARAÇÂO'
-    INACTIVE: str = 'INATIVO'
-
-
-class StatusCompany(enum.Enum):
-    ACTIVE: str = 'ATIVO'
-    IN_ANALYSIS: str = 'EM ANALISE'
-    BLOCKED: str = 'BLOQUEADO'
-    DESACATIVE: str = 'DESATIVADO'
-
-
-class StatusGrid(enum.Enum):
-    SCHEDULED: str = 'AGENDADO'
-    IN_PROGRESS: str = 'EM ANDAMENTO'
-    PAUSED: str = 'PAUSADO'
-    CANCELED: str = 'CANCELADO'
-    DONE: str = 'CONCLUÍDO'
-
-
-class StatusSchedule(enum.Enum):
-    SCHEDULED: str = 'AGENDADO'
-    IN_PROGRESS: str = 'EM ANDAMENTO'
-    PAUSED: str = 'PAUSADO'
-    CANCELED: str = 'CANCELADO'
-    DID_NOT_ATTEND: str = 'NÃO COMPARECEU'
-    DONE: str = 'CONCLUÍDO'
-
-
-class StatusExecuteProcedure(enum.Enum):
-    IN_PROGRESS: str = 'EM ANDAMENTO'
-    PAUSED: str = 'PAUSADO'
-    CANCELED: str = 'CANCELADO'
-    DONE: str = 'CONCLUÍDO'
-
-
-class TypeHelp(enum.Enum):
-    DEPENDENT: str = 'DEPENDENTE'
-    INDEPENDENT: str = 'INDEPENDENTE'
-    POSITIONAL: str = 'POSICIONAL'
-    GESTURE: str = 'GESTUAL'
-    VERBAL: str = 'VERBAL'
-    PHYSICAL: str = 'FÍSICA'
-    VISUAL: str = 'VISUAL'
-    NOT_EXECUTED: str = 'NÃO EXECUTADO'
-
-
-class EventRepeat(enum.Enum):
-    NO: str = 'NÃO'
-    WEEK: str = 'SEMANALMENTE'
-    MOUTH: str = 'MENSALMENTE'
-
-
 class Company(ModelBase):
     __tablename__ = 'companies'
 
     name = Column(String(255), nullable=False)
     document = Column(String(255), nullable=False)
     address = Column(String(255), nullable=False)
+    number_address = Column(Integer(), nullable=True)
     complement = Column(String(255), nullable=True)
     zip_code = Column(String(255), nullable=False)
     city = Column(String(255), nullable=False)
@@ -118,7 +48,7 @@ class Company(ModelBase):
     country = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False)
     phone = Column(String(255), nullable=False)
-    status = Column(Enum(StatusCompany), nullable=False)
+    status = Column(Enum(CompanyEnum), nullable=False)
 
 
 class User(ModelBase):
@@ -131,10 +61,10 @@ class User(ModelBase):
     password_hash = Column(String(100), nullable=False)
     email = Column(String(50), nullable=False, unique=True)
     document = Column(String(20), nullable=True)
-    permission = Column(Enum(UserPermission), nullable=False)
+    permission = Column(Enum(PermissionEnum), nullable=False)
     image_path = Column(String(100), nullable=True)
     position = Column(String(100), nullable=True)
-    status = Column(Enum(Status), nullable=False)
+    status = Column(Enum(StatusEnum), nullable=False)
 
 
 class Contractor(ModelBase):
@@ -142,7 +72,7 @@ class Contractor(ModelBase):
 
     company_id = Column(UUIDType(binary=False),
                         ForeignKey(Company.id), nullable=False)
-    status = Column(Enum(StatusContract), nullable=False)
+    status = Column(Enum(ContractEnum), nullable=False)
 
     responsable = relationship(
         'ResponsibleContract', back_populates='contractor')
@@ -164,7 +94,7 @@ class Student(ModelBase):
     fullname = Column(String(255), nullable=False)
     birthday = Column(Date, nullable=True)
     allergy = Column(String(20), nullable=True)
-    genere = Column(Enum(Genere), nullable=False)
+    genere = Column(Enum(GenereEnum), nullable=False)
     document = Column(String(20), nullable=True)
     indentity_number = Column(String(100), nullable=True)
     org_exp = Column(String(10), nullable=True)
@@ -174,7 +104,7 @@ class Student(ModelBase):
     phone = Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
     informations = Column(String(500), nullable=True)
-    status = Column(Enum(Status), nullable=False)
+    status = Column(Enum(StatusEnum), nullable=False)
 
     contractor = relationship('Contractor', back_populates='student')
     schedule = relationship('Schedule', back_populates='student')
@@ -198,7 +128,7 @@ class ResponsibleContract(ModelBase):
     nationality = Column(String(20), nullable=True)
     email = Column(String(50), nullable=False)
     phone = Column(String(50), nullable=True)
-    bond = Column(String(50), nullable=True)
+    bond = Column(Enum(PartenalEnum), nullable=True)
     main_contract = Column(Boolean(), nullable=True)
     avatar = Column(String(255), nullable=True)
 
@@ -264,17 +194,17 @@ class Instructor(ModelBase):
     value_mouth = Column(String(50), nullable=True)
     comission = Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
-    status = Column(Enum(Status), nullable=False)
+    status = Column(Enum(StatusEnum), nullable=False)
 
     schedule = relationship('Schedule', back_populates='instructor')
-    address = relationship('AddressInctructor', back_populates='instructor')
+    address = relationship('AddressInstructor', back_populates='instructor')
 
     specialty = relationship('SpecialtyInstructor',
                              back_populates='instructor')
     specialty_name = association_proxy('specialty', 'specialty')
 
 
-class AddressInctructor(ModelBase):
+class AddressInstructor(ModelBase):
     __tablename__ = 'instructor_address'
 
     instructor_id = Column(UUIDType(binary=False),
@@ -342,9 +272,9 @@ class Schedule(ModelBase):
     end = Column(DateTime, nullable=False)
     start_hour = Column(String(20), nullable=True)
     end_hour = Column(String(20), nullable=True)
-    repeat = Column(Enum(EventRepeat), nullable=True)
+    repeat = Column(Enum(RepeatEnum), nullable=True)
     period = Column(String(20), nullable=True)
-    status = Column(Enum(StatusSchedule), nullable=False)
+    status = Column(Enum(ScheduleEnum), nullable=False)
     details = Column(String(255), nullable=True)
     student_arrival = Column(DateTime, nullable=True)
     event_begin = Column(DateTime, nullable=True)
@@ -369,6 +299,7 @@ class ProcedureSchedule(ModelBase):
     procedure_id = Column(UUIDType(binary=False),
                       ForeignKey(Procedure.id), nullable=False)
     
+    
     tries = Column(Integer(), nullable=False)
     goal = Column(Float(), nullable=False)
     period = Column(String(255), nullable=False)
@@ -383,7 +314,7 @@ class ProcedureSchedule(ModelBase):
     skills = relationship('Skill', back_populates='procedure')
     
     skill_name = association_proxy('skills', 'name')
-    
+
 
 class Execution(ModelBase):
     __tablename__ = 'executions'
@@ -391,7 +322,7 @@ class Execution(ModelBase):
     schedule_id = Column(UUIDType(binary=False),
                          ForeignKey(Schedule.id), nullable=False)
     procedure_id = Column(UUIDType(binary=False),
-                          ForeignKey(Procedure.id), nullable=True)
+                          ForeignKey(Procedure.id), nullable=False)
     procedure_schedule_id = Column(UUIDType(binary=False),
                           ForeignKey(ProcedureSchedule.id), nullable=False)
     
@@ -400,7 +331,7 @@ class Execution(ModelBase):
     success = Column(Boolean(), nullable=False)
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=False)
-    help_type = Column(Enum(TypeHelp), nullable=False)
+    help_type = Column(Enum(HelpEnum), nullable=False)
 
 
 class SkillsSchedule(ModelBase):

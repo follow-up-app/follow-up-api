@@ -136,3 +136,6 @@ dmypy.json
 .pyre/
 
 # docker-compose/certificates/certificate.*
+
+#pytest
+.pytest_cache*

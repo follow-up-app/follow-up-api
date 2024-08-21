@@ -5,27 +5,30 @@ from starlette.middleware.cors import CORSMiddleware
 from config import get_settings
 import multiprocessing
 import sentry_sdk
-from routes.auth import router as auth_router
-from routes.company import router as company_router
-from routes.users import router as user_router
-from routes.students import router as student_router
-from routes.skills import router as skill_router
-from routes.procedures import router as procedure_router
-from routes.configurations import router as configuration_router
-from routes.instructors import router as instuctor_router
-from routes.schedule import router as schedule_router
-from routes.notifications import router as notifications_router
-from routes.executions import router as execution_router
-from routes.follow_up import router as follow_up_router
-from routes.profile import router as profile_router
+from app.routes.auth import router as auth_router
+from app.routes.company import router as company_router
+from app.routes.users import router as user_router
+from app.routes.students import router as student_router
+from app.routes.skills import router as skill_router
+from app.routes.configurations import router as configuration_router
+from app.routes.instructors import router as instuctor_router
+from app.routes.schedule import router as schedule_router
+from app.routes.notifications import router as notifications_router
+from app.routes.executions import router as execution_router
+from app.routes.follow_up import router as follow_up_router
+from app.routes.profile import router as profile_router
+from app.routes.avatar import router as avatar_router
 
 
 # sentry_sdk.init(
-#    "https://9d28606c6ee84d6c87ed3e44be9ef297@o1155311.ingest.sentry.io/6235706",
-
+#     dsn="https://3ace38572162064e6cc3487a1795249d@o4507711488589824.ingest.us.sentry.io/4507711490818048",
 #     # Set traces_sample_rate to 1.0 to capture 100%
 #     # of transactions for performance monitoring.
-#     traces_sample_rate=0.25
+#     traces_sample_rate=1.0,
+#     # Set profiles_sample_rate to 1.0 to profile 100%
+#     # of sampled transactions.
+#     # We recommend adjusting this value in production.
+#     profiles_sample_rate=1.0,
 # )
 
 origins = [
@@ -46,22 +49,21 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix='/auth')
-app.include_router(company_router, prefix='/company')
+app.include_router(company_router, prefix='/companies')
 app.include_router(user_router, prefix='/users')
 app.include_router(instuctor_router, prefix='/instructors')
 app.include_router(student_router, prefix='/students')
 app.include_router(skill_router, prefix='/skills')
-app.include_router(procedure_router, prefix='/procedures')
 app.include_router(schedule_router, prefix='/schedules')
 app.include_router(configuration_router, prefix='/configurations')
 app.include_router(execution_router, prefix='/execution')
 app.include_router(follow_up_router, prefix='/follow-up')
 app.include_router(profile_router, prefix='/profile')
+app.include_router(avatar_router, prefix='/avatars')
 
 
 # routes provisional
 app.include_router(notifications_router, prefix='/notifications')
-
 
 
 if __name__ == "__main__":

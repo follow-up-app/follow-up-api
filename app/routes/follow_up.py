@@ -34,7 +34,7 @@ from app.services.user_service import UserService
 from db import get_db
 from db.models import User
 from app.schemas.schedule_schemas import ScheduleSchemaOut
-from app.schemas.follow_up_schemas import FiltersSchemaIn, ScheduleSchemaFollowUpMobile
+from app.schemas.follow_up_schemas import FiltersSchemaIn, ScheduleSchemaFollowUp, ScheduleSchemaFollowUpMobile
 import logging
 
 
@@ -113,11 +113,11 @@ async def get_follow_up(follow_up_service: FollowUpService = Depends(get_service
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get('/schedule/{schedule_id}', summary='Return result detail', response_model=ScheduleSchemaOut, tags=[tags])
+@router.get('/schedule/{schedule_id}', summary='Return result detail', response_model=ScheduleSchemaFollowUp, tags=[tags])
 async def get_follow_up_schedule(schedule_id: UUID, follow_up_service: FollowUpService = Depends(get_service)):
     try:
         follow_up = follow_up_service.get_follow_up_schedule(schedule_id)
-        return ScheduleSchemaOut.from_orm(follow_up)
+        return ScheduleSchemaFollowUp.from_orm(follow_up)
 
     except Exception as e:
         logger.error(f"Error in query follow-up schedule id: {e}")

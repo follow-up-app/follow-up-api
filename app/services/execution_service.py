@@ -46,8 +46,8 @@ class ExecutionService:
     def get_id(self, id: UUID) -> ExecutionSchemaOut:
         return self.execution_repository.get_id(id)
 
-    def get_shedule_procedure(self, schedule_id: UUID, procedure_id: UUID) -> List[ExecutionSchemaOut]:
-        return self.execution_repository.get_shedule_procedure(schedule_id, procedure_id)
+    def get_shedule_procedure(self, schedule_id: UUID, procedure_schedule_id: UUID) -> List[ExecutionSchemaOut]:
+        return self.execution_repository.get_shedule_procedure(schedule_id, procedure_schedule_id)
 
     def get_schedule(self, schedule_id: UUID):
         return self.execution_repository.get_schedule(schedule_id)

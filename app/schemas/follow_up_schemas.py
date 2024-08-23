@@ -14,7 +14,7 @@ class SkillFollowUp(BaseModel):
     schedule_id: UUID
     skill_id: UUID
     skill_name: str
-    procedures: Optional[List[ProcedureSchemaOut]]
+    procedures: List[ProcedureSchemaOut]
 
     class Config:
         orm_mode = True

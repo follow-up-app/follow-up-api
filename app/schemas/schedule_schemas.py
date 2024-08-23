@@ -40,7 +40,7 @@ class ScheduleSchemaEvent(BaseModel):
 
 
 class ScheduleUpadateSchamaIn(BaseModel):
-    status = ScheduleEnum
+    status: ScheduleEnum
 
 class ProcedureScheduleSchemaIn(BaseModel):
     procedure_id: UUID

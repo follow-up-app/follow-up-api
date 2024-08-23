@@ -64,9 +64,9 @@ class ScheduleRepository:
     def get_event(self, event_id: UUID) -> List[ScheduleSchemaOut]:
         return Schedule.query(self.session).filter(Schedule.event_id == event_id).all()
 
-    def done(self, schedule: Schedule) -> ScheduleSchemaOut:
+    def done(self, schedule: ScheduleSchemaOut) -> ScheduleSchemaOut:
         schedule.status = ScheduleEnum.DONE
-        schedule.event_begin = datetime
+        schedule.event_finish = datetime.now()
         schedule.event_user_id = self.current_user.id
 
         self.session.add(schedule)
@@ -74,7 +74,7 @@ class ScheduleRepository:
 
         return schedule
 
-    def student_arrival(self, schedule: Schedule) -> ScheduleSchemaOut:
+    def student_arrival(self, schedule: ScheduleSchemaOut) -> ScheduleSchemaOut:
         schedule.student_arrival = datetime.now()
 
         self.session.add(schedule)
@@ -91,7 +91,7 @@ class ScheduleRepository:
 
         return True
 
-    def in_progress(self, schedule: Schedule) -> ScheduleSchemaOut:
+    def in_progress(self, schedule: ScheduleSchemaOut) -> ScheduleSchemaOut:
         schedule.event_begin = datetime.now()
         schedule.event_user_id = self.current_user.id
         schedule.status = ScheduleEnum.IN_PROGRESS

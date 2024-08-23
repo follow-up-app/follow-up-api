@@ -34,7 +34,7 @@ class ExecutionRepository:
     def get_shedule_procedure(self, schedule_id: UUID, procedure_id: UUID) -> List[ExecutionSchemaOut]:
         return Execution.query(self.session).filter(
             Execution.schedule_id == schedule_id,
-            Execution.procedure_id == procedure_id).order_by(Execution.trie).all()
+            Execution.procedure_schedule_id == procedure_id).order_by(Execution.trie).all()
 
     def get_schedule(self, schedule_id: UUID) -> List[ExecutionSchemaOut]:
         return Execution.query(self.session).filter(Execution.schedule_id == schedule_id).all()

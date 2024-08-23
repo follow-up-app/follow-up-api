@@ -45,16 +45,18 @@ class FollowUpService:
             executions = []
             procedures = self.procedure_schedule_service.get_schedule_student_skill(
                 schedule.id, schedule.student_id, skill.skill_id)
+            
 
             for procedure in procedures:
                 procedure.points = 0
                 executions = self.execution_service.get_shedule_procedure(
-                    schedule.id, procedure.procedure_id)
+                    schedule.id, procedure.id)
 
                 if executions:
                     procedure.points = round(self.execution_service.count_execution_independent(
                         schedule.id, procedure.procedure_id) / procedure.tries * 100, 2)
                     procedure.executions = executions
+                        
             skill.procedures = procedures
 
         schedule.skills = skills

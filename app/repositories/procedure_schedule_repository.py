@@ -67,13 +67,13 @@ class ProcedureScheduleRepository:
         procedure_schedule.tries = procedure_in.tries
         procedure_schedule.goal = procedure_in.goal
         procedure_schedule.period = procedure_in.period
-        procedure_schedule.name = procedure_in.name
-        procedure_schedule.objective = procedure_in.objective
-        procedure_schedule.stimulus = procedure_in.stimulus
-        procedure_schedule.answer = procedure_in.answer
-        procedure_schedule.consequence = procedure_in.consequence
-        procedure_schedule.materials = procedure_in.materials
-        procedure_schedule.help = procedure_in.help
+        procedure_schedule.name = procedure_in.name.upper()
+        procedure_schedule.objective = procedure_in.objective.upper()
+        procedure_schedule.stimulus = procedure_in.stimulus.upper()
+        procedure_schedule.answer = procedure_in.answer.upper()
+        procedure_schedule.consequence = procedure_in.consequence.upper()
+        procedure_schedule.materials = procedure_in.materials.upper()
+        procedure_schedule.help = procedure_in.help.upper()
 
         self.session.add(procedure_schedule)
         self.session.commit()

@@ -16,7 +16,7 @@ class InstructorRepository:
             company_id=self.current_user.company_id,
             user_id=user_id,
             fullname=instructor_in.fullname,
-            email=instructor_in.email,
+            email=instructor_in.email.lower(),
             phone=instructor_in.phone,
             document=instructor_in.document,
             indentity_number=instructor_in.indentity_number,
@@ -36,12 +36,11 @@ class InstructorRepository:
         return instructor
 
     def get_id(self, id: UUID) -> InstructorSchemaOut:
-        print(id)
         return Instructor.query(self.session).filter(Instructor.id == id).first()
 
     def get_all(self) -> List[InstructorSchemaOut]:
         return Instructor.query(self.session).filter(Instructor.company_id == self.current_user.company_id).order_by(Instructor.fullname.asc()).all()
-    
+
     def get_actives_all(self) -> List[InstructorSchemaOut]:
         return Instructor.query(self.session).filter(Instructor.company_id == self.current_user.company_id, Instructor.status == StatusEnum.ACTIVE).order_by(Instructor.fullname.asc()).all()
 
@@ -51,7 +50,7 @@ class InstructorRepository:
     def update(self, instructor: Instructor, instructor_in: InstructorSchemaIn):
         instructor.fullname = instructor_in.fullname
         instructor.document = instructor_in.document
-        instructor.email = instructor_in.email
+        instructor.email = instructor_in.email.lower()
         instructor.phone = instructor_in.phone
         instructor.indentity_number = instructor_in.indentity_number
         instructor.org_exp = instructor_in.org_exp
@@ -85,7 +84,7 @@ class InstructorRepository:
 
         self.session.add(instructor)
         self.session.commit()
-        
+
         return instructor
 
     def get_instructor_user(self) -> InstructorSchemaOut:

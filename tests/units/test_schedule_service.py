@@ -31,6 +31,7 @@ class TestScheduleService(unittest.TestCase):
         mock_repository.create.return_value = ScheduleSchemaOut(
             id='dbac77ac-95c4-4e61-8d51-7e77c39eb145',
             company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
+            specialty_id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
             instructor_id='29241ac0-6a39-42d0-887b-6d5a3ec31df4',
             student_id='18b941d7-6d85-4f84-a8fa-13b9f71d6806',
             event_id='add7dae3-daa9-4dc2-8aca-aae756204ab8',
@@ -200,6 +201,7 @@ class TestScheduleService(unittest.TestCase):
         schedule_service.check_student = mock_exists_function
 
         new_schedule = ScheduleSchemaIn(
+            specialty_id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
             instructor_id='29241ac0-6a39-42d0-887b-6d5a3ec31df4',
             student_id='18b941d7-6d85-4f84-a8fa-13b9f71d6806',
             skill_id=[

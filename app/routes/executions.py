@@ -37,7 +37,7 @@ import logging
 
 router = APIRouter()
 
-tags: str = "Exceution"
+tags: str = "Excecution"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -147,5 +147,5 @@ async def update(id: UUID, execution_service: ExecutionService = Depends(get_ser
         return execution_service.delete(id)
 
     except Exception as e:
-        logger.error(f"Error in update execution: {e}")
+        logger.error(f"Error in delete execution: {e}")
         raise HTTPException(status_code=400, detail=str(e))

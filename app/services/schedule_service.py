@@ -5,6 +5,7 @@ from app.constants.exceptions.instructor_exceptions import InstructorNotFoundErr
 from app.constants.exceptions.procedure_exceptions import ProcedureExecutionError, ProcedureNotFoundError
 from app.constants.exceptions.schedule_exceptions import InstructorNotAvailableError, ProcedureScheduleExists, ScheduleHourError, ScheduleNotFoundError, ScheduleNotRemoveError, StudentNotAvailableError
 from app.constants.exceptions.student_exceptions import StudentNotFoundError
+from app.core.rabbitmq import RabbitMQHandler
 from app.repositories.execution_repository import ExecutionRepository
 from app.repositories.schedule_repository import ScheduleRepository
 from app.schemas.instructor_schema import InstructorSchemaOut
@@ -14,6 +15,7 @@ from app.schemas.student_schemas import StudentSchemaOut
 from app.services.instructor_service import InstructorService
 from app.services.procedure_schedule_service import ProcedureScheduleService
 from app.services.procedure_service import ProcedureService
+from app.services.queue_service import QueueService
 from app.services.skill_schedule_service import SkillScheduleService
 from app.services.skill_service import SkillService
 from app.services.student_service import StudentService
@@ -31,7 +33,8 @@ class ScheduleService:
                  skill_schedule_service: SkillScheduleService,
                  execution_repositoy: ExecutionRepository,
                  procedure_service: ProcedureService,
-                 procedure_schedule_service: ProcedureScheduleService
+                 procedure_schedule_service: ProcedureScheduleService,
+                 queue_service: QueueService
                  ):
         self.schedule_repository = schedule_repository
         self.student_service = student_service
@@ -41,6 +44,7 @@ class ScheduleService:
         self.execution_repositoy = execution_repositoy
         self.procedure_service = procedure_service
         self.procedure_schedule_service = procedure_schedule_service
+        self.queue_service = queue_service
 
     def create(self, schedule_in: ScheduleSchemaIn) -> List[ScheduleSchemaOut]:
         days = schedule_in.period * 30
@@ -203,6 +207,7 @@ class ScheduleService:
             return self.schedule_repository.in_progress(schedule)
 
         if schedule_in.status == ScheduleEnum.DONE:
+            self.queue_service.sender_payment(schedule)
             return self.schedule_repository.done(schedule)
 
     def student_arrival(self, id: UUID) -> ScheduleSchemaOut:

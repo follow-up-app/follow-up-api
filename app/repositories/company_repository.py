@@ -12,7 +12,7 @@ class CompanyRepository:
 
     def create(self, company_in: CompanySchemaIn) -> CompanySchemaOut:
         company = Company(
-            name=company_in.name,
+            name=company_in.name.upper(),
             document=company_in.document,
             address=company_in.address,
             number_address=company_in.number_address,
@@ -21,7 +21,7 @@ class CompanyRepository:
             city=company_in.city,
             state=company_in.state,
             country=company_in.country,
-            email=company_in.email,
+            email=company_in.email.lower(),
             phone=company_in.phone,
             status=CompanyEnum.ACTIVE
         )
@@ -37,7 +37,7 @@ class CompanyRepository:
         return Company.query(self.session).order_by(Company.name.asc()).all()
 
     def update(self, company: Company, company_in: CompanySchemaIn) -> CompanySchemaOut:
-        company.name = company_in.name
+        company.name = company_in.name.upper()
         company.address = company_in.address
         company.number_address = company_in.number_address
         company.complement = company_in.complement
@@ -45,7 +45,7 @@ class CompanyRepository:
         company.city = company_in.city
         company.state = company_in.state
         company.country = company_in.country
-        company.email = company_in.email
+        company.email = company_in.email.lower()
         company.phone = company_in.phone
         company.status = company_in.status
 

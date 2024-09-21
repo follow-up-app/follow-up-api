@@ -30,10 +30,14 @@ class TestPaymentService(unittest.TestCase):
             created_date='2024-12-10 10:00'
         )
 
-        schedule_repository = Mock()
-        schedule_repository.get_id.return_value = ScheduleSchemaOut(
+        payment_service = PaymentService(
+            payment_mock_repository
+        )
+
+        schedule = ScheduleSchemaOut(
             id='dbac77ac-95c4-4e61-8d51-7e77c39eb145',
             company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
+            specialty_id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
             instructor_id='29241ac0-6a39-42d0-887b-6d5a3ec31df4',
             student_id='18b941d7-6d85-4f84-a8fa-13b9f71d6806',
             event_id='add7dae3-daa9-4dc2-8aca-aae756204ab8',
@@ -51,18 +55,10 @@ class TestPaymentService(unittest.TestCase):
             event_finish=None,
             event_user_id=None,
             created_date='2024-12-10 10:00',
-            updated_at='2024-12-10 10:00',
-            specialty=SpecialtySchemaOut(
-                id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
-                company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
-                name='PHONO',
-                description='Unit tests',
-                value_hour=150.00
-            )
+            updated_at='2024-12-10 10:00'
         )
 
-        instructor_mock_repository = Mock()
-        instructor_mock_repository.get_id.return_value = InstructorSchemaOut(
+        instructor = InstructorSchemaOut(
             id='29241ac0-6a39-42d0-887b-6d5a3ec31df4',
             company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
             fullname='Obi Wan knobe',
@@ -81,30 +77,10 @@ class TestPaymentService(unittest.TestCase):
             status=StatusEnum.ACTIVE
         )
 
-        payment_service = PaymentService(
-            payment_mock_repository,
-            schedule_repository,
-            instructor_mock_repository
-        )
-
-        new_payment = PaymentSchemaIn(
-            schedule_id='dbac77ac-95c4-4e61-8d51-7e77c39eb145',
-            instructor_id='29241ac0-6a39-42d0-887b-6d5a3ec31df4',
-            value=100.00,
-            date_due='2024-12-10',
-        )
-
-        created_item = payment_service.create(new_payment)
+        created_item = payment_service.create(
+            schedule, instructor)
         self.assertEqual(
             created_item.id, 'f888aa0e-24b5-4465-bc99-376e975fbad3')
-
-        schedule_repository.get_id.return_value = None
-        with self.assertRaises(ValueError):
-            payment_service.create(new_payment)
-
-        instructor_mock_repository.get_id.return_value = None
-        with self.assertRaises(ValueError):
-            payment_service.create(new_payment)
 
     def test_update(self):
         payment_mock_repository = Mock()
@@ -138,29 +114,8 @@ class TestPaymentService(unittest.TestCase):
             created_date='2024-12-10 10:00'
         )
 
-        schedule_repository = Mock()
-        schedule_repository.get_id.return_value = ScheduleSchemaOut(
-            id='dbac77ac-95c4-4e61-8d51-7e77c39eb145',
-            company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
-            title='Event Test',
-            start='2024-12-10 10:00',
-            end='2024-12-10 11:00',
-            created_date='2024-12-10 10:00',
-            updated_at='2024-12-10 10:00',
-            specialty=SpecialtySchemaOut(
-                id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
-                company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
-                name='PHONO',
-                description='Unit tests',
-                value_hour=150.00
-            )
-        )
-        instructor_mock_repository = Mock()
-
         payment_service = PaymentService(
             payment_mock_repository,
-            schedule_repository,
-            instructor_mock_repository
         )
 
         new_payment = PaymentSchemaIn(

@@ -67,6 +67,7 @@ class ScheduleSchemaOut(BaseModel):
     student_id: Optional[UUID]
     instructor_id: Optional[UUID]
     event_id: Optional[UUID]
+    specialty_id: Optional[UUID] = None
     title: str
     start: datetime
     end: datetime

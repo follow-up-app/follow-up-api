@@ -2,6 +2,6 @@ import enum
 
 
 class PaymentEnum(enum.Enum):
-    OPEN: str = 'EM ABERTO'
+    OPEN: str = 'PREVISTO'
     SCHEDULED: str = 'AGENDADO'
-    DONE: str = 'FEITO'    
+    DONE: str = 'FEITO'

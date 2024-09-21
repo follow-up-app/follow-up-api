@@ -20,6 +20,7 @@ from app.routes.follow_up import router as follow_up_router
 from app.routes.profile import router as profile_router
 from app.routes.avatar import router as avatar_router
 from app.routes.specialties import router as specialty_router
+from app.routes.api_requests import router as api_requests_router
 
 
 # sentry_sdk.init(
@@ -62,13 +63,13 @@ app.include_router(follow_up_router, prefix='/follow-up')
 app.include_router(profile_router, prefix='/profile')
 app.include_router(avatar_router, prefix='/avatars')
 app.include_router(specialty_router, prefix='/specialties')
-
+app.include_router(api_requests_router, prefix='/api-requests')
 
 # routes provisional
 app.include_router(notifications_router, prefix='/notifications')
 
-rabbit = RabbitMQHandler()
-consumer_thread = threading.Thread(target=rabbit.listener).start()
+# rabbit = RabbitMQHandler()
+# consumer_thread = threading.Thread(target=rabbit.listener).start()
 
 if __name__ == "__main__":
     host_process = multiprocessing.Process(

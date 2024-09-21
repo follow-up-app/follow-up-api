@@ -16,6 +16,7 @@ from app.constants.enums.repeat_enum import RepeatEnum
 from app.constants.enums.schedule_enum import ScheduleEnum
 from app.constants.enums.status_enum import StatusEnum
 from app.constants.enums.payment_enum import PaymentEnum
+from app.constants.enums.instructor_payments_enum import ModePaymentEnum, TypePaymentEnum
 
 
 Base = declarative_base()
@@ -66,6 +67,20 @@ class User(ModelBase):
     image_path = Column(String(100), nullable=True)
     position = Column(String(100), nullable=True)
     status = Column(Enum(StatusEnum), nullable=False)
+
+
+class Specialty(ModelBase):
+    __tablename__ = 'specialties'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(String(100), nullable=False)
+    value_hour = Column(Float(), nullable=False)
+
+    instructor = relationship('Instructor', back_populates='specialty')
+    schedule = relationship('Schedule', back_populates='specialty')
+    skills = relationship('Skill', back_populates='specialty')
 
 
 class Contractor(ModelBase):
@@ -165,6 +180,8 @@ class Instructor(ModelBase):
                         ForeignKey(Company.id), nullable=False)
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=True)
+    specialty_id = Column(UUIDType(binary=False),
+                          ForeignKey(Specialty.id), nullable=True)
 
     fullname = Column(String(100), nullable=False)
     document = Column(String(100), nullable=False)
@@ -182,9 +199,15 @@ class Instructor(ModelBase):
     comission = Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
     status = Column(Enum(StatusEnum), nullable=False)
+    type_payment = Column(Enum(TypePaymentEnum), nullable=True)
+    mode_payment = Column(Enum(ModePaymentEnum), nullable=True)
+    value = Column(Float(), nullable=True)
 
+    specialty = relationship('Specialty', back_populates='instructor')
     schedule = relationship('Schedule', back_populates='instructor')
     address = relationship('AddressInstructor', back_populates='instructor')
+    payment_details = relationship(
+        'IntructorPaymentsDetail', back_populates='instructor')
     payment = relationship('Payment', back_populates='instructor')
 
 
@@ -205,17 +228,17 @@ class AddressInstructor(ModelBase):
     instructor = relationship('Instructor', back_populates='address')
 
 
-class Specialty(ModelBase):
-    __tablename__ = 'specialties'
+class IntructorPaymentsDetail(ModelBase):
+    __tablename__ = 'instructor_payment_details'
 
-    company_id = Column(UUIDType(binary=False),
-                        ForeignKey(Company.id), nullable=False)
-    name = Column(String(100), nullable=False)
-    description = Column(String(100), nullable=False)
-    value_hour = Column(Float(), nullable=False)
+    instructor_id = Column(UUIDType(binary=False),
+                           ForeignKey(Instructor.id), nullable=False)
 
-    schedule = relationship('Schedule', back_populates='specialty')
-    skills = relationship('Skill', back_populates='specialty')
+    bank_number = Column(Integer(), nullable=True)
+    account_number = Column(String(50), nullable=True)
+    key = Column(String(255), nullable=True)
+
+    instructor = relationship('Instructor', back_populates='payment_details')
 
 
 class Skill(ModelBase):
@@ -363,7 +386,8 @@ class Payment(ModelBase):
     instructor_id = Column(UUIDType(binary=False),
                            ForeignKey(Instructor.id), nullable=True)
 
-    value = Column(Float(), nullable=False)
+    reference = Column(String(20), nullable=True)
+    value = Column(Float(), nullable=True)
     date_due = Column(Date, nullable=False)
     date_scheduled = Column(Date, nullable=True)
     date_done = Column(Date, nullable=True)

@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     SMTP_EMAIL_FROM: str
     SMTP_EMAIL_PASSWORD: str
     PANEL_URL: str
+    CEP_URL: str
+    BANKS_URL: str
 
     class Config:
         env_file = ".env"

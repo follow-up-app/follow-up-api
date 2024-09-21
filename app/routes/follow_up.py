@@ -8,7 +8,9 @@ from app.repositories.address_contract_repository import AndressContractReposito
 from app.repositories.address_instructor_repository import AddressInstructorRepository
 from app.repositories.contractor_repository import ContractorRepository
 from app.repositories.execution_repository import ExecutionRepository
+from app.repositories.instructor_payment_repository import InstructorPaymentRepository
 from app.repositories.instructor_repository import InstructorRepository
+from app.repositories.payment_repository import PaymnentRepository
 from app.repositories.procedure_repository import ProcedureRepository
 from app.repositories.procedure_schedule_repository import ProcedureScheduleRepository
 from app.repositories.responsible_contract_repository import ResponsibleContractReposioty
@@ -18,13 +20,14 @@ from app.repositories.skill_schedule_repository import SkillScheduleRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.user_repository import UserRepository
 from app.services.address_contract_service import AddressContractService
-from app.services.address_instructor_service import AddressInstructorService
 from app.services.contractor_service import ContractorService
 from app.services.execution_service import ExecutionService
 from app.services.follow_up_service import FollowUpService
 from app.services.instructor_service import InstructorService
+from app.services.payment_service import PaymentService
 from app.services.procedure_schedule_service import ProcedureScheduleService
 from app.services.procedure_service import ProcedureService
+from app.services.queue_service import QueueService
 from app.services.responsible_contract_service import ResponsibleContractService
 from app.services.schedule_service import ScheduleService
 from app.services.skill_schedule_service import SkillScheduleService
@@ -55,6 +58,7 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     execution_repository = ExecutionRepository(session, current_user)
     procedure_repository = ProcedureRepository(session)
     address_instructor_respository = AddressInstructorRepository(session)
+    instructor_payment_repository = InstructorPaymentRepository(session)
     contractor_repository = ContractorRepository(session, current_user)
     responsible_contract_respository = ResponsibleContractReposioty(
         session, current_user)
@@ -69,7 +73,7 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     contractor_service = ContractorService(contractor_repository)
     responsible_contract_service = ResponsibleContractService(
         responsible_contract_respository)
-    address_instructor_service = AddressInstructorService(
+    address_instructor_repository = AddressInstructorRepository(
         address_instructor_respository)
     student_service = StudentService(
         student_repository,
@@ -78,12 +82,14 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         address_contract_service)
     user_service = UserService(user_repository, mailer)
     instructor_service = InstructorService(
-        instructor_repository, user_service, address_instructor_service)
+        instructor_repository, user_service, address_instructor_repository, instructor_payment_repository)
     procedure_service = ProcedureService(procedure_repository)
     skill_service = SkillService(skill_repository, procedure_service)
     skill_schedule_service = SkillScheduleService(skill_schedule_repository)
     procedure_schedule_service = ProcedureScheduleService(
         procedure_schedule_repository)
+    payment_repository = PaymnentRepository(session, current_user)
+    payment_service = PaymentService(payment_repository)
 
     schedule_service = ScheduleService(
         schedule_repository,
@@ -93,7 +99,8 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         skill_schedule_service,
         execution_repository,
         procedure_service,
-        procedure_schedule_service
+        procedure_schedule_service,
+        payment_service
     )
 
     execution_service = ExecutionService(

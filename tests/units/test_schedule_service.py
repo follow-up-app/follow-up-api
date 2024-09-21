@@ -12,7 +12,6 @@ from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, Sk
 from app.schemas.skill_schemas import SkillSchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
 from app.services.address_contract_service import AddressContractService
-from app.services.address_instructor_service import AddressInstructorService
 from app.services.contractor_service import ContractorService
 from app.services.instructor_service import InstructorService
 from app.services.procedure_schedule_service import ProcedureScheduleService
@@ -130,13 +129,14 @@ class TestScheduleService(unittest.TestCase):
         mock_address_repository = Mock()
         user_service = UserService(
             user_repository=mock_user_repository, mailer=mock_email)
-        address_instructor_service = AddressInstructorService(
-            address_instructor_repository=mock_address_repository)
+
+        instructor_payment_repository = Mock()
 
         instructor_service = InstructorService(
             instructor_repository=instructor_mock_repository,
             user_service=user_service,
-            address_instructor_service=address_instructor_service
+            address_instructor_repository=mock_address_repository,
+            instructor_payment_repository=instructor_payment_repository
         )
 
         skill_mock_repository = Mock()
@@ -186,6 +186,7 @@ class TestScheduleService(unittest.TestCase):
             procedure_schedule_repository)
 
         mock_exists_function = Mock(return_value=False)
+        payment_mock = Mock()
         schedule_service = ScheduleService(
             schedule_repository=mock_repository,
             instructor_service=instructor_service,
@@ -194,8 +195,8 @@ class TestScheduleService(unittest.TestCase):
             skill_schedule_service=skill_schedule_service,
             execution_repositoy=execution_mock_repositoty,
             procedure_schedule_service=procedure_schedule_service,
-            procedure_service=procedure_service
-
+            procedure_service=procedure_service,
+            payment_service=payment_mock
         )
         schedule_service.check_instructor = mock_exists_function
         schedule_service.check_student = mock_exists_function

@@ -30,6 +30,17 @@ class PaymnentRepository:
     def get_id(self, id: UUID) -> PaymentSchemaOut:
         return Payment.query(self.session).filter(Payment.id == id).first()
 
+    def get_schedule_id(self, schedule_id: UUID) -> PaymentSchemaOut:
+        return Payment.query(self.session).filter(Payment.schedule_id == schedule_id).first()
+
+    def update_status(self, payment: Payment, status: PaymentEnum) -> PaymentSchemaOut:
+        payment.status = status
+
+        self.session.add(payment)
+        self.session.commit()
+
+        return payment
+
     def get_all(self) -> List[PaymentSchemaOut]:
         return Payment.query(self.session).filter(
             Payment.company_id == self.current_user.company_id,

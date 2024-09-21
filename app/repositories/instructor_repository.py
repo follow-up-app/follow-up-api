@@ -2,6 +2,7 @@ from typing import List
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.constants.enums.status_enum import StatusEnum
+from app.schemas.instructor_payment_schema import InstructorPaymentSchemaIn
 from app.schemas.instructor_schema import Filters, InstructorSchemaIn, InstructorSchemaOut
 from db.models import Instructor, User
 
@@ -92,3 +93,15 @@ class InstructorRepository:
 
     def get_filters(self, filters_in: Filters) -> List[InstructorSchemaOut]:
         return Instructor.query(self.session).filter(Instructor.id == filters_in.instructor_id).order_by(Instructor.fullname.asc()).all()
+
+    def update_type_payment(self, instructor: Instructor, instructor_payment_in: InstructorPaymentSchemaIn):
+        instructor.specialty_id = instructor_payment_in.specialty_id
+        instructor.type_payment = instructor_payment_in.type_payment
+        instructor.mode_payment = instructor_payment_in.mode_payment
+        instructor.value = instructor_payment_in.value
+        instructor.comission = instructor_payment_in.comission
+
+        self.session.add(instructor)
+        self.session.commit()
+
+        return instructor

@@ -13,6 +13,7 @@ from app.schemas.procedure_schemas import ProcedureSchemaIn, ProcedureSchemaOut
 from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn
 from app.schemas.student_schemas import StudentSchemaOut
 from app.services.instructor_service import InstructorService
+from app.services.payment_service import PaymentService
 from app.services.procedure_schedule_service import ProcedureScheduleService
 from app.services.procedure_service import ProcedureService
 from app.services.queue_service import QueueService
@@ -34,7 +35,7 @@ class ScheduleService:
                  execution_repositoy: ExecutionRepository,
                  procedure_service: ProcedureService,
                  procedure_schedule_service: ProcedureScheduleService,
-                 queue_service: QueueService
+                 payment_service: PaymentService
                  ):
         self.schedule_repository = schedule_repository
         self.student_service = student_service
@@ -44,7 +45,7 @@ class ScheduleService:
         self.execution_repositoy = execution_repositoy
         self.procedure_service = procedure_service
         self.procedure_schedule_service = procedure_schedule_service
-        self.queue_service = queue_service
+        self.payment_service = payment_service
 
     def create(self, schedule_in: ScheduleSchemaIn) -> List[ScheduleSchemaOut]:
         days = schedule_in.period * 30
@@ -91,6 +92,8 @@ class ScheduleService:
                 instructor,
                 dates[0], dates[1], schedule_in)
 
+            self.payment_service.create(schedule, instructor)
+
             events.append(schedule)
 
         for sch in events:
@@ -99,7 +102,6 @@ class ScheduleService:
             for procedure in schedule_in.procedures:
                 self.procedure_schedule_service.create(
                     sch.id, student.id, procedure)
-
         return events
 
     def dates_allowed(self, date: date, start: str, end: str, student_id: UUID, instructor_id: UUID) -> Tuple[datetime, datetime]:
@@ -207,7 +209,7 @@ class ScheduleService:
             return self.schedule_repository.in_progress(schedule)
 
         if schedule_in.status == ScheduleEnum.DONE:
-            self.queue_service.sender_payment(schedule)
+            self.payment_service.update_status_schedule(schedule.id)
             return self.schedule_repository.done(schedule)
 
     def student_arrival(self, id: UUID) -> ScheduleSchemaOut:

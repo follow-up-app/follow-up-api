@@ -3,9 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.security import get_current_user
-from app.repositories.instructor_repository import InstructorRepository
 from app.repositories.payment_repository import PaymnentRepository
-from app.repositories.schedule_repository import ScheduleRepository
 from app.schemas.payment_schemas import PaymentFilters, PaymentGroup, PaymentSchemaIn, PaymentSchemaOut
 from app.services.payment_service import PaymentService
 from db import get_db
@@ -22,10 +20,7 @@ logger = logging.getLogger(__name__)
 
 def get_service(session: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     payment_repository = PaymnentRepository(session, current_user)
-    schedule_repository = ScheduleRepository(session, current_user)
-    instructor_repository = InstructorRepository(session, current_user)
-
-    return PaymentService(payment_repository, schedule_repository, instructor_repository)
+    return PaymentService(payment_repository)
 
 
 @router.post('/', summary='Create payment', response_model=PaymentSchemaOut, tags=[tags])

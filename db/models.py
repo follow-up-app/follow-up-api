@@ -210,6 +210,8 @@ class Instructor(ModelBase):
         'IntructorPaymentsDetail', back_populates='instructor')
     payment = relationship('Payment', back_populates='instructor')
 
+    specialty_name = association_proxy('specialty', 'name')
+
 
 class AddressInstructor(ModelBase):
     __tablename__ = 'instructor_address'

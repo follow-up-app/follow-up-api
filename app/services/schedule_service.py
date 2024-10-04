@@ -5,7 +5,6 @@ from app.constants.exceptions.instructor_exceptions import InstructorNotFoundErr
 from app.constants.exceptions.procedure_exceptions import ProcedureExecutionError, ProcedureNotFoundError
 from app.constants.exceptions.schedule_exceptions import InstructorNotAvailableError, ProcedureScheduleExists, ScheduleHourError, ScheduleNotFoundError, ScheduleNotRemoveError, StudentNotAvailableError
 from app.constants.exceptions.student_exceptions import StudentNotFoundError
-from app.core.rabbitmq import RabbitMQHandler
 from app.repositories.execution_repository import ExecutionRepository
 from app.repositories.schedule_repository import ScheduleRepository
 from app.schemas.instructor_schema import InstructorSchemaOut
@@ -16,7 +15,6 @@ from app.services.instructor_service import InstructorService
 from app.services.payment_service import PaymentService
 from app.services.procedure_schedule_service import ProcedureScheduleService
 from app.services.procedure_service import ProcedureService
-from app.services.queue_service import QueueService
 from app.services.skill_schedule_service import SkillScheduleService
 from app.services.skill_service import SkillService
 from app.services.student_service import StudentService
@@ -92,8 +90,6 @@ class ScheduleService:
                 instructor,
                 dates[0], dates[1], schedule_in)
 
-            self.payment_service.create(schedule, instructor)
-
             events.append(schedule)
 
         for sch in events:
@@ -102,6 +98,7 @@ class ScheduleService:
             for procedure in schedule_in.procedures:
                 self.procedure_schedule_service.create(
                     sch.id, student.id, procedure)
+            self.payment_service.create(sch, instructor)
         return events
 
     def dates_allowed(self, date: date, start: str, end: str, student_id: UUID, instructor_id: UUID) -> Tuple[datetime, datetime]:
@@ -173,6 +170,7 @@ class ScheduleService:
             for skill in skills:
                 self.skill_schedule_service.delete(skill.id)
 
+            self.payment_service.delete_for_schedule(schedule.id)
             self.schedule_repository.delete(schedule.id)
 
         return True
@@ -196,6 +194,7 @@ class ScheduleService:
         for skill in skills:
             self.skill_schedule_service.delete(skill.id)
 
+        self.payment_service.delete_for_schedule(schedule.id)
         self.schedule_repository.delete(schedule.id)
 
         return True

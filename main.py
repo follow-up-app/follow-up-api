@@ -21,6 +21,7 @@ from app.routes.profile import router as profile_router
 from app.routes.avatar import router as avatar_router
 from app.routes.specialties import router as specialty_router
 from app.routes.api_requests import router as api_requests_router
+from app.routes.payments import router as payments_router
 
 
 # sentry_sdk.init(
@@ -64,6 +65,7 @@ app.include_router(profile_router, prefix='/profile')
 app.include_router(avatar_router, prefix='/avatars')
 app.include_router(specialty_router, prefix='/specialties')
 app.include_router(api_requests_router, prefix='/api-requests')
+app.include_router(payments_router, prefix='/payments')
 
 # routes provisional
 app.include_router(notifications_router, prefix='/notifications')

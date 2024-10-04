@@ -9,8 +9,8 @@ from app.schemas.schedule_schemas import ScheduleSchemaOut
 
 class PaymentSchemaIn(BaseModel):
     company_id: Optional[UUID]
-    schedule_id: UUID
-    instructor_id: UUID
+    schedule_id: Optional[UUID]
+    instructor_id: Optional[UUID]
     value: Optional[float] = None
     date_due: Optional[date] = None
     date_scheduled: Optional[date] = None
@@ -22,7 +22,8 @@ class PaymentSchemaOut(BaseModel):
     id: UUID
     schedule_id: UUID
     instructor_id: UUID
-    value: float
+    value: Optional[float] = None
+    reference: Optional[str] = None
     date_due: Optional[date]
     date_scheduled: Optional[date]
     date_done: Optional[date]
@@ -39,6 +40,16 @@ class PaymentFilters(BaseModel):
     start: Optional[date] = None
     end: Optional[date] = None
     status: Optional[PaymentEnum] = None
+
+
+class PaymentSummary(BaseModel):
+    instructor_id: UUID
+    specialty: str
+    fullname: str
+    social_name: str
+    status: PaymentEnum
+    count: int
+    total: float
 
 
 class PaymentGroup(BaseModel):

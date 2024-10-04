@@ -26,7 +26,6 @@ from app.services.instructor_service import InstructorService
 from app.services.payment_service import PaymentService
 from app.services.procedure_schedule_service import ProcedureScheduleService
 from app.services.procedure_service import ProcedureService
-from app.services.queue_service import QueueService
 from app.services.responsible_contract_service import ResponsibleContractService
 from app.services.schedule_service import ScheduleService
 from app.services.skill_schedule_service import SkillScheduleService

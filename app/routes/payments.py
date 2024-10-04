@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.security import get_current_user
 from app.repositories.payment_repository import PaymnentRepository
-from app.schemas.payment_schemas import PaymentFilters, PaymentGroup, PaymentSchemaIn, PaymentSchemaOut
+from app.schemas.payment_schemas import PaymentFilters, PaymentSchemaIn, PaymentSchemaOut, PaymentSummary
 from app.services.payment_service import PaymentService
 from db import get_db
 from db.models import User
@@ -88,12 +88,34 @@ async def get_filters(filters_in: PaymentFilters, payment_service: PaymentServic
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post('/resume/', summary='Return all payments', response_model=List[PaymentGroup], tags=[tags])
+@router.post('/resume', summary='Return all payments', tags=[tags])
 async def get_resume(filters_in: PaymentFilters, payment_service: PaymentService = Depends(get_service)):
     try:
         payments = payment_service.get_resume(filters_in)
-        return [PaymentGroup.from_orm(x) for x in payments]
+        return [
+            {
+                "instructor_id": payment.instructor_id,
+                "fullname": payment.fullname,
+                "social_name": payment.social_name,
+                "specialty": payment.name,
+                "status": payment.status,
+                "count": payment.count,
+                "total": payment.total,
+            }
+            for payment in payments
+        ]
 
     except Exception as e:
-        logger.error(f"Error in resume query payments: {e}")
+        logger.error(f"Error in resume query in resume payments: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/for-instructor', summary='Return all payments for instructors', response_model=List[PaymentSchemaOut], tags=[tags])
+async def get_intructor_status(filters_in: PaymentFilters, payment_service: PaymentService = Depends(get_service)):
+    try:
+        payments = payment_service.get_intructor_status(filters_in)
+        return [PaymentSchemaOut.from_orm(x) for x in payments]
+
+    except Exception as e:
+        logger.error(f"Error in resume query payments for instructor: {e}")
         raise HTTPException(status_code=400, detail=str(e))

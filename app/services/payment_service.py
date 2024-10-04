@@ -1,14 +1,12 @@
-import datetime
+from datetime import datetime, date, timedelta
 from typing import List
 from uuid import UUID
 from app.constants.enums.instructor_payments_enum import ModePaymentEnum
 from app.constants.enums.payment_enum import PaymentEnum
 from app.constants.exceptions.payment_exceptions import PaymentNotFoundError
-from app.constants.exceptions.schedule_exceptions import ScheduleNotFoundError
 from app.repositories.payment_repository import PaymnentRepository
-from app.repositories.schedule_repository import ScheduleRepository
 from app.schemas.instructor_schema import InstructorSchemaOut
-from app.schemas.payment_schemas import PaymentFilters, PaymentGroup, PaymentSchemaIn, PaymentSchemaOut
+from app.schemas.payment_schemas import PaymentFilters, PaymentSchemaIn, PaymentSchemaOut, PaymentSummary
 from app.schemas.schedule_schemas import ScheduleSchemaOut
 
 
@@ -22,9 +20,11 @@ class PaymentService:
         if instructor.mode_payment == ModePaymentEnum.HOUR:
             value = instructor.value
 
-        date_due = datetime.date.today() + datetime.timedelta(days=30)
+        date_due_ = schedule.start + timedelta(days=30)
+        date_due = date_due_.strftime("%Y-%m-%d")
+        reference = date_due_.strftime("%m/%Y")
 
-        return self.payment_repository.create(schedule.company_id, schedule.id, instructor.id, value, date_due)
+        return self.payment_repository.create(schedule.company_id, schedule.id, instructor.id, value, date_due, reference)
 
     def get_id(self, id: UUID) -> PaymentSchemaOut:
         return self.payment_repository.get_id(id)
@@ -52,8 +52,17 @@ class PaymentService:
 
         return self.payment_repository.get_filters(start, end, filters_in.instructor_id, filters_in.status)
 
-    def get_resume(self, filters_in: PaymentFilters) -> List[PaymentGroup]:
+    def get_resume(self, filters_in: PaymentFilters) -> List[PaymentSummary]:
         start = datetime.combine(filters_in.start, datetime.min.time())
         end = datetime.combine(filters_in.end, datetime.max.time())
 
-        return self.payment_repository.get_resume(start, end, filters_in.status)
+        return self.payment_repository.get_resume(start, end, filters_in.status, filters_in.instructor_id)
+
+    def get_intructor_status(self, filters_in: PaymentFilters) -> List[PaymentSchemaOut]:
+        start = datetime.combine(filters_in.start, datetime.min.time())
+        end = datetime.combine(filters_in.end, datetime.max.time())
+
+        return self.payment_repository.get_intructor_status(start, end, filters_in.status, filters_in.instructor_id)
+
+    def delete_for_schedule(self, schedule_id: UUID):
+        return self.payment_repository.delete_for_schedule(schedule_id)

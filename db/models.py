@@ -17,6 +17,7 @@ from app.constants.enums.schedule_enum import ScheduleEnum
 from app.constants.enums.status_enum import StatusEnum
 from app.constants.enums.payment_enum import PaymentEnum
 from app.constants.enums.instructor_payments_enum import ModePaymentEnum, TypePaymentEnum
+from app.constants.enums.billing_enum import BillingEnum
 
 
 Base = declarative_base()
@@ -88,6 +89,8 @@ class Contractor(ModelBase):
 
     company_id = Column(UUIDType(binary=False),
                         ForeignKey(Company.id), nullable=False)
+
+    mode_billing = Column(Enum(BillingEnum), nullable=True)
     status = Column(Enum(ContractEnum), nullable=False)
 
     responsable = relationship(
@@ -125,6 +128,7 @@ class Student(ModelBase):
     contractor = relationship('Contractor', back_populates='student')
     schedule = relationship('Schedule', back_populates='student')
     procedures = relationship('Procedure', back_populates='student')
+    billing = relationship('Billing', back_populates='student')
 
 
 class ResponsibleContract(ModelBase):
@@ -316,6 +320,7 @@ class Schedule(ModelBase):
     event = relationship('SkillsSchedule', back_populates='event')
     specialty = relationship('Specialty', back_populates='schedule')
     payment = relationship('Payment', back_populates='schedule')
+    billing = relationship('Billing', back_populates='schedule')
 
 
 class ProcedureSchedule(ModelBase):
@@ -398,3 +403,87 @@ class Payment(ModelBase):
 
     schedule = relationship('Schedule', back_populates='payment')
     instructor = relationship('Instructor', back_populates='payment')
+
+
+class Billing(ModelBase):
+    __tablename__ = 'bilings'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+    schedule_id = Column(UUIDType(binary=False),
+                         ForeignKey(Schedule.id), nullable=False)
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=True)
+
+    reference = Column(String(20), nullable=True)
+    category = Column(Enum(BillingEnum), nullable=True)
+    value = Column(Float(), nullable=True)
+    date_due = Column(Date, nullable=False)
+    date_done = Column(Date, nullable=True)
+    description = Column(String(250), nullable=True)
+    status = Column(Enum(BillingEnum), nullable=False)
+
+    schedule = relationship('Schedule', back_populates='billing')
+    student = relationship('Student', back_populates='billing')
+
+
+class Invoice(ModelBase):
+    __tablename__ = 'invoices'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+
+
+class InvoiceBilling(ModelBase):
+    __tablename__ = 'invoices_billings'
+
+    invoice_id = Column(UUIDType(binary=False),
+                        ForeignKey(Invoice.id), nullable=False)
+    billing_id = Column(UUIDType(binary=False),
+                        ForeignKey(Billing.id), nullable=False)
+
+
+class Plan(ModelBase):
+    __tablename__ = 'plans'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+
+    social_name = Column(String(100), nullable=True)
+    fantasy_name = Column(String(100), nullable=True)
+    email = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=True)
+
+
+class StudentPlan(ModelBase):
+    __tablename__ = 'student_plans'
+
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=False)
+    plan_id = Column(UUIDType(binary=False),
+                     ForeignKey(Plan.id), nullable=False)
+    status = Column(Enum(StatusEnum), nullable=False)
+
+
+class StudentDoctor(ModelBase):
+    __tablename__ = 'student_doctors'
+
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=False)
+
+    name = Column(String(100), nullable=True)
+    email = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=True)
+
+
+class StudentMedicine(ModelBase):
+    __tablename__ = 'student_medicines'
+
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=False)
+
+    medicine = Column(String(100), nullable=True)
+    amount = Column(String(50), nullable=False)
+    measure = Column(String(50), nullable=True)
+    schedules = Column(String(50), nullable=True)
+    anotations = Column(String(250), nullable=True)

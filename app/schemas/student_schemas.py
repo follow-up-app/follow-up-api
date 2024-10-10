@@ -6,7 +6,7 @@ from app.constants.enums.genere_enum import GenereEnum
 from app.constants.enums.partenal_enum import PartenalEnum
 from app.constants.enums.status_enum import StatusEnum
 from app.schemas.responsible_contract_schemas import ResponsibleContractSchemaOut
-
+from app.schemas.contractor_schemas import ContractorOut
 
 class StudentSchemaIn(BaseModel):
     fullname: str
@@ -43,6 +43,7 @@ class StudentSchemaOut(BaseModel):
     informations: Optional[str]
     avatar: Optional[str]
     responsibles: Optional[List[ResponsibleContractSchemaOut]]
+    contractor: Optional[ContractorOut]
     status: StatusEnum
 
     class Config:

@@ -32,6 +32,8 @@ from app.services.skill_schedule_service import SkillScheduleService
 from app.services.skill_service import SkillService
 from app.services.student_service import StudentService
 from app.services.user_service import UserService
+from app.repositories.billing_repository import BillingRepository
+from app.services.billing_service import BillingService
 from db import get_db
 from db.models import User
 from app.schemas.schedule_schemas import ProcedureScheduleSchemaIn, ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn
@@ -63,6 +65,7 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         session, current_user)
     procedure_schedule_repository = ProcedureScheduleRepository(session)
     user_repository = UserRepository(session, current_user)
+    billing_repository = BillingRepository(session, current_user)
     mailer = Mailer()
 
     address_contract_service = AddressContractService(
@@ -87,7 +90,7 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         procedure_schedule_repository)
     payment_repository = PaymnentRepository(session, current_user)
     payment_service = PaymentService(payment_repository)
-
+    billing_service = BillingService(billing_repository)
 
     return ScheduleService(
         schedule_repository,
@@ -98,7 +101,8 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         execution_repository,
         procedure_service,
         procedure_schedule_service,
-        payment_service
+        payment_service,
+        billing_service
     )
 
 
@@ -246,7 +250,8 @@ async def update_procedure_schedule(procedure_schedule_id: UUID, procedure_in: P
 @router.post('/{id}/procedures/', summary='add procedure in schedule', response_model=List[ScheduleSchemaOut], tags=[tags])
 async def add_procedure(id: UUID, procedure_in: ProcedureScheduleSchemaIn, schedule_service: ScheduleService = Depends(get_service)):
     try:
-        schedules = schedule_service.add_procedure_schedule(id, procedure_in.procedure_id)
+        schedules = schedule_service.add_procedure_schedule(
+            id, procedure_in.procedure_id)
         return [ScheduleSchemaOut.from_orm(x) for x in schedules]
 
     except Exception as e:

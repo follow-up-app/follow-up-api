@@ -187,6 +187,7 @@ class TestScheduleService(unittest.TestCase):
 
         mock_exists_function = Mock(return_value=False)
         payment_mock = Mock()
+        billing_mock = Mock()
         schedule_service = ScheduleService(
             schedule_repository=mock_repository,
             instructor_service=instructor_service,
@@ -196,7 +197,8 @@ class TestScheduleService(unittest.TestCase):
             execution_repositoy=execution_mock_repositoty,
             procedure_schedule_service=procedure_schedule_service,
             procedure_service=procedure_service,
-            payment_service=payment_mock
+            payment_service=payment_mock,
+            billing_service=billing_mock
         )
         schedule_service.check_instructor = mock_exists_function
         schedule_service.check_student = mock_exists_function

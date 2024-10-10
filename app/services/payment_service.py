@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from typing import List
 from uuid import UUID
 from app.constants.enums.instructor_payments_enum import ModePaymentEnum

@@ -21,6 +21,7 @@ from app.services.student_service import StudentService
 from datetime import date, datetime, timedelta
 from uuid import UUID
 import uuid
+from app.services.billing_service import BillingService
 
 
 class ScheduleService:
@@ -33,7 +34,8 @@ class ScheduleService:
                  execution_repositoy: ExecutionRepository,
                  procedure_service: ProcedureService,
                  procedure_schedule_service: ProcedureScheduleService,
-                 payment_service: PaymentService
+                 payment_service: PaymentService,
+                 billing_service: BillingService
                  ):
         self.schedule_repository = schedule_repository
         self.student_service = student_service
@@ -44,6 +46,7 @@ class ScheduleService:
         self.procedure_service = procedure_service
         self.procedure_schedule_service = procedure_schedule_service
         self.payment_service = payment_service
+        self.billing_service = billing_service
 
     def create(self, schedule_in: ScheduleSchemaIn) -> List[ScheduleSchemaOut]:
         days = schedule_in.period * 30
@@ -99,6 +102,7 @@ class ScheduleService:
                 self.procedure_schedule_service.create(
                     sch.id, student.id, procedure)
             self.payment_service.create(sch, instructor)
+            self.billing_service.create(sch, student)
         return events
 
     def dates_allowed(self, date: date, start: str, end: str, student_id: UUID, instructor_id: UUID) -> Tuple[datetime, datetime]:
@@ -171,6 +175,7 @@ class ScheduleService:
                 self.skill_schedule_service.delete(skill.id)
 
             self.payment_service.delete_for_schedule(schedule.id)
+            self.billing_service.delete_for_schedule(schedule.id)
             self.schedule_repository.delete(schedule.id)
 
         return True
@@ -195,6 +200,7 @@ class ScheduleService:
             self.skill_schedule_service.delete(skill.id)
 
         self.payment_service.delete_for_schedule(schedule.id)
+        self.billing_service.delete_for_schedule(schedule.id)
         self.schedule_repository.delete(schedule.id)
 
         return True
@@ -209,6 +215,8 @@ class ScheduleService:
 
         if schedule_in.status == ScheduleEnum.DONE:
             self.payment_service.update_status_schedule(schedule.id)
+            self.billing_service.update_status_schedule(schedule.id)
+
             return self.schedule_repository.done(schedule)
 
     def student_arrival(self, id: UUID) -> ScheduleSchemaOut:

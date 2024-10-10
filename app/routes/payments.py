@@ -23,17 +23,6 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     return PaymentService(payment_repository)
 
 
-@router.post('/', summary='Create payment', response_model=PaymentSchemaOut, tags=[tags])
-async def create(payment_in: PaymentSchemaIn, payment_service: PaymentService = Depends(get_service)):
-    try:
-        payment = payment_service.create(payment_in)
-        return PaymentSchemaOut.from_orm(payment)
-
-    except Exception as e:
-        logger.error(f"Error in create payment: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get('/', summary='Return all payments', response_model=List[PaymentSchemaOut], tags=[tags])
 async def get_all(payment_service: PaymentService = Depends(get_service)):
     try:

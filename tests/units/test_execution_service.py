@@ -73,6 +73,7 @@ class TestExecutionService(unittest.TestCase):
         )
 
         payment_service = Mock()
+        billing_service = Mock()
         schedule_service = ScheduleService(
             schedule_repository=schedule_repository,
             student_service=Mock(),
@@ -82,7 +83,8 @@ class TestExecutionService(unittest.TestCase):
             execution_repositoy=mock_repository,
             procedure_service=Mock(),
             procedure_schedule_service=procedure_schedule_service,
-            payment_service=payment_service
+            payment_service=payment_service,
+            billing_service=billing_service
         )
 
         execution_service = ExecutionService(

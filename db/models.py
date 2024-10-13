@@ -157,14 +157,14 @@ class AddressContract(ModelBase):
     responsable_name = association_proxy('address', 'fullname')
 
 
-class SpecialtyInstructor(ModelBase):
-    __tablename__ = 'specialties_instructor'
+# class SpecialtyInstructor(ModelBase):
+    # __tablename__ = 'specialties_instructor'
 
-    company_id = Column(UUIDType(binary=False),
-                        ForeignKey(Company.id), nullable=False)
-    specialty = Column(String(100), nullable=False)
+    # company_id = Column(UUIDType(binary=False),
+    #                     ForeignKey(Company.id), nullable=False)
+    # specialty = Column(String(100), nullable=False)
 
-    instructor = relationship('Instructor', back_populates='specialty')
+    # instructor = relationship('Instructor', back_populates='specialty')
 
 
 class Instructor(ModelBase):
@@ -174,8 +174,8 @@ class Instructor(ModelBase):
                         ForeignKey(Company.id), nullable=False)
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=True)
-    specialty_instructor_id = Column(UUIDType(binary=False),
-                                     ForeignKey(SpecialtyInstructor.id), nullable=True)
+    # specialty_instructor_id = Column(UUIDType(binary=False),
+    #  ForeignKey(SpecialtyInstructor.id), nullable=True)
 
     fullname = Column(String(100), nullable=False)
     document = Column(String(100), nullable=False)
@@ -190,8 +190,8 @@ class Instructor(ModelBase):
     email = Column(String(50), nullable=False)
     phone = Column(String(50), nullable=True)
     whats_app = Column(Boolean(), nullable=True)
-    value_hour = Column(String(50), nullable=True)
-    value_mouth = Column(String(50), nullable=True)
+    # value_hour = Column(String(50), nullable=True)
+    # value_mouth = Column(String(50), nullable=True)
     comission = Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
     status = Column(Enum(StatusEnum), nullable=False)
@@ -199,8 +199,8 @@ class Instructor(ModelBase):
     schedule = relationship('Schedule', back_populates='instructor')
     address = relationship('AddressInstructor', back_populates='instructor')
 
-    specialty = relationship('SpecialtyInstructor',
-                             back_populates='instructor')
+    # specialty = relationship('SpecialtyInstructor',
+    #                          back_populates='instructor')
     specialty_name = association_proxy('specialty', 'specialty')
 
 
@@ -232,6 +232,7 @@ class Skill(ModelBase):
 
     schedule = relationship('SkillsSchedule', back_populates='skills')
     procedure = relationship('ProcedureSchedule', back_populates='skills')
+    procedures = relationship('Procedure', back_populates='skill')
 
 
 class Procedure(ModelBase):
@@ -254,6 +255,7 @@ class Procedure(ModelBase):
                         ForeignKey(Student.id), nullable=True)
 
     student = relationship('Student', back_populates='procedures')
+    skill = relationship('Skill', back_populates='procedures')
 
 
 class Schedule(ModelBase):
@@ -286,7 +288,7 @@ class Schedule(ModelBase):
     instructor = relationship('Instructor', back_populates='schedule')
     student = relationship('Student', back_populates='schedule')
     event = relationship('SkillsSchedule', back_populates='event')
-    
+
 
 class ProcedureSchedule(ModelBase):
     __tablename__ = 'procedures_schedueles'
@@ -297,9 +299,8 @@ class ProcedureSchedule(ModelBase):
     skill_id = Column(UUIDType(binary=False),
                       ForeignKey(Skill.id), nullable=False)
     procedure_id = Column(UUIDType(binary=False),
-                      ForeignKey(Procedure.id), nullable=False)
-    
-    
+                          ForeignKey(Procedure.id), nullable=False)
+
     tries = Column(Integer(), nullable=False)
     goal = Column(Float(), nullable=False)
     period = Column(String(255), nullable=False)
@@ -310,9 +311,9 @@ class ProcedureSchedule(ModelBase):
     consequence = Column(String(1000), nullable=True)
     materials = Column(String(1000), nullable=True)
     help = Column(String(1000), nullable=True)
-    
+
     skills = relationship('Skill', back_populates='procedure')
-    
+
     skill_name = association_proxy('skills', 'name')
 
 
@@ -324,8 +325,8 @@ class Execution(ModelBase):
     procedure_id = Column(UUIDType(binary=False),
                           ForeignKey(Procedure.id), nullable=False)
     procedure_schedule_id = Column(UUIDType(binary=False),
-                          ForeignKey(ProcedureSchedule.id), nullable=False)
-    
+                                   ForeignKey(ProcedureSchedule.id), nullable=False)
+
     trie = Column(Integer(), nullable=False)
     time = Column(String(255), nullable=False)
     success = Column(Boolean(), nullable=False)

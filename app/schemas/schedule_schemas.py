@@ -13,7 +13,6 @@ class ScheduleSchemaIn(BaseModel):
     id: Optional[UUID]
     student_id: UUID
     instructor_id: UUID
-    skill_id: List[UUID]
     start_hour: str
     end_hour: str
     repeat: RepeatEnum
@@ -22,6 +21,7 @@ class ScheduleSchemaIn(BaseModel):
     color: Optional[str]
     schedule_in: date
     procedures: List[ProcedureSchemaOut]
+    dates: Optional[List[date]] = None
 
 
 class ScheduleSchemaEvent(BaseModel):
@@ -84,3 +84,6 @@ class ScheduleSchemaOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+class SkillScheduleIn(BaseModel):
+    skill_id: UUID

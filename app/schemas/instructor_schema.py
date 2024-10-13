@@ -18,8 +18,6 @@ class InstructorSchemaIn(BaseModel):
     document_company: Optional[str]
     social_name: Optional[str]
     fantasy_name: Optional[str]
-    value_hour: Optional[str]
-    value_mouth: Optional[str]
     comission: Optional[str]
     status: Optional[StatusEnum]
 
@@ -28,7 +26,6 @@ class InstructorSchemaOut(BaseModel):
     id: UUID
     company_id: UUID
     user_id: Optional[UUID]
-    specialty_name: Optional[str]
     fullname: str
     document: str
     email: str
@@ -41,9 +38,6 @@ class InstructorSchemaOut(BaseModel):
     document_company: Optional[str]
     social_name: Optional[str]
     fantasy_name: Optional[str]
-    value_hour: Optional[str]
-    value_mouth: Optional[str]
-    comission: Optional[str]
     avatar: Optional[str]
     status: StatusEnum
 

@@ -224,9 +224,10 @@ class TestScheduleService(unittest.TestCase):
                 materials=None,
                 help=None,
                 student_id=None
-            )]
+            )],
+            dates=['2024-12-12', '2024-12-12'],
         )
 
-        created_item = schedule_service.create(new_schedule)
+        created_item = schedule_service.prepare(new_schedule)
 
         self.assertIsInstance(created_item, list)

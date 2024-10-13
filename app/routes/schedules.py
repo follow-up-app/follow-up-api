@@ -36,7 +36,7 @@ from app.repositories.billing_repository import BillingRepository
 from app.services.billing_service import BillingService
 from db import get_db
 from db.models import User
-from app.schemas.schedule_schemas import ProcedureScheduleSchemaIn, ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn
+from app.schemas.schedule_schemas import ProcedureScheduleSchemaIn, ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn, SkillScheduleIn
 import logging
 
 
@@ -106,10 +106,10 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     )
 
 
-@router.post('/', summary='Create schedule', response_model=List[ScheduleSchemaOut], tags=[tags])
+@router.post('/', summary='Create schedule',  tags=[tags])
 async def create(schedule_in: ScheduleSchemaIn, schedule_service: ScheduleService = Depends(get_service)):
     try:
-        schedules = schedule_service.create(schedule_in)
+        schedules = schedule_service.prepare(schedule_in)
         return [ScheduleSchemaOut.from_orm(x) for x in schedules]
 
     except Exception as e:
@@ -266,4 +266,26 @@ async def delete_procedure(procedure_schedule_id: UUID, schedule_service: Schedu
 
     except Exception as e:
         logger.error(f"Error in delete procedure in schedule: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/{id}/skills/', summary='add skill in schedule', response_model=List[ScheduleSchemaOut], tags=[tags])
+async def add_skill(id: UUID, skill_in: SkillScheduleIn, schedule_service: ScheduleService = Depends(get_service)):
+    try:
+        schedules = schedule_service.add_skill_schedule(
+            id, skill_in.skill_id)
+        return [ScheduleSchemaOut.from_orm(x) for x in schedules]
+
+    except Exception as e:
+        logger.error(f"Error in add skill in schedule: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete('/skills/{skill_schedule_id}', summary='Delete skill schedule', tags=[tags])
+async def delete_skill_schedule(skill_schedule_id: UUID, schedule_service: ScheduleService = Depends(get_service)):
+    try:
+        return schedule_service.delete_skill_schedule(skill_schedule_id)
+
+    except Exception as e:
+        logger.error(f"Error in delete skill in schedule: {e}")
         raise HTTPException(status_code=400, detail=str(e))

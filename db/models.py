@@ -177,6 +177,16 @@ class AddressContract(ModelBase):
     responsable_name = association_proxy('address', 'fullname')
 
 
+# class SpecialtyInstructor(ModelBase):
+    # __tablename__ = 'specialties_instructor'
+
+    # company_id = Column(UUIDType(binary=False),
+    #                     ForeignKey(Company.id), nullable=False)
+    # specialty = Column(String(100), nullable=False)
+
+    # instructor = relationship('Instructor', back_populates='specialty')
+
+
 class Instructor(ModelBase):
     __tablename__ = 'instructors'
 
@@ -186,6 +196,8 @@ class Instructor(ModelBase):
                      ForeignKey(User.id), nullable=True)
     specialty_id = Column(UUIDType(binary=False),
                           ForeignKey(Specialty.id), nullable=True)
+    # specialty_instructor_id = Column(UUIDType(binary=False),
+    #  ForeignKey(SpecialtyInstructor.id), nullable=True)
 
     fullname = Column(String(100), nullable=False)
     document = Column(String(100), nullable=False)
@@ -215,7 +227,6 @@ class Instructor(ModelBase):
     payment = relationship('Payment', back_populates='instructor')
 
     specialty_name = association_proxy('specialty', 'name')
-
 
 class AddressInstructor(ModelBase):
     __tablename__ = 'instructor_address'
@@ -263,6 +274,7 @@ class Skill(ModelBase):
     specialty = relationship('Specialty', back_populates='skills')
 
     specialty_name = association_proxy('specialty', 'name')
+    procedures = relationship('Procedure', back_populates='skill')
 
 
 class Procedure(ModelBase):
@@ -285,6 +297,7 @@ class Procedure(ModelBase):
                         ForeignKey(Student.id), nullable=True)
 
     student = relationship('Student', back_populates='procedures')
+    skill = relationship('Skill', back_populates='procedures')
 
 
 class Schedule(ModelBase):

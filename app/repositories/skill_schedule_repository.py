@@ -33,3 +33,9 @@ class SkillScheduleRepository:
         self.session.commit()
 
         return True
+
+    def check_skill_schedule(self, schedule_id: UUID, skill_id: UUID) -> SkillScheduleSchemaOut:
+        return SkillsSchedule.query(self.session).filter(
+            SkillsSchedule.schedule_id == schedule_id,
+            SkillsSchedule.skill_id == skill_id,
+        ).first()

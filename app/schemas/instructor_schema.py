@@ -19,6 +19,7 @@ class InstructorSchemaIn(BaseModel):
     document_company: Optional[str]
     social_name: Optional[str]
     fantasy_name: Optional[str]
+    comission: Optional[str]
     status: Optional[StatusEnum]
 
 

@@ -4,6 +4,14 @@ from pydantic import BaseModel
 from app.schemas.execution_schemas import ExecutionSchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
 
+class SkillOut(BaseModel):
+    id: UUID
+    name: str
+    objective: str
+
+    class Config:
+        orm_mode = True
+
 class ProcedureSchemaIn(BaseModel):
     skill_id: Optional[UUID]
     name: str
@@ -42,6 +50,7 @@ class ProcedureSchemaOut(BaseModel):
     app_active: Optional[bool]
     executions: Optional[List[ExecutionSchemaOut]]
     student: Optional[StudentSchemaOut]
+    skill: Optional[SkillOut]
 
     class Config:
         orm_mode = True

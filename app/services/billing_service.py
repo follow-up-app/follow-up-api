@@ -15,7 +15,7 @@ class BillingService:
         self.billing_repository = billing_repository
 
     def create(self, schedule: ScheduleSchemaOut, student: StudentSchemaOut) -> BillingSchemaOut:
-        value = ScheduleSchemaOut.specialty.value_hour
+        value = schedule.specialty.value_hour
         category = CategoryEnum.PERSONAL
         if student.contractor.mode_billing == CategoryEnum.PLAN:
             category = CategoryEnum.PLAN

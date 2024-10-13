@@ -17,7 +17,7 @@ from app.constants.enums.schedule_enum import ScheduleEnum
 from app.constants.enums.status_enum import StatusEnum
 from app.constants.enums.payment_enum import PaymentEnum
 from app.constants.enums.instructor_payments_enum import ModePaymentEnum, TypePaymentEnum
-from app.constants.enums.billing_enum import BillingEnum
+from app.constants.enums.billing_enum import BillingEnum, CategoryEnum
 
 
 Base = declarative_base()
@@ -177,16 +177,6 @@ class AddressContract(ModelBase):
     responsable_name = association_proxy('address', 'fullname')
 
 
-# class SpecialtyInstructor(ModelBase):
-    # __tablename__ = 'specialties_instructor'
-
-    # company_id = Column(UUIDType(binary=False),
-    #                     ForeignKey(Company.id), nullable=False)
-    # specialty = Column(String(100), nullable=False)
-
-    # instructor = relationship('Instructor', back_populates='specialty')
-
-
 class Instructor(ModelBase):
     __tablename__ = 'instructors'
 
@@ -196,8 +186,6 @@ class Instructor(ModelBase):
                      ForeignKey(User.id), nullable=True)
     specialty_id = Column(UUIDType(binary=False),
                           ForeignKey(Specialty.id), nullable=True)
-    # specialty_instructor_id = Column(UUIDType(binary=False),
-    #  ForeignKey(SpecialtyInstructor.id), nullable=True)
 
     fullname = Column(String(100), nullable=False)
     document = Column(String(100), nullable=False)
@@ -431,7 +419,7 @@ class Billing(ModelBase):
                         ForeignKey(Student.id), nullable=True)
 
     reference = Column(String(20), nullable=True)
-    category = Column(Enum(BillingEnum), nullable=True)
+    category = Column(Enum(CategoryEnum), nullable=True)
     value = Column(Float(), nullable=True)
     date_due = Column(Date, nullable=False)
     date_done = Column(Date, nullable=True)
@@ -502,4 +490,3 @@ class StudentMedicine(ModelBase):
     measure = Column(String(50), nullable=True)
     schedules = Column(String(50), nullable=True)
     anotations = Column(String(250), nullable=True)
-    event_id = association_proxy('event', 'event_id')

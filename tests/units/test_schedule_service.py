@@ -173,7 +173,8 @@ class TestScheduleService(unittest.TestCase):
             schedule_id='dbac77ac-95c4-4e61-8d51-7e77c39eb145',
             skill_id='50820477-873f-45e4-8893-e6548fa141ca',
             finished=False,
-            skill_name='Fight'
+            skill_name='Fight',
+            event_id='add7dae3-daa9-4dc2-8aca-aae756204ab8'
         )
         skill_schedule_service = SkillScheduleService(
             skill_schedule_repository=skill_schedule_mock_repositoty

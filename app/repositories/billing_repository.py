@@ -18,7 +18,7 @@ class BillingRepository:
         billing = Billing(
             company_id=company_id,
             schedule_id=schedule_id,
-            instructor_id=student_id,
+            student_id=student_id,
             category=category,
             value=value,
             date_due=date_due,

@@ -56,6 +56,7 @@ class SkillScheduleSchemaOut(BaseModel):
     skill_id: UUID
     skill_name: str
     finished: bool
+    event_id: UUID
 
     class Config:
         orm_mode = True

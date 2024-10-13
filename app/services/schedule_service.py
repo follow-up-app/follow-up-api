@@ -50,19 +50,18 @@ class ScheduleService:
         self.billing_service = billing_service
 
     def prepare(self, schedule_in: ScheduleSchemaIn) -> List[ScheduleSchemaOut]:
+        event_id = uuid.uuid4()
         if schedule_in.dates:
             for date in schedule_in.dates:
-                self.create(schedule_in, date)
+                self.create(schedule_in, date, event_id)
 
-        return self.create(schedule_in, schedule_in.schedule_in)
+        return self.create(schedule_in, schedule_in.schedule_in, event_id)
 
-    def create(self, schedule_in: ScheduleSchemaIn, data_schedule) -> List[ScheduleSchemaOut]:
-        print(data_schedule)
+    def create(self, schedule_in: ScheduleSchemaIn, data_schedule: date, event_id: UUID) -> List[ScheduleSchemaOut]:
         days = schedule_in.period * 30
         max_date = data_schedule + timedelta(days=round(days))
         period_ = max_date - data_schedule
         events = []
-        event_id = uuid.uuid4()
 
         instructor = self.instructor_service.get_id(schedule_in.instructor_id)
         if not instructor:
@@ -328,11 +327,13 @@ class ScheduleService:
         delete = self.procedure_schedule_service.delete(procedure_schedule.id)
         skill_schedules = self.procedure_schedule_service.get_schedule_skill(
             procedure_schedule.schedule_id, procedure_schedule.skill_id)
-        print(skill_schedules)
         if skill_schedules == []:
             skill_schedule = self.skill_schedule_service.check_skill_schedule(
                 procedure_schedule.schedule_id, procedure_schedule.skill_id)
-            self.skill_schedule_service.delete(skill_schedule.id)
+            all_skill_schedules = self.skill_schedule_service.all_skill_schedules_events(
+                skill_schedule.event_id, skill_schedule.skill_id)
+            for event in all_skill_schedules:
+                self.skill_schedule_service.delete(event.id)
 
         return delete
 

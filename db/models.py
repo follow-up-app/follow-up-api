@@ -228,6 +228,7 @@ class Instructor(ModelBase):
 
     specialty_name = association_proxy('specialty', 'name')
 
+
 class AddressInstructor(ModelBase):
     __tablename__ = 'instructor_address'
 
@@ -394,6 +395,7 @@ class SkillsSchedule(ModelBase):
     event = relationship('Schedule', back_populates='event')
 
     skill_name = association_proxy('skills', 'name')
+    event_id = association_proxy('event', 'event_id')
 
 
 class Payment(ModelBase):
@@ -500,3 +502,4 @@ class StudentMedicine(ModelBase):
     measure = Column(String(50), nullable=True)
     schedules = Column(String(50), nullable=True)
     anotations = Column(String(250), nullable=True)
+    event_id = association_proxy('event', 'event_id')

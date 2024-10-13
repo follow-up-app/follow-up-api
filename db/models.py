@@ -348,3 +348,4 @@ class SkillsSchedule(ModelBase):
     event = relationship('Schedule', back_populates='event')
 
     skill_name = association_proxy('skills', 'name')
+    event_id = association_proxy('event', 'event_id')

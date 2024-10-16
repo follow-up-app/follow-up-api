@@ -2,7 +2,7 @@ from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from services.billing_service import BillingService
+from app.services.billing_service import BillingService
 from app.core.security import get_current_user
 from app.repositories.billing_repository import BillingRepository
 from app.schemas.billing_schemas import BillingSchemaIn, BillingSchemaOut, BillingFilters, BillingGroup
@@ -73,9 +73,10 @@ async def get_resume(filters_in: BillingFilters, billing_service: BillingService
         billings = billing_service.get_resume(filters_in)
         return [
             {
-                "student_id": billing.instructor_id,
+                "student_id": billing.student_id,
                 "fullname": billing.fullname,
-                "social_name": billing.social_name,
+                "category": billing.category,
+                # "social_name": billing.social_name,
                 "status": billing.status,
                 "count": billing.count,
                 "total": billing.total,
@@ -84,5 +85,16 @@ async def get_resume(filters_in: BillingFilters, billing_service: BillingService
         ]
 
     except Exception as e:
-        logger.error(f"Error in resume query in resume payments: {e}")
+        logger.error(f"Error in resume query in resume billings: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/for-student', summary='Return all billings for instructors', response_model=List[BillingSchemaOut], tags=[tags])
+async def get_student_status(filters_in: BillingFilters, billing_service: BillingService = Depends(get_service)):
+    try:
+        billings = billing_service.get_student_status(filters_in)
+        return [BillingSchemaOut.from_orm(x) for x in billings]
+
+    except Exception as e:
+        logger.error(f"Error in resume query billings for instructor: {e}")
         raise HTTPException(status_code=400, detail=str(e))

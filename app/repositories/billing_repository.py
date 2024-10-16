@@ -2,7 +2,7 @@ import datetime
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
-from db.models import Billing, User, Student, StudentPlan, Plan
+from db.models import Billing, User, Student, StudentPlan, Plan, Contractor
 from app.constants.enums.billing_enum import BillingEnum
 from app.schemas.billing_schemas import BillingSchemaIn, BillingSchemaOut, BillingGroup
 from sqlalchemy.sql.functions import func
@@ -83,14 +83,12 @@ class BillingRepository:
             self.session.query(
                 Billing.student_id,
                 Student.fullname,
-                Plan.social_name,
+                Billing.category,
                 Billing.status,
                 func.count(Billing.student_id).label('count'),
                 func.sum(Billing.value).label('total'),
             )
             .join(Student, Billing.student_id == Student.id)
-            .leftJoin(StudentPlan, Student.student_id == StudentPlan.student_id)
-            .leftJoin(Plan, StudentPlan.plan_id == Plan.id)
             .filter(
                 Billing.company_id == self.current_user.company_id,
                 Billing.date_due >= start,
@@ -105,7 +103,7 @@ class BillingRepository:
         billings = query.group_by(
             Billing.student_id,
             Student.fullname,
-            Plan.social_name,
+            Billing.category,
             Billing.status).all()
 
         return billings

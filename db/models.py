@@ -90,7 +90,7 @@ class Contractor(ModelBase):
     company_id = Column(UUIDType(binary=False),
                         ForeignKey(Company.id), nullable=False)
 
-    mode_billing = Column(Enum(BillingEnum), nullable=True)
+    type_billing = Column(Enum(CategoryEnum), nullable=True)
     status = Column(Enum(ContractEnum), nullable=False)
 
     responsable = relationship(

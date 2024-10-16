@@ -17,7 +17,7 @@ class BillingService:
     def create(self, schedule: ScheduleSchemaOut, student: StudentSchemaOut) -> BillingSchemaOut:
         value = schedule.specialty.value_hour
         category = CategoryEnum.PERSONAL
-        if student.contractor.mode_billing == CategoryEnum.PLAN:
+        if student.contractor.type_billing == CategoryEnum.PLAN:
             category = CategoryEnum.PLAN
 
         date_due_ = schedule.start + timedelta(days=30)

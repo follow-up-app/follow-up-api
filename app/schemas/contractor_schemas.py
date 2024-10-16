@@ -16,7 +16,7 @@ class ContractorOut(BaseModel):
     company_id: UUID
     responsible_name: Optional[str]
     student_name: Optional[str]
-    mode_billing: Optional[CategoryEnum] = None
+    type_billing: Optional[CategoryEnum] = None
     status: ContractEnum
 
     class Config:

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.constants.enums.contract_enum import ContractEnum
 from app.schemas.contractor_schemas import ContractorIn, ContractorOut
 from db.models import Contractor, User
+from app.constants.enums.billing_enum import CategoryEnum
 
 
 class ContractorRepository:
@@ -14,6 +15,7 @@ class ContractorRepository:
     def create(self) -> ContractorOut:
         contract = Contractor(
             company_id=self.current_user.company_id,
+            type_billing=CategoryEnum.PERSONAL,
             status=ContractEnum.ACTIVE
         )
 

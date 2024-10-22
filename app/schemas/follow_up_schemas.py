@@ -52,6 +52,7 @@ class ScheduleSchemaFollowUpMobile(BaseModel):
     student: Optional[StudentSchemaOut]
     instructor: Optional[InstructorSchemaOut]
     skill: Optional[SkillSchemaOut]
+    procedures: Optional[List[ProcedureSchemaOut]]
     outhers: Optional[List[ProcedureSchemaOut]]
 
     class Config:

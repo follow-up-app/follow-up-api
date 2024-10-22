@@ -232,7 +232,7 @@ class Skill(ModelBase):
 
     schedule = relationship('SkillsSchedule', back_populates='skills')
     procedure = relationship('ProcedureSchedule', back_populates='skills')
-    procedures = relationship('Procedure', back_populates='skill')
+    # procedures = relationship('Procedure', back_populates='skill')
 
 
 class Procedure(ModelBase):
@@ -255,7 +255,7 @@ class Procedure(ModelBase):
                         ForeignKey(Student.id), nullable=True)
 
     student = relationship('Student', back_populates='procedures')
-    skill = relationship('Skill', back_populates='procedures')
+    # skill = relationship('Skill', back_populates='procedures')
 
 
 class Schedule(ModelBase):

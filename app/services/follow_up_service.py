@@ -45,7 +45,6 @@ class FollowUpService:
             executions = []
             procedures = self.procedure_schedule_service.get_schedule_student_skill(
                 schedule.id, schedule.student_id, skill.skill_id)
-            
 
             for procedure in procedures:
                 procedure.points = 0
@@ -56,7 +55,7 @@ class FollowUpService:
                     procedure.points = round(self.execution_service.count_execution_independent(
                         schedule.id, procedure.procedure_id) / procedure.tries * 100, 2)
                     procedure.executions = executions
-                        
+
             skill.procedures = procedures
 
         schedule.skills = skills
@@ -74,23 +73,23 @@ class FollowUpService:
         if not skill:
             raise ValueError(SkillNotFoundError.MESSAGE)
 
-        procedures = self.procedure_schedule_service.get_schedule_student_skill(
+        procedures = []
+        procedures_schedule = self.procedure_schedule_service.get_schedule_student_skill(
             schedule.id, schedule.student_id, skill.id)
 
-        skill.procedures = procedures
-        schedule.skill = skill
-
-        for procedure in skill.procedures:
+        for procedure in procedures_schedule:
             executions = self.execution_service.count_for_procedure_in_schedule(
                 procedure.id, schedule.id)
-            
+
             procedure.total_exec = int(executions)
             procedure.data_chart = round(executions / procedure.tries, 2)
             procedure.app_active = True
             if executions >= procedure.tries:
                 procedure.app_active = False
+            procedures.append(procedure)
 
         others_skills = self.skill_schedule_service.get_schedule(schedule.id)
+        schedule.procedures = procedures
 
         outhers = []
         for skl in others_skills:
@@ -98,7 +97,7 @@ class FollowUpService:
                 schedule.id, schedule.student_id, skl.skill_id)
             for p in prcs:
                 excs = self.execution_service.count_for_procedure_in_schedule(
-                   p.id, schedule.id)
+                    p.id, schedule.id)
                 p.app_active = True
                 if excs >= p.tries:
                     p.app_active = False
@@ -111,15 +110,14 @@ class FollowUpService:
     def get_filters(self, filters_in: FiltersSchemaIn) -> List[ScheduleSchemaFollowUp]:
         start = datetime.combine(filters_in.start, datetime.min.time())
         end = datetime.combine(filters_in.end, datetime.max.time())
-        
+
         schedules = self.schedule_service.get_date_filter(start, end)
-        
+
         for schedule in schedules:
             skills = self.skill_schedule_service.get_schedule(schedule.id)
             schedule.skills = skills
-            
+
         return schedules
-        
+
     def get_student(self, student_id: UUID) -> List[ScheduleSchemaFollowUp]:
         return self.schedule_service.get_student(student_id)
-        

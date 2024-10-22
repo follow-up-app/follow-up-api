@@ -89,7 +89,8 @@ class FollowUpService:
             procedures.append(procedure)
 
         others_skills = self.skill_schedule_service.get_schedule(schedule.id)
-        schedule.procedures = procedures
+        schedule.skill = skill
+        schedule.skill.procedures = procedures
 
         outhers = []
         for skl in others_skills:

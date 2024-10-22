@@ -21,6 +21,8 @@ class ScheduleRepository:
                instructor: InstructorSchemaOut,
                date_schedule_in: datetime,
                date_schedule_out: datetime,
+               hour_start: str,
+               hour_end: str,
                schedule_in: ScheduleSchemaIn) -> ScheduleSchemaOut:
 
         schedule = Schedule(
@@ -32,8 +34,8 @@ class ScheduleRepository:
             title=student.fullname + ' | ' + instructor.fullname,
             instructor_id=instructor.id,
             details=schedule_in.details,
-            start_hour=schedule_in.start_hour,
-            end_hour=schedule_in.end_hour,
+            start_hour=hour_start,
+            end_hour=hour_end,
             repeat=schedule_in.repeat,
             period=schedule_in.period,
             color=schedule_in.color,

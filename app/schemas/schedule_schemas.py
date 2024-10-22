@@ -9,12 +9,15 @@ from app.schemas.procedure_schemas import ProcedureSchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
 
 
+class HoursScheduleIn(BaseModel):
+    start: str
+    end: str
+
+
 class ScheduleSchemaIn(BaseModel):
     id: Optional[UUID]
     student_id: UUID
     instructor_id: UUID
-    start_hour: str
-    end_hour: str
     repeat: RepeatEnum
     period: Optional[int] = None
     details: Optional[str]
@@ -22,6 +25,7 @@ class ScheduleSchemaIn(BaseModel):
     schedule_in: date
     procedures: List[ProcedureSchemaOut]
     dates: Optional[List[date]] = None
+    hours: Optional[List[HoursScheduleIn]] = None
 
 
 class ScheduleSchemaEvent(BaseModel):
@@ -42,8 +46,10 @@ class ScheduleSchemaEvent(BaseModel):
 class ScheduleUpadateSchamaIn(BaseModel):
     status: ScheduleEnum
 
+
 class ProcedureScheduleSchemaIn(BaseModel):
     procedure_id: UUID
+    all_events: Optional[bool]
 
 class SkillScheduleSchemaOut(BaseModel):
     id: UUID
@@ -69,7 +75,7 @@ class ScheduleSchemaOut(BaseModel):
     repeat: Optional[RepeatEnum]
     period: Optional[str] = None
     color: Optional[str]
-    details: Optional[str]
+    details: Optional[str] = None
     event_begin: Optional[datetime]
     event_finish: Optional[datetime]
     event_user_id: Optional[UUID]
@@ -84,6 +90,7 @@ class ScheduleSchemaOut(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class SkillScheduleIn(BaseModel):
     skill_id: UUID

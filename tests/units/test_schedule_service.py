@@ -8,7 +8,7 @@ from app.constants.enums.status_enum import StatusEnum
 from app.schemas.instructor_schema import InstructorSchemaOut
 from app.schemas.procedure_schemas import ProcedureSchemaOut
 from app.schemas.responsible_contract_schemas import ResponsibleContractSchemaOut
-from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, SkillScheduleSchemaOut
+from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, SkillScheduleSchemaOut, HoursScheduleIn
 from app.schemas.skill_schemas import SkillSchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
 from app.services.address_contract_service import AddressContractService
@@ -205,8 +205,12 @@ class TestScheduleService(unittest.TestCase):
             skill_id=[
                 '50820477-873f-45e4-8893-e6548fa141ca'
             ],
-            start_hour='10:00',
-            end_hour='11:00',
+            hours=[
+                HoursScheduleIn(
+                    start='10:00',
+                    end='11:00'
+                )
+            ],
             repeat=RepeatEnum.WEEK,
             period=2,
             schedule_in='2024-12-10',

@@ -73,13 +73,11 @@ class FollowUpService:
         if not skill:
             raise ValueError(SkillNotFoundError.MESSAGE)
 
-        procedures = self.procedure_schedule_service.get_schedule_student_skill(
+        procedures = []
+        procedures_schedule = self.procedure_schedule_service.get_schedule_student_skill(
             schedule.id, schedule.student_id, skill.id)
 
-        skill.procedures = procedures
-        schedule.skill = skill
-
-        for procedure in skill.procedures:
+        for procedure in procedures_schedule:
             executions = self.execution_service.count_for_procedure_in_schedule(
                 procedure.id, schedule.id)
 
@@ -88,8 +86,11 @@ class FollowUpService:
             procedure.app_active = True
             if executions >= procedure.tries:
                 procedure.app_active = False
+            procedures.append(procedure)
 
         others_skills = self.skill_schedule_service.get_schedule(schedule.id)
+        schedule.skill = skill
+        schedule.skill.procedures = procedures
 
         outhers = []
         for skl in others_skills:

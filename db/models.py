@@ -263,7 +263,6 @@ class Skill(ModelBase):
     specialty = relationship('Specialty', back_populates='skills')
 
     specialty_name = association_proxy('specialty', 'name')
-    procedures = relationship('Procedure', back_populates='skill')
 
 
 class Procedure(ModelBase):
@@ -286,7 +285,6 @@ class Procedure(ModelBase):
                         ForeignKey(Student.id), nullable=True)
 
     student = relationship('Student', back_populates='procedures')
-    skill = relationship('Skill', back_populates='procedures')
 
 
 class Schedule(ModelBase):

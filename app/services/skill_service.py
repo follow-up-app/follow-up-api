@@ -38,7 +38,11 @@ class SkillService:
         return self.procedure_service.get_all(id)
 
     def get_for_many_skills(self, skills_in: SkillManyIDs) -> List[ProcedureSchemaOut]:
-        return self.procedure_service.get_for_many_skills(skills_in.skills)
+        procedures = self.procedure_service.get_for_many_skills(skills_in.skills)
+        for procedure in procedures:
+            procedure.skill = self.skill_repository.get_id(procedure.skill_id)
+
+        return procedures
 
     def create_procedure(self, id: UUID, procedure_in: ProcedureSchemaIn) -> ProcedureSchemaOut:
         return self.procedure_service.create(id, procedure_in)

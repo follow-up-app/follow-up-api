@@ -11,8 +11,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    depends_on:
-      - alembic
     networks:
       - app-network
 
@@ -30,18 +28,6 @@ services:
       - app-network
     depends_on:
       - follow_up
-
-  alembic:
-    build: .
-    env_file:
-      - .env
-    command: alembic upgrade head
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - .:/app
-    networks:
-      - app-network
 
 networks:
   app-network:

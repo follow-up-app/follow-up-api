@@ -15,6 +15,9 @@ from app.constants.enums.permission_enum import PermissionEnum
 from app.constants.enums.repeat_enum import RepeatEnum
 from app.constants.enums.schedule_enum import ScheduleEnum
 from app.constants.enums.status_enum import StatusEnum
+from app.constants.enums.payment_enum import PaymentEnum
+from app.constants.enums.instructor_payments_enum import ModePaymentEnum, TypePaymentEnum
+from app.constants.enums.billing_enum import BillingEnum, CategoryEnum
 
 
 Base = declarative_base()
@@ -39,16 +42,24 @@ class Company(ModelBase):
 
     name = Column(String(255), nullable=False)
     document = Column(String(255), nullable=False)
+    municipal_registration = Column(String(50), nullable=True)
     address = Column(String(255), nullable=False)
     number_address = Column(Integer(), nullable=True)
-    complement = Column(String(255), nullable=True)
-    zip_code = Column(String(255), nullable=False)
-    city = Column(String(255), nullable=False)
-    state = Column(String(255), nullable=False)
-    country = Column(String(255), nullable=False)
+    complement = Column(String(20), nullable=True)
+    zip_code = Column(String(20), nullable=False)
+    city = Column(String(100), nullable=False)
+    state = Column(String(10), nullable=False)
+    country = Column(String(50), nullable=False)
+    city_code = Column(String(50), nullable=True)
     email = Column(String(255), nullable=False)
     phone = Column(String(255), nullable=False)
+    aliquot = Column(String(50), nullable=True)
+    item_list_service = Column(String(50), nullable=True)
+    municipal_tax_code = Column(String(50), nullable=True)
+    api_nfes_token = Column(String(50), nullable=True)
     status = Column(Enum(CompanyEnum), nullable=False)
+
+    users = relationship('User', back_populates='company')
 
 
 class User(ModelBase):
@@ -66,12 +77,31 @@ class User(ModelBase):
     position = Column(String(100), nullable=True)
     status = Column(Enum(StatusEnum), nullable=False)
 
+    company = relationship('Company', back_populates='users')
+
+
+class Specialty(ModelBase):
+    __tablename__ = 'specialties'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(String(100), nullable=False)
+    code_nfes = Column(String(100), nullable=True)
+    value_hour = Column(Float(), nullable=False)
+
+    instructor = relationship('Instructor', back_populates='specialty')
+    schedule = relationship('Schedule', back_populates='specialty')
+    skills = relationship('Skill', back_populates='specialty')
+
 
 class Contractor(ModelBase):
     __tablename__ = 'contractors'
 
     company_id = Column(UUIDType(binary=False),
                         ForeignKey(Company.id), nullable=False)
+
+    type_billing = Column(Enum(CategoryEnum), nullable=True)
     status = Column(Enum(ContractEnum), nullable=False)
 
     responsable = relationship(
@@ -109,6 +139,7 @@ class Student(ModelBase):
     contractor = relationship('Contractor', back_populates='student')
     schedule = relationship('Schedule', back_populates='student')
     procedures = relationship('Procedure', back_populates='student')
+    billing = relationship('Billing', back_populates='student')
 
 
 class ResponsibleContract(ModelBase):
@@ -151,20 +182,11 @@ class AddressContract(ModelBase):
     district = Column(String(50), nullable=False)
     city = Column(String(50), nullable=False)
     state = Column(String(2), nullable=False)
+    city_code = Column(String(255), nullable=True)
 
     contractor = relationship('Contractor', back_populates='address')
     responsable = relationship('ResponsibleContract', back_populates='address')
     responsable_name = association_proxy('address', 'fullname')
-
-
-class SpecialtyInstructor(ModelBase):
-    __tablename__ = 'specialties_instructor'
-
-    company_id = Column(UUIDType(binary=False),
-                        ForeignKey(Company.id), nullable=False)
-    specialty = Column(String(100), nullable=False)
-
-    instructor = relationship('Instructor', back_populates='specialty')
 
 
 class Instructor(ModelBase):
@@ -174,8 +196,8 @@ class Instructor(ModelBase):
                         ForeignKey(Company.id), nullable=False)
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=True)
-    specialty_instructor_id = Column(UUIDType(binary=False),
-                                     ForeignKey(SpecialtyInstructor.id), nullable=True)
+    specialty_id = Column(UUIDType(binary=False),
+                          ForeignKey(Specialty.id), nullable=True)
 
     fullname = Column(String(100), nullable=False)
     document = Column(String(100), nullable=False)
@@ -190,18 +212,21 @@ class Instructor(ModelBase):
     email = Column(String(50), nullable=False)
     phone = Column(String(50), nullable=True)
     whats_app = Column(Boolean(), nullable=True)
-    value_hour = Column(String(50), nullable=True)
-    value_mouth = Column(String(50), nullable=True)
     comission = Column(String(50), nullable=True)
     avatar = Column(String(255), nullable=True)
     status = Column(Enum(StatusEnum), nullable=False)
+    type_payment = Column(Enum(TypePaymentEnum), nullable=True)
+    mode_payment = Column(Enum(ModePaymentEnum), nullable=True)
+    value = Column(Float(), nullable=True)
 
+    specialty = relationship('Specialty', back_populates='instructor')
     schedule = relationship('Schedule', back_populates='instructor')
     address = relationship('AddressInstructor', back_populates='instructor')
+    payment_details = relationship(
+        'IntructorPaymentsDetail', back_populates='instructor')
+    payment = relationship('Payment', back_populates='instructor')
 
-    specialty = relationship('SpecialtyInstructor',
-                             back_populates='instructor')
-    specialty_name = association_proxy('specialty', 'specialty')
+    specialty_name = association_proxy('specialty', 'name')
 
 
 class AddressInstructor(ModelBase):
@@ -221,17 +246,35 @@ class AddressInstructor(ModelBase):
     instructor = relationship('Instructor', back_populates='address')
 
 
+class IntructorPaymentsDetail(ModelBase):
+    __tablename__ = 'instructor_payment_details'
+
+    instructor_id = Column(UUIDType(binary=False),
+                           ForeignKey(Instructor.id), nullable=False)
+
+    bank_number = Column(Integer(), nullable=True)
+    account_number = Column(String(50), nullable=True)
+    key = Column(String(255), nullable=True)
+
+    instructor = relationship('Instructor', back_populates='payment_details')
+
+
 class Skill(ModelBase):
     __tablename__ = 'skills'
 
     company_id = Column(UUIDType(binary=False),
                         ForeignKey(Company.id), nullable=False)
+    specialty_id = Column(UUIDType(binary=False),
+                          ForeignKey(Specialty.id), nullable=True)
 
     name = Column(String(100), nullable=False)
     objective = Column(String(255), nullable=False)
 
     schedule = relationship('SkillsSchedule', back_populates='skills')
     procedure = relationship('ProcedureSchedule', back_populates='skills')
+    specialty = relationship('Specialty', back_populates='skills')
+
+    specialty_name = association_proxy('specialty', 'name')
 
 
 class Procedure(ModelBase):
@@ -265,7 +308,8 @@ class Schedule(ModelBase):
                            ForeignKey(Instructor.id), nullable=True)
     student_id = Column(UUIDType(binary=False),
                         ForeignKey(Student.id), nullable=True)
-
+    specialty_id = Column(UUIDType(binary=False),
+                          ForeignKey(Specialty.id), nullable=True)
     event_id = Column(UUIDType(binary=False), nullable=True)
     title = Column(String(255), nullable=False)
     start = Column(DateTime, nullable=False)
@@ -286,7 +330,10 @@ class Schedule(ModelBase):
     instructor = relationship('Instructor', back_populates='schedule')
     student = relationship('Student', back_populates='schedule')
     event = relationship('SkillsSchedule', back_populates='event')
-    
+    specialty = relationship('Specialty', back_populates='schedule')
+    payment = relationship('Payment', back_populates='schedule')
+    billing = relationship('Billing', back_populates='schedule')
+
 
 class ProcedureSchedule(ModelBase):
     __tablename__ = 'procedures_schedueles'
@@ -297,9 +344,8 @@ class ProcedureSchedule(ModelBase):
     skill_id = Column(UUIDType(binary=False),
                       ForeignKey(Skill.id), nullable=False)
     procedure_id = Column(UUIDType(binary=False),
-                      ForeignKey(Procedure.id), nullable=False)
-    
-    
+                          ForeignKey(Procedure.id), nullable=False)
+
     tries = Column(Integer(), nullable=False)
     goal = Column(Float(), nullable=False)
     period = Column(String(255), nullable=False)
@@ -310,9 +356,9 @@ class ProcedureSchedule(ModelBase):
     consequence = Column(String(1000), nullable=True)
     materials = Column(String(1000), nullable=True)
     help = Column(String(1000), nullable=True)
-    
+
     skills = relationship('Skill', back_populates='procedure')
-    
+
     skill_name = association_proxy('skills', 'name')
 
 
@@ -324,8 +370,8 @@ class Execution(ModelBase):
     procedure_id = Column(UUIDType(binary=False),
                           ForeignKey(Procedure.id), nullable=False)
     procedure_schedule_id = Column(UUIDType(binary=False),
-                          ForeignKey(ProcedureSchedule.id), nullable=False)
-    
+                                   ForeignKey(ProcedureSchedule.id), nullable=False)
+
     trie = Column(Integer(), nullable=False)
     time = Column(String(255), nullable=False)
     success = Column(Boolean(), nullable=False)
@@ -347,3 +393,149 @@ class SkillsSchedule(ModelBase):
     event = relationship('Schedule', back_populates='event')
 
     skill_name = association_proxy('skills', 'name')
+    event_id = association_proxy('event', 'event_id')
+
+
+class Payment(ModelBase):
+    __tablename__ = 'payments'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+    schedule_id = Column(UUIDType(binary=False),
+                         ForeignKey(Schedule.id), nullable=False)
+    instructor_id = Column(UUIDType(binary=False),
+                           ForeignKey(Instructor.id), nullable=True)
+
+    reference = Column(String(20), nullable=True)
+    value = Column(Float(), nullable=True)
+    date_due = Column(Date, nullable=False)
+    date_scheduled = Column(Date, nullable=True)
+    date_done = Column(Date, nullable=True)
+    description = Column(String(250), nullable=True)
+    status = Column(Enum(PaymentEnum), nullable=False)
+
+    schedule = relationship('Schedule', back_populates='payment')
+    instructor = relationship('Instructor', back_populates='payment')
+
+
+class Billing(ModelBase):
+    __tablename__ = 'bilings'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+    schedule_id = Column(UUIDType(binary=False),
+                         ForeignKey(Schedule.id), nullable=False)
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=True)
+
+    reference = Column(String(20), nullable=True)
+    category = Column(Enum(CategoryEnum), nullable=True)
+    value = Column(Float(), nullable=True)
+    date_due = Column(Date, nullable=False)
+    date_done = Column(Date, nullable=True)
+    description = Column(String(250), nullable=True)
+    status = Column(Enum(BillingEnum), nullable=False)
+    generate_invoice = Column(Boolean, nullable=True)
+    date_generate_invoice = Column(DateTime, nullable=True)
+
+    schedule = relationship('Schedule', back_populates='billing')
+    student = relationship('Student', back_populates='billing')
+    invoice_billings = relationship('InvoiceBilling', back_populates='billing')
+
+
+class CompanyInvoiceToken(ModelBase):
+    __tablename__ = 'company_invoice_tokens'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+    token = Column(String(250), nullable=False)
+
+
+class Invoice(ModelBase):
+    __tablename__ = 'invoices'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+
+    reference = Column(String(250), nullable=False)
+
+    invoice_billings = relationship('InvoiceBilling', back_populates='invoice')
+
+
+class InvoiceBilling(ModelBase):
+    __tablename__ = 'invoice_billings'
+
+    invoice_id = Column(UUIDType(binary=False),
+                        ForeignKey(Invoice.id), nullable=False)
+    billing_id = Column(UUIDType(binary=False),
+                        ForeignKey(Billing.id), nullable=False)
+
+    invoice = relationship('Invoice', back_populates='invoice_billings')
+    billing = relationship('Billing', back_populates='invoice_billings')
+
+
+class InvoiceLog(ModelBase):
+    __tablename__ = 'invoice_logs'
+
+    invoice_id = Column(UUIDType(binary=False),
+                        ForeignKey(Invoice.id), nullable=False)
+    history = Column(String(250), nullable=False)
+
+
+class HealthPlan(ModelBase):
+    __tablename__ = 'health_plans'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+
+    social_name = Column(String(100), nullable=True)
+    fantasy_name = Column(String(100), nullable=True)
+    document = Column(String(20), nullable=True)
+    address = Column(String(255), nullable=False)
+    number_address = Column(Integer(), nullable=True)
+    complement = Column(String(255), nullable=True)
+    zip_code = Column(String(255), nullable=False)
+    city = Column(String(255), nullable=False)
+    state = Column(String(255), nullable=False)
+    country = Column(String(255), nullable=True)
+    municipal_registration = Column(String(255), nullable=True)
+    email = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=True)
+    active = Column(Boolean(), nullable=True)
+
+    student_plan = relationship('StudentHealthPlan', back_populates='plan')
+
+
+class StudentHealthPlan(ModelBase):
+    __tablename__ = 'student_health_plans'
+
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=False)
+    health_plan_id = Column(UUIDType(binary=False),
+                            ForeignKey(HealthPlan.id), nullable=False)
+
+    plan = relationship('HealthPlan', back_populates='student_plan')
+
+
+class StudentDoctor(ModelBase):
+    __tablename__ = 'student_doctors'
+
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=False)
+
+    name = Column(String(100), nullable=True)
+    email = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=True)
+
+
+class StudentMedicine(ModelBase):
+    __tablename__ = 'student_medicines'
+
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=False)
+
+    medicine = Column(String(100), nullable=True)
+    amount = Column(String(50), nullable=False)
+    measure = Column(String(50), nullable=True)
+    schedules = Column(String(50), nullable=True)
+    anotations = Column(String(250), nullable=True)

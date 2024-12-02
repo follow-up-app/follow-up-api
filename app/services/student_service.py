@@ -2,15 +2,15 @@ import os
 from typing import List
 from uuid import UUID
 from app.constants.enums.status_enum import StatusEnum
-from app.constants.exceptions.student_exceptions import StudentDocumentAlreadyExistsError, StudentNotFoundError
+from app.constants.exceptions.student_exceptions import StudentDocumentAlreadyExistsError, StudentNotFoundError, PlanExistsError
 from app.repositories.student_repository import StudentRepository
 from app.schemas.address_contract_schemas import AddressContractorSchemaIn, AddressContractorSchemaOut
 from app.schemas.responsible_contract_schemas import ResponsibleContractSchemaIn, ResponsibleContractSchemaOut
-from app.schemas.student_schemas import Filters, StudentSchemaIn, StudentSchemaOut
+from app.schemas.student_schemas import Filters, StudentSchemaIn, StudentSchemaOut, StudentPlanSchemaOut
 from app.services.address_contract_service import AddressContractService
 from app.services.contractor_service import ContractorService
 from app.services.responsible_contract_service import ResponsibleContractService
-
+from app.schemas.contractor_schemas import ContractorIn, ContractorOut
 
 class StudentService:
     def __init__(self, student_repository: StudentRepository,
@@ -43,15 +43,19 @@ class StudentService:
             student.responsibles = responsibles_
 
         return students
-    
+
     def get_all_actives(self) -> List[StudentSchemaOut]:
         return self.student_repository.get_all_actives()
-    
 
     def get_id(self, id: UUID) -> StudentSchemaOut:
         student = self.student_repository.get_id(id)
         if not student:
             raise ValueError(StudentNotFoundError.MESSAGE)
+
+        student.responsibles = self.responsible_contract_service.get_contractor_id(
+            student.contractor.id)
+        student.plans = self.student_repository.student_health_plans(
+            student.id)
 
         responsibles_ = self.responsible_contract_service.get_contractor_id(
             student.contractor_id)
@@ -59,9 +63,15 @@ class StudentService:
         for r in responsibles_:
             resps.append(r)
         student.responsibles = responsibles_
+        plans = []
+        health_plans_ = self.student_repository.student_health_plans(
+            student.id)
+        for p in health_plans_:
+            plans.append(p.plan)
+        student.plans = plans
 
         return student
-    
+
     def update_active(self, id: UUID) -> StudentSchemaOut:
         student = self.student_repository.get_id(id)
         if not student:
@@ -72,7 +82,6 @@ class StudentService:
 
         if student.status == StatusEnum.INACTIVE:
             return self.student_repository.active(student)
-        
 
     def update(self, id: UUID, student_in: StudentSchemaIn) -> StudentSchemaOut:
         student = self.student_repository.get_id(id)
@@ -152,3 +161,20 @@ class StudentService:
             student.responsibles = responsibles_
 
         return students
+
+    def create_student_health_plan(self, student_id: UUID, health_plan_id: UUID):
+        plan = self.student_repository.student_health_plan_exists(
+            student_id, health_plan_id)
+        if plan:
+            raise ValueError(PlanExistsError.MESSAGE)
+
+        return self.student_repository.create_student_health_plan(student_id, health_plan_id)
+
+    def remove_student_health_plan(self, student_id: UUID, health_plan_id: UUID) -> bool:
+        return self.student_repository.remove_student_health_plan(student_id, health_plan_id)
+
+    def student_health_plans(self, student_id: UUID) -> List[StudentPlanSchemaOut]:
+        return self.student_repository.student_health_plans(student_id)
+
+    def change_type_billing(self, contractor_id: UUID, contractor_in: ContractorIn) -> ContractorOut:
+        return self.contractor_service.update(contractor_id, contractor_in)

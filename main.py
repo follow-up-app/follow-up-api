@@ -10,14 +10,18 @@ from app.routes.company import router as company_router
 from app.routes.users import router as user_router
 from app.routes.students import router as student_router
 from app.routes.skills import router as skill_router
-from app.routes.configurations import router as configuration_router
 from app.routes.instructors import router as instuctor_router
-from app.routes.schedule import router as schedule_router
+from app.routes.schedules import router as schedule_router
 from app.routes.notifications import router as notifications_router
 from app.routes.executions import router as execution_router
 from app.routes.follow_up import router as follow_up_router
 from app.routes.profile import router as profile_router
 from app.routes.avatar import router as avatar_router
+from app.routes.specialties import router as specialty_router
+from app.routes.api_requests import router as api_requests_router
+from app.routes.payments import router as payments_router
+from app.routes.billings import router as billings_router
+from app.routes.health_plans import router as health_plans_router
 
 
 # sentry_sdk.init(
@@ -55,15 +59,15 @@ app.include_router(instuctor_router, prefix='/instructors')
 app.include_router(student_router, prefix='/students')
 app.include_router(skill_router, prefix='/skills')
 app.include_router(schedule_router, prefix='/schedules')
-app.include_router(configuration_router, prefix='/configurations')
 app.include_router(execution_router, prefix='/execution')
 app.include_router(follow_up_router, prefix='/follow-up')
 app.include_router(profile_router, prefix='/profile')
 app.include_router(avatar_router, prefix='/avatars')
-
-
-# routes provisional
-app.include_router(notifications_router, prefix='/notifications')
+app.include_router(specialty_router, prefix='/specialties')
+app.include_router(api_requests_router, prefix='/api-requests')
+app.include_router(payments_router, prefix='/payments')
+app.include_router(billings_router, prefix='/billings')
+app.include_router(health_plans_router, prefix='/health-plans')
 
 
 if __name__ == "__main__":

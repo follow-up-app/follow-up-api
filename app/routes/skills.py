@@ -62,6 +62,17 @@ async def get_id(id: UUID, skill_service: SkillService = Depends(get_service)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get('/specialty/{specialty_id}', summary='Returns skills list', response_model=List[SkillSchemaOut], tags=[tags])
+async def get_speciality(specialty_id: UUID, skill_service: SkillService = Depends(get_service)):
+    try:
+        skills = skill_service.get_speciality(specialty_id)
+        return [SkillSchemaOut.from_orm(x) for x in skills]
+
+    except Exception as e:
+        logger.error(f"Error in query skills: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.patch('/{id}', summary='Update skill', response_model=SkillSchemaOut, tags=[tags])
 async def update(id: UUID, skill_in: SkillSchemaIn, skill_service: SkillService = Depends(get_service)):
     try:

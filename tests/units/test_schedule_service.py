@@ -12,7 +12,6 @@ from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, Sk
 from app.schemas.skill_schemas import SkillSchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
 from app.services.address_contract_service import AddressContractService
-from app.services.address_instructor_service import AddressInstructorService
 from app.services.contractor_service import ContractorService
 from app.services.instructor_service import InstructorService
 from app.services.procedure_schedule_service import ProcedureScheduleService
@@ -31,6 +30,7 @@ class TestScheduleService(unittest.TestCase):
         mock_repository.create.return_value = ScheduleSchemaOut(
             id='dbac77ac-95c4-4e61-8d51-7e77c39eb145',
             company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
+            specialty_id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
             instructor_id='29241ac0-6a39-42d0-887b-6d5a3ec31df4',
             student_id='18b941d7-6d85-4f84-a8fa-13b9f71d6806',
             event_id='add7dae3-daa9-4dc2-8aca-aae756204ab8',
@@ -129,13 +129,14 @@ class TestScheduleService(unittest.TestCase):
         mock_address_repository = Mock()
         user_service = UserService(
             user_repository=mock_user_repository, mailer=mock_email)
-        address_instructor_service = AddressInstructorService(
-            address_instructor_repository=mock_address_repository)
+
+        instructor_payment_repository = Mock()
 
         instructor_service = InstructorService(
             instructor_repository=instructor_mock_repository,
             user_service=user_service,
-            address_instructor_service=address_instructor_service
+            address_instructor_repository=mock_address_repository,
+            instructor_payment_repository=instructor_payment_repository
         )
 
         skill_mock_repository = Mock()
@@ -172,7 +173,8 @@ class TestScheduleService(unittest.TestCase):
             schedule_id='dbac77ac-95c4-4e61-8d51-7e77c39eb145',
             skill_id='50820477-873f-45e4-8893-e6548fa141ca',
             finished=False,
-            skill_name='Fight'
+            skill_name='Fight',
+            event_id='add7dae3-daa9-4dc2-8aca-aae756204ab8'
         )
         skill_schedule_service = SkillScheduleService(
             skill_schedule_repository=skill_schedule_mock_repositoty
@@ -185,6 +187,8 @@ class TestScheduleService(unittest.TestCase):
             procedure_schedule_repository)
 
         mock_exists_function = Mock(return_value=False)
+        payment_mock = Mock()
+        billing_mock = Mock()
         schedule_service = ScheduleService(
             schedule_repository=mock_repository,
             instructor_service=instructor_service,
@@ -193,13 +197,15 @@ class TestScheduleService(unittest.TestCase):
             skill_schedule_service=skill_schedule_service,
             execution_repositoy=execution_mock_repositoty,
             procedure_schedule_service=procedure_schedule_service,
-            procedure_service=procedure_service
-
+            procedure_service=procedure_service,
+            payment_service=payment_mock,
+            billing_service=billing_mock
         )
         schedule_service.check_instructor = mock_exists_function
         schedule_service.check_student = mock_exists_function
 
         new_schedule = ScheduleSchemaIn(
+            specialty_id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
             instructor_id='29241ac0-6a39-42d0-887b-6d5a3ec31df4',
             student_id='18b941d7-6d85-4f84-a8fa-13b9f71d6806',
             skill_id=[
@@ -224,9 +230,10 @@ class TestScheduleService(unittest.TestCase):
                 materials=None,
                 help=None,
                 student_id=None
-            )]
+            )],
+            dates=['2024-12-12', '2024-12-12'],
         )
 
-        created_item = schedule_service.create(new_schedule)
+        created_item = schedule_service.prepare(new_schedule)
 
         self.assertIsInstance(created_item, list)

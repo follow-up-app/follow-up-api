@@ -59,13 +59,14 @@ class TestInstructorService(unittest.TestCase):
 
         user_service = UserService(
             user_repository=mock_user_repository, mailer=mock_email)
-        address_instructor_service = AddressInstructorService(
-            address_instructor_repository=mock_address_repository)
+
+        instructor_payment_repository = Mock()
 
         instructor_service = InstructorService(
             instructor_repository=mock_repository,
             user_service=user_service,
-            address_instructor_service=address_instructor_service
+            address_instructor_repository=mock_address_repository,
+            instructor_payment_repository=instructor_payment_repository
         )
 
         instructor_service.user_service.create = mock_user_repository
@@ -148,10 +149,12 @@ class TestInstructorService(unittest.TestCase):
         address_instructor_service = AddressInstructorService(
             address_instructor_repository=mock_address_repository)
 
+        instructor_payment_repository = Mock()
         instructor_service = InstructorService(
             instructor_repository=mock_repository,
             user_service=user_service,
-            address_instructor_service=address_instructor_service
+            address_instructor_repository=mock_address_repository,
+            instructor_payment_repository=instructor_payment_repository
         )
 
         mock_exists_function = Mock(return_value=True)

@@ -8,10 +8,12 @@ from app.repositories.address_contract_repository import AndressContractReposito
 from app.repositories.address_instructor_repository import AddressInstructorRepository
 from app.repositories.contractor_repository import ContractorRepository
 from app.repositories.execution_repository import ExecutionRepository
+from app.repositories.instructor_payment_repository import InstructorPaymentRepository
 from app.repositories.instructor_repository import InstructorRepository
+from app.repositories.payment_repository import PaymnentRepository
 from app.repositories.procedure_repository import ProcedureRepository
 from app.repositories.procedure_schedule_repository import ProcedureScheduleRepository
-from app.repositories.responsible_contract_repository import ResponsibleContractReposioty
+from app.repositories.responsible_contract_repository import ResponsibleContractRepository
 from app.repositories.schedule_repository import ScheduleRepository
 from app.repositories.skill_repository import SkillRepository
 from app.repositories.skill_schedule_repository import SkillScheduleRepository
@@ -19,9 +21,9 @@ from app.repositories.student_repository import StudentRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.procedure_schemas import ProcedureSchemaIn, ProcedureSchemaOut
 from app.services.address_contract_service import AddressContractService
-from app.services.address_instructor_service import AddressInstructorService
 from app.services.contractor_service import ContractorService
 from app.services.instructor_service import InstructorService
+from app.services.payment_service import PaymentService
 from app.services.procedure_schedule_service import ProcedureScheduleService
 from app.services.procedure_service import ProcedureService
 from app.services.responsible_contract_service import ResponsibleContractService
@@ -30,9 +32,11 @@ from app.services.skill_schedule_service import SkillScheduleService
 from app.services.skill_service import SkillService
 from app.services.student_service import StudentService
 from app.services.user_service import UserService
+from app.repositories.billing_repository import BillingRepository
+from app.services.billing_service import BillingService
 from db import get_db
 from db.models import User
-from app.schemas.schedule_schemas import ProcedureScheduleSchemaIn, ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn
+from app.schemas.schedule_schemas import ProcedureScheduleSchemaIn, ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn, SkillScheduleIn
 import logging
 
 
@@ -53,13 +57,15 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     execution_repository = ExecutionRepository(session, current_user)
     procedure_repository = ProcedureRepository(session)
     address_instructor_respository = AddressInstructorRepository(session)
+    instructor_payment_repository = InstructorPaymentRepository(session)
     contractor_repository = ContractorRepository(session, current_user)
-    responsible_contract_respository = ResponsibleContractReposioty(
+    responsible_contract_respository = ResponsibleContractRepository(
         session, current_user)
     address_contract_respository = AndressContractRepository(
         session, current_user)
     procedure_schedule_repository = ProcedureScheduleRepository(session)
     user_repository = UserRepository(session, current_user)
+    billing_repository = BillingRepository(session, current_user)
     mailer = Mailer()
 
     address_contract_service = AddressContractService(
@@ -67,7 +73,7 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     contractor_service = ContractorService(contractor_repository)
     responsible_contract_service = ResponsibleContractService(
         responsible_contract_respository)
-    address_instructor_service = AddressInstructorService(
+    address_instructor_respository = AddressInstructorRepository(
         address_instructor_respository)
     student_service = StudentService(
         student_repository,
@@ -76,12 +82,15 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         address_contract_service)
     user_service = UserService(user_repository, mailer)
     instructor_service = InstructorService(
-        instructor_repository, user_service, address_instructor_service)
+        instructor_repository, user_service, address_instructor_respository, instructor_payment_repository)
     procedure_service = ProcedureService(procedure_repository)
     skill_service = SkillService(skill_repository, procedure_service)
     skill_schedule_service = SkillScheduleService(skill_schedule_repository)
     procedure_schedule_service = ProcedureScheduleService(
         procedure_schedule_repository)
+    payment_repository = PaymnentRepository(session, current_user)
+    payment_service = PaymentService(payment_repository)
+    billing_service = BillingService(billing_repository)
 
     return ScheduleService(
         schedule_repository,
@@ -91,14 +100,16 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         skill_schedule_service,
         execution_repository,
         procedure_service,
-        procedure_schedule_service
+        procedure_schedule_service,
+        payment_service,
+        billing_service
     )
 
 
-@router.post('/', summary='Create schedule', response_model=List[ScheduleSchemaOut], tags=[tags])
+@router.post('/', summary='Create schedule',  tags=[tags])
 async def create(schedule_in: ScheduleSchemaIn, schedule_service: ScheduleService = Depends(get_service)):
     try:
-        schedules = schedule_service.create(schedule_in)
+        schedules = schedule_service.prepare(schedule_in)
         return [ScheduleSchemaOut.from_orm(x) for x in schedules]
 
     except Exception as e:
@@ -239,7 +250,8 @@ async def update_procedure_schedule(procedure_schedule_id: UUID, procedure_in: P
 @router.post('/{id}/procedures/', summary='add procedure in schedule', response_model=List[ScheduleSchemaOut], tags=[tags])
 async def add_procedure(id: UUID, procedure_in: ProcedureScheduleSchemaIn, schedule_service: ScheduleService = Depends(get_service)):
     try:
-        schedules = schedule_service.add_procedure_schedule(id, procedure_in.procedure_id)
+        schedules = schedule_service.add_procedure_schedule(
+            id, procedure_in.procedure_id)
         return [ScheduleSchemaOut.from_orm(x) for x in schedules]
 
     except Exception as e:
@@ -254,4 +266,26 @@ async def delete_procedure(procedure_schedule_id: UUID, schedule_service: Schedu
 
     except Exception as e:
         logger.error(f"Error in delete procedure in schedule: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/{id}/skills/', summary='add skill in schedule', response_model=List[ScheduleSchemaOut], tags=[tags])
+async def add_skill(id: UUID, skill_in: SkillScheduleIn, schedule_service: ScheduleService = Depends(get_service)):
+    try:
+        schedules = schedule_service.add_skill_schedule(
+            id, skill_in.skill_id)
+        return [ScheduleSchemaOut.from_orm(x) for x in schedules]
+
+    except Exception as e:
+        logger.error(f"Error in add skill in schedule: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete('/skills/{skill_schedule_id}', summary='Delete skill schedule', tags=[tags])
+async def delete_skill_schedule(skill_schedule_id: UUID, schedule_service: ScheduleService = Depends(get_service)):
+    try:
+        return schedule_service.delete_skill_schedule(skill_schedule_id)
+
+    except Exception as e:
+        logger.error(f"Error in delete skill in schedule: {e}")
         raise HTTPException(status_code=400, detail=str(e))

@@ -2,11 +2,13 @@ from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from app.core.security import get_current_user
 from db import get_db
 from app.schemas.company_schemas import CompanySchemaIn, CompanySchemaOut
 import logging
 from app.services.company_service import CompanyService
 from app.repositories.company_repository import CompanyRepository
+from db.models import User
 
 
 router = APIRouter()
@@ -17,8 +19,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_service(session: Session = Depends(get_db)):
-    company_repository = CompanyRepository(session)
+def get_service(session: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    company_repository = CompanyRepository(session, current_user)
     return CompanyService(company_repository)
 
 
@@ -44,11 +46,11 @@ async def get_all(company_service: CompanyService = Depends(get_service)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get('/{id}', summary='Return company for id', response_model=List[CompanySchemaOut], tags=[tags])
+@router.get('/{id}', summary='Return company for id', response_model=CompanySchemaOut, tags=[tags])
 async def get_id(id: UUID, company_service: CompanyService = Depends(get_service)):
     try:
         company = company_service.get_id(id)
-        return [CompanySchemaOut.from_orm(company)]
+        return CompanySchemaOut.from_orm(company)
 
     except Exception as e:
         logger.error(f"Error in query company for id: {e}")

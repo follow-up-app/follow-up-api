@@ -1,10 +1,9 @@
-
 from typing import List
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.constants.enums.status_enum import StatusEnum
-from app.schemas.student_schemas import Filters, StudentSchemaIn, StudentSchemaOut
-from db.models import Contractor, Student, User
+from app.schemas.student_schemas import Filters, StudentSchemaIn, StudentSchemaOut, StudentPlanSchemaOut
+from db.models import Contractor, Student, User, StudentHealthPlan
 
 
 class StudentRepository:
@@ -92,3 +91,36 @@ class StudentRepository:
 
     def get_filters(self, filters_in: Filters) -> List[StudentSchemaOut]:
         return Student.query(self.session).filter(Student.id == filters_in.student_id).order_by(Student.fullname.asc()).all()
+
+    def create_student_health_plan(self, student_id: UUID, health_plan_id: UUID):
+        plan = StudentHealthPlan(
+            student_id=student_id,
+            health_plan_id=health_plan_id
+        )
+
+        self.session.add(plan)
+        self.session.commit()
+
+        return plan
+
+    def remove_student_health_plan(self, student_id: UUID, health_plan_id: UUID):
+        plan = StudentHealthPlan.query(self.session).filter(
+            StudentHealthPlan.student_id == student_id,
+            StudentHealthPlan.health_plan_id == health_plan_id
+        ).first()
+
+        self.session.delete(plan)
+        self.session.commit()
+
+        return plan
+
+    def student_health_plans(self, student_id: UUID) -> List[StudentPlanSchemaOut]:
+        return StudentHealthPlan.query(self.session).filter(
+            StudentHealthPlan.student_id == student_id,
+        ).all()
+
+    def student_health_plan_exists(self, student_id: UUID, health_plan_id: UUID) -> List[StudentPlanSchemaOut]:
+        return StudentHealthPlan.query(self.session).filter(
+            StudentHealthPlan.student_id == student_id,
+            StudentHealthPlan.health_plan_id == health_plan_id
+        ).first()

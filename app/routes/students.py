@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_current_user
 from app.repositories.address_contract_repository import AndressContractRepository
 from app.repositories.contractor_repository import ContractorRepository
-from app.repositories.responsible_contract_repository import ResponsibleContractReposioty
+from app.repositories.responsible_contract_repository import ResponsibleContractRepository
 from app.repositories.student_repository import StudentRepository
 from app.schemas.address_contract_schemas import AddressContractorSchemaIn, AddressContractorSchemaOut
 from app.schemas.responsible_contract_schemas import ResponsibleContractSchemaIn, ResponsibleContractSchemaOut
@@ -15,8 +15,8 @@ from app.services.responsible_contract_service import ResponsibleContractService
 from app.services.student_service import StudentService
 from db import get_db
 from db.models import User
-from app.schemas.student_schemas import StudentSchemaIn, StudentSchemaOut, Filters
-from fastapi.responses import FileResponse
+from app.schemas.student_schemas import StudentSchemaIn, StudentSchemaOut, Filters, StudentPlanSchemaIn, StudentPlanSchemaOut
+from app.schemas.contractor_schemas import ContractorIn, ContractorOut
 import logging
 
 router = APIRouter()
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 def get_service(session: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     student_repository = StudentRepository(session, current_user)
     contractor_repository = ContractorRepository(session, current_user)
-    responsible_contract_respository = ResponsibleContractReposioty(
+    responsible_contract_respository = ResponsibleContractRepository(
         session, current_user)
     address_contract_respository = AndressContractRepository(
         session, current_user)
@@ -64,8 +64,8 @@ async def get_all(student_service: StudentService = Depends(get_service)):
     except Exception as e:
         logger.error(f"Error in query students: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-    
-    
+
+
 @router.get('/actives/', summary='Returns students actives list', response_model=List[StudentSchemaOut], tags=[tags])
 async def get_all_actives(student_service: StudentService = Depends(get_service)):
     try:
@@ -97,8 +97,8 @@ async def update_active(id: UUID, student_service: StudentService = Depends(get_
     except Exception as e:
         logger.error(f"Error in update student: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-    
-    
+
+
 @router.patch('/{id}', summary='Update student', response_model=StudentSchemaOut, tags=[tags])
 async def update(id: UUID, student_in: StudentSchemaIn, student_service: StudentService = Depends(get_service)):
     try:
@@ -217,4 +217,47 @@ async def get_filters(filters_in: Filters, student_service: StudentService = Dep
 
     except Exception as e:
         logger.error(f"Error in filter students: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/plans', summary='Add plan in student',  tags=[tags])
+async def create_student_health_plan(plan_in: StudentPlanSchemaIn, student_service: StudentService = Depends(get_service)):
+    try:
+        return student_service.create_student_health_plan(plan_in.student_id, plan_in.health_plan_id)
+
+    except Exception as e:
+        logger.error(f"Error in add plan students: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete('/plans/{student_id}/{health_plan_id}', summary='Add plan in student', tags=[tags])
+async def remove_student_health_plan(student_id: UUID, health_plan_id: UUID, student_service: StudentService = Depends(get_service)):
+    try:
+        return student_service.remove_student_health_plan(student_id, health_plan_id)
+
+    except Exception as e:
+        logger.error(f"Error in remove plan students: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get('/plans/{student_id}', summary='Return list with filters',  response_model=List[StudentPlanSchemaOut], tags=[tags])
+async def student_health_plans(student_id: UUID, student_service: StudentService = Depends(get_service)):
+    try:
+        plans = student_service.student_health_plans(student_id)
+        return [StudentPlanSchemaOut.from_orm(x) for x in plans]
+
+    except Exception as e:
+        logger.error(f"Error in query plans students: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.patch('/contractor/{contractor_id}', summary='Update contract', response_model=ContractorOut, tags=[tags])
+async def contract_update(contractor_id: UUID, contractor_in: ContractorIn, student_service: StudentService = Depends(get_service)):
+    try:
+        contract = student_service.change_type_billing(
+            contractor_id, contractor_in)
+        return ContractorOut.from_orm(contract)
+
+    except Exception as e:
+        logger.error(f"Error in update contract: {e}")
         raise HTTPException(status_code=400, detail=str(e))

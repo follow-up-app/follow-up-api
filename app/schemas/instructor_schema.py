@@ -2,6 +2,7 @@ from uuid import UUID
 from typing import Optional
 from datetime import date
 from pydantic import BaseModel
+from app.constants.enums.instructor_payments_enum import ModePaymentEnum, TypePaymentEnum
 from app.constants.enums.status_enum import StatusEnum
 
 
@@ -18,8 +19,6 @@ class InstructorSchemaIn(BaseModel):
     document_company: Optional[str]
     social_name: Optional[str]
     fantasy_name: Optional[str]
-    value_hour: Optional[str]
-    value_mouth: Optional[str]
     comission: Optional[str]
     status: Optional[StatusEnum]
 
@@ -28,6 +27,7 @@ class InstructorSchemaOut(BaseModel):
     id: UUID
     company_id: UUID
     user_id: Optional[UUID]
+    specialty_id: Optional[UUID]
     specialty_name: Optional[str]
     fullname: str
     document: str
@@ -41,9 +41,10 @@ class InstructorSchemaOut(BaseModel):
     document_company: Optional[str]
     social_name: Optional[str]
     fantasy_name: Optional[str]
-    value_hour: Optional[str]
-    value_mouth: Optional[str]
-    comission: Optional[str]
+    type_payment: Optional[TypePaymentEnum]
+    mode_payment: Optional[ModePaymentEnum]
+    value: Optional[str]
+    comission: Optional[float] = None
     avatar: Optional[str]
     status: StatusEnum
 

@@ -1,7 +1,6 @@
 from typing import List
 from sqlalchemy.orm import Session
 from uuid import UUID
-
 from app.schemas.address_instructor_schemas import AddressInstructorSchemaIn, AddressInstructorSchemaOut
 from db.models import AddressInstructor
 
@@ -23,7 +22,7 @@ class AddressInstructorRepository:
         )
         self.session.add(instructor_address)
         self.session.commit()
-        
+
         return instructor_address
 
     def get_id(self, id: UUID) -> AddressInstructorSchemaOut:

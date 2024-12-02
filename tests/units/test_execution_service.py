@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from app.constants.enums.help_enum import HelpEnum
 from app.constants.enums.repeat_enum import RepeatEnum
 from app.constants.enums.schedule_enum import ScheduleEnum
-from app.schemas.execution_schemas import ExecutionSchemaIn, ExecutionSchemaOut
+from app.schemas.execution_schemas import ExecutionSchemaIn
 from app.schemas.procedure_schemas import ProcedureSchemaOut
 from app.schemas.schedule_schemas import ScheduleSchemaOut
 from app.services.execution_service import ExecutionService
@@ -72,6 +72,8 @@ class TestExecutionService(unittest.TestCase):
             procedure_schedule_repository=procedure_schedule_repository
         )
 
+        payment_service = Mock()
+        billing_service = Mock()
         schedule_service = ScheduleService(
             schedule_repository=schedule_repository,
             student_service=Mock(),
@@ -80,7 +82,9 @@ class TestExecutionService(unittest.TestCase):
             skill_schedule_service=Mock(),
             execution_repositoy=mock_repository,
             procedure_service=Mock(),
-            procedure_schedule_service=procedure_schedule_service
+            procedure_schedule_service=procedure_schedule_service,
+            payment_service=payment_service,
+            billing_service=billing_service
         )
 
         execution_service = ExecutionService(
@@ -99,4 +103,3 @@ class TestExecutionService(unittest.TestCase):
         created_item = execution_service.create(new_execution)
         self.assertEqual(
             created_item.id, '09f46eb1-883c-427a-8c71-18ab2bfd9b94')
-        

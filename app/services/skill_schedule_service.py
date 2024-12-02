@@ -19,3 +19,9 @@ class SkillScheduleService:
 
     def delete(self, id: UUID) -> bool:
         return self.skill_schedule_repository.delete(id)
+
+    def check_skill_schedule(self, schedule_id: UUID, skill_id: UUID) -> SkillScheduleSchemaOut:
+        return self.skill_schedule_repository.check_skill_schedule(schedule_id, skill_id)
+
+    def all_skill_schedules_events(self, event_id: UUID, skill_id: UUID) -> List[SkillScheduleSchemaOut]:
+        return self.skill_schedule_repository.all_skill_schedules_events(event_id, skill_id)

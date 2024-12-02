@@ -9,9 +9,9 @@ from fastapi.responses import FileResponse
 from app.core.mailer import Mailer
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
+from db.models import User
 import logging
 
-from db.models import User
 
 
 router = APIRouter()

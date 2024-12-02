@@ -4,17 +4,17 @@ from fastapi import APIRouter, Depends, HTTPException, File
 from sqlalchemy.orm import Session
 from app.core.security import get_current_user
 from app.repositories.address_instructor_repository import AddressInstructorRepository
+from app.repositories.instructor_payment_repository import InstructorPaymentRepository
 from app.repositories.instructor_repository import InstructorRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.address_instructor_schemas import AddressInstructorSchemaIn, AddressInstructorSchemaOut
+from app.schemas.instructor_payment_schema import InstructorPaymentSchemaIn, InstructorPaymentSchemaOut
 from app.schemas.user_schemas import UserSchemaOut
-from app.services.address_instructor_service import AddressInstructorService
 from app.services.instructor_service import InstructorService
 from app.services.user_service import UserService
 from db import get_db
 from db.models import User
 from app.schemas.instructor_schema import InstructorSchemaOut, InstructorSchemaIn, Filters
-import re
 from fastapi.responses import FileResponse
 from app.core.mailer import Mailer
 import logging
@@ -35,10 +35,8 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     user_service = UserService(user_repository, mailer)
 
     address_instructor_respository = AddressInstructorRepository(session)
-    address_instructor_service = AddressInstructorService(
-        address_instructor_respository)
-
-    return InstructorService(instructor_repository, user_service, address_instructor_service)
+    instructor_payment_respository = InstructorPaymentRepository(session)
+    return InstructorService(instructor_repository, user_service, address_instructor_respository, instructor_payment_respository)
 
 
 @router.post('/', summary='create instructor', response_model=InstructorSchemaOut, tags=[tags])
@@ -139,6 +137,7 @@ async def address_update(address_id: UUID, address_in: AddressInstructorSchemaIn
         logger.error(f"Error in update address: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.get('/actives/', summary='Returns instructors actives list', response_model=List[InstructorSchemaOut], tags=[tags])
 async def get_actives_all(instructor_service: InstructorService = Depends(get_service)):
     try:
@@ -148,7 +147,7 @@ async def get_actives_all(instructor_service: InstructorService = Depends(get_se
     except Exception as e:
         logger.error(f"Error in query instructors: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-    
+
 
 @router.get('/active/{id}/', summary='Active or inctive instructor in app', response_model=InstructorSchemaOut, tags=[tags])
 async def update_active(id: UUID, instructor_service: InstructorService = Depends(get_service)):
@@ -169,4 +168,39 @@ async def get_filters(filters_in: Filters, instructor_service: InstructorService
 
     except Exception as e:
         logger.error(f"Error in filter instructors: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/{id}/data-payment', summary='Create details for payment',  response_model=InstructorSchemaOut, tags=[tags])
+async def create_payment(id: UUID, instructor_payment_in: InstructorPaymentSchemaIn, instructor_service: InstructorService = Depends(get_service)):
+    try:
+        instructor = instructor_service.create_data_payment(
+            id, instructor_payment_in)
+        return InstructorSchemaOut.from_orm(instructor)
+
+    except Exception as e:
+        logger.error(f"Error in create instructor data payment: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.patch('/{id}/data-payment', summary='Update instructor details for payment',  response_model=InstructorSchemaOut, tags=[tags])
+async def update_bank_payment(id: UUID, instructor_payment_in: InstructorPaymentSchemaIn, instructor_service: InstructorService = Depends(get_service)):
+    try:
+        instructor = instructor_service.update_data_payment(
+            id, instructor_payment_in)
+        return InstructorSchemaOut.from_orm(instructor)
+
+    except Exception as e:
+        logger.error(f"Error in update instructor bank payment: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get('/{id}/data-payment', summary='return instructor details for payment',  response_model=InstructorPaymentSchemaOut, tags=[tags])
+async def get_bank_payment(id: UUID, instructor_service: InstructorService = Depends(get_service)):
+    try:
+        instructor = instructor_service.get_data_payment(id)
+        return InstructorPaymentSchemaOut.from_orm(instructor)
+
+    except Exception as e:
+        logger.error(f"Error in query instructor bank payment: {e}")
         raise HTTPException(status_code=400, detail=str(e))

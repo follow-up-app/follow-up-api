@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     APP_NAME: str
     PORT: int
     SQLALCHEMY_DATABASE_URI: str
+    RABBITMQ_URL: str
     MONGO_DATABASE_URI: str
     DEBUG: bool = True
     SECRET_KEY: str = "3abc99c6afb0ae67124598af47e30f4bc907c395e239f9603b62b711c02dcd69"
@@ -22,6 +23,9 @@ class Settings(BaseSettings):
     SMTP_EMAIL_FROM: str
     SMTP_EMAIL_PASSWORD: str
     PANEL_URL: str
+    CEP_URL: str
+    BANKS_URL: str
+    NFSE_HOST: str
 
     class Config:
         env_file = ".env"

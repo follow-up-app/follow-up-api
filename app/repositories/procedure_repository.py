@@ -15,13 +15,13 @@ class ProcedureRepository:
             tries=procedure_in.tries,
             goal=procedure_in.goal,
             period=procedure_in.period,
-            name=procedure_in.name,
-            objective=procedure_in.objective,
-            stimulus=procedure_in.stimulus,
-            answer=procedure_in.answer,
-            consequence=procedure_in.consequence,
-            materials=procedure_in.materials,
-            help=procedure_in.help,
+            name=procedure_in.name.upper(),
+            objective=procedure_in.objective.upper(),
+            stimulus=procedure_in.stimulus.upper(),
+            answer=procedure_in.answer.upper(),
+            consequence=procedure_in.consequence.upper(),
+            materials=procedure_in.materials.upper(),
+            help=procedure_in.help.upper(),
         )
 
         self.session.add(procedure)
@@ -42,13 +42,13 @@ class ProcedureRepository:
         procedure.tries = procedure_in.tries
         procedure.goal = procedure_in.goal
         procedure.period = procedure_in.period
-        procedure.name = procedure_in.name
-        procedure.objective = procedure_in.objective
-        procedure.stimulus = procedure_in.stimulus
-        procedure.answer = procedure_in.answer
-        procedure.consequence = procedure_in.consequence
-        procedure.materials = procedure_in.materials
-        procedure.help = procedure_in.help
+        procedure.name = procedure_in.name.upper()
+        procedure.objective = procedure_in.objective.upper()
+        procedure.stimulus = procedure_in.stimulus.upper()
+        procedure.answer = procedure_in.answer.upper()
+        procedure.consequence = procedure_in.consequence.upper()
+        procedure.materials = procedure_in.materials.upper()
+        procedure.help = procedure_in.help.upper()
 
         self.session.add(procedure)
         self.session.commit()

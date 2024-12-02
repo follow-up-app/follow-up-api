@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import Mock
+from app.schemas.skill_schemas import SkillSchemaIn
 from app.services.procedure_service import ProcedureService
 from app.services.skill_service import SkillService
 from db.models import Procedure, Skill
@@ -11,6 +12,7 @@ class TestSkillService(unittest.TestCase):
         mock_repository.create.return_value = Skill(
             id='50820477-873f-45e4-8893-e6548fa141ca',
             company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
+            specialty_id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
             name='Fight',
             objective='all fight'
         )
@@ -37,8 +39,8 @@ class TestSkillService(unittest.TestCase):
         skill_service = SkillService(
             skill_repository=mock_repository, procedure_service=mock_procedure_service)
 
-        new_skill = Skill(
-            company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
+        new_skill = SkillSchemaIn(
+            specialty_id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
             name='Fight',
             objective='all fight'
         )
@@ -79,8 +81,8 @@ class TestSkillService(unittest.TestCase):
         skill_service = SkillService(
             skill_repository=mock_repository, procedure_service=mock_procedure_service)
         skill_service.skill_repository.get_id = mock_exists_function
-        new_skill = Skill(
-            company_id='469264d5-6203-4f2e-aa2e-fdb0d939bc96',
+        new_skill = SkillSchemaIn(
+            specialty_id='54e67113-4300-4897-b0f4-2b279c6bd2f0',
             name='Fight',
             objective='all fight'
         )

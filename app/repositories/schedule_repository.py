@@ -4,7 +4,7 @@ from datetime import date, datetime
 from sqlalchemy.orm import Session
 from app.constants.enums.schedule_enum import ScheduleEnum
 from app.schemas.instructor_schema import InstructorSchemaOut
-from app.schemas.schedule_schemas import ScheduleSchemaEvent, ScheduleSchemaIn, ScheduleSchemaOut
+from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
 from db.models import Schedule, User
 from sqlalchemy.sql.functions import func
@@ -26,6 +26,7 @@ class ScheduleRepository:
         schedule = Schedule(
             company_id=self.current_user.company_id,
             student_id=student.id,
+            specialty_id=schedule_in.specialty_id,
             event_id=event_id,
             start=date_schedule_in,
             end=date_schedule_out,
@@ -45,7 +46,7 @@ class ScheduleRepository:
 
         return schedule
 
-    def get_id(self, id: UUID) -> ScheduleSchemaOut:
+    def get_id(self, id: UUID):
         return Schedule.query(self.session).filter(Schedule.id == id).first()
 
     def get_all(self) -> List[ScheduleSchemaOut]:
@@ -147,6 +148,6 @@ class ScheduleRepository:
             Schedule.start <= end).order_by(Schedule.start.asc()).all()
 
         if student_id is not None:
-            schedules = schedules.filter(Schedule.student_id)
+            schedules = schedules.filter(Schedule.student_id == student_id)
 
         return schedules

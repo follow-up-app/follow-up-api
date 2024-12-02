@@ -21,6 +21,9 @@ class SkillService:
     def get_all(self) -> List[SkillSchemaOut]:
         return self.skill_repository.get_all()
 
+    def get_speciality(self, id: UUID) -> List[SkillSchemaOut]:
+        return self.skill_repository.get_speciality(id)
+
     def update(self, id: UUID, skill_in: SkillSchemaIn) -> SkillSchemaOut:
         skill = self.skill_repository.get_id(id)
         if not skill:

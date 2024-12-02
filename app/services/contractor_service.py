@@ -23,7 +23,7 @@ class ContractorService:
         if not contractor:
             raise ValueError(ContractorNotFoundError.MESSAGE)
 
-        return self.student_repository.update(contractor, contractor_in)
+        return self.contractor_repository.update(contractor, contractor_in)
 
     def company_contractors(self) ->List[ContractorOut]:
         contracts_ = self.contractor_repository.get_all()

@@ -10,19 +10,21 @@ class AddressContractorSchemaIn(BaseModel):
     complement: Optional[str]
     zip_code: str
     district: str
+    city_code: Optional[str] = None
     city: str
     state: str
 
 
 class AddressContractorSchemaOut(BaseModel):
     id: UUID
-    responsible_contract_id: UUID
+    responsible_contract_id: Optional[UUID] = None
     address: Optional[str]
     number: Optional[int]
     complement: Optional[str]
     zip_code: Optional[str]
     district: Optional[str]
     city: Optional[str]
+    city_code: Optional[str] = None
     state: Optional[str]
 
     class Config:

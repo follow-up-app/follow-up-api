@@ -112,7 +112,8 @@ class FollowUpService:
         start = datetime.combine(filters_in.start, datetime.min.time())
         end = datetime.combine(filters_in.end, datetime.max.time())
 
-        schedules = self.schedule_service.get_date_filter(start, end)
+        schedules = self.schedule_service.get_date_filter(
+            start, end, filters_in.student_id)
 
         for schedule in schedules:
             skills = self.skill_schedule_service.get_schedule(schedule.id)

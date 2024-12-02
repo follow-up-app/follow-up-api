@@ -13,6 +13,7 @@ from app.schemas.procedure_schemas import ProcedureSchemaIn, ProcedureSchemaOut
 from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn
 from app.schemas.student_schemas import StudentSchemaOut
 from app.services.instructor_service import InstructorService
+from app.services.payment_service import PaymentService
 from app.services.procedure_schedule_service import ProcedureScheduleService
 from app.services.procedure_service import ProcedureService
 from app.services.skill_schedule_service import SkillScheduleService
@@ -21,6 +22,7 @@ from app.services.student_service import StudentService
 from datetime import date, datetime, timedelta
 from uuid import UUID
 import uuid
+from app.services.billing_service import BillingService
 
 
 class ScheduleService:
@@ -32,7 +34,9 @@ class ScheduleService:
                  skill_schedule_service: SkillScheduleService,
                  execution_repositoy: ExecutionRepository,
                  procedure_service: ProcedureService,
-                 procedure_schedule_service: ProcedureScheduleService
+                 procedure_schedule_service: ProcedureScheduleService,
+                 payment_service: PaymentService,
+                 billing_service: BillingService
                  ):
         self.schedule_repository = schedule_repository
         self.student_service = student_service
@@ -42,6 +46,8 @@ class ScheduleService:
         self.execution_repositoy = execution_repositoy
         self.procedure_service = procedure_service
         self.procedure_schedule_service = procedure_schedule_service
+        self.payment_service = payment_service
+        self.billing_service = billing_service
 
     def prepare(self, schedule_in: ScheduleSchemaIn) -> List[ScheduleSchemaOut]:
         event_id = uuid.uuid4()
@@ -101,7 +107,10 @@ class ScheduleService:
             for procedure in schedule_in.procedures:
                 self.procedure_schedule_service.create(
                     sch.id, student.id, procedure)
-                self.skill_schedule_service.create(sch.id, procedure.skill_id)
+            self.skill_schedule_service.create(sch.id, procedure.skill_id)
+
+            self.payment_service.create(sch, instructor)
+            self.billing_service.create(sch, student)
 
         return events
 
@@ -174,6 +183,8 @@ class ScheduleService:
             for skill in skills:
                 self.skill_schedule_service.delete(skill.id)
 
+            self.payment_service.delete_for_schedule(schedule.id)
+            self.billing_service.delete_for_schedule(schedule.id)
             self.schedule_repository.delete(schedule.id)
 
         return True
@@ -197,6 +208,8 @@ class ScheduleService:
         for skill in skills:
             self.skill_schedule_service.delete(skill.id)
 
+        self.payment_service.delete_for_schedule(schedule.id)
+        self.billing_service.delete_for_schedule(schedule.id)
         self.schedule_repository.delete(schedule.id)
 
         return True
@@ -210,6 +223,9 @@ class ScheduleService:
             return self.schedule_repository.in_progress(schedule)
 
         if schedule_in.status == ScheduleEnum.DONE:
+            self.payment_service.update_status_schedule(schedule.id)
+            self.billing_service.update_status_schedule(schedule.id)
+
             return self.schedule_repository.done(schedule)
 
     def student_arrival(self, id: UUID) -> ScheduleSchemaOut:

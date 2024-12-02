@@ -11,7 +11,10 @@ from app.services.schedule_service import ScheduleService
 
 
 class ExecutionService:
-    def __init__(self, execution_repository: ExecutionRepository, schedule_service: ScheduleService, procedure_schedule_service: ProcedureScheduleService):
+    def __init__(self,
+                 execution_repository: ExecutionRepository,
+                 schedule_service: ScheduleService,
+                 procedure_schedule_service: ProcedureScheduleService):
         self.execution_repository = execution_repository
         self.schedule_service = schedule_service
         self.procedure_schedule_service = procedure_schedule_service
@@ -20,7 +23,7 @@ class ExecutionService:
         schedule = self.schedule_service.get_id(execution_in.schedule_id)
         if not schedule:
             raise ValueError(ScheduleNotFoundError.MESSAGE)
-     
+
         procedure_schedule = self.procedure_schedule_service.get_id(
             execution_in.procedure_id)
         if not procedure_schedule:

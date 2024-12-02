@@ -7,7 +7,7 @@ from app.constants.enums.billing_enum import CategoryEnum
 
 class ContractorIn(BaseModel):
     company_id: Optional[UUID]
-    status: Optional[CategoryEnum]
+    category: Optional[CategoryEnum]
     status: Optional[ContractEnum]
 
 

@@ -1,12 +1,12 @@
 from typing import List
 from uuid import UUID
 from app.constants.exceptions.responsible_contract_exceptions import ResponibleNotFoundError
-from app.repositories.responsible_contract_repository import ResponsibleContractReposioty
+from app.repositories.responsible_contract_repository import ResponsibleContractRepository
 from app.schemas.responsible_contract_schemas import ResponsibleContractSchemaIn, ResponsibleContractSchemaOut
 
 
 class ResponsibleContractService:
-    def __init__(self, responsible_contract_repository: ResponsibleContractReposioty):
+    def __init__(self, responsible_contract_repository: ResponsibleContractRepository):
         self.responsible_contract_repository = responsible_contract_repository
 
     def create(self, responsible_contract_in: ResponsibleContractSchemaIn, contractor_id: UUID) -> ResponsibleContractSchemaOut:

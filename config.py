@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     PANEL_URL: str
     CEP_URL: str
     BANKS_URL: str
+    NFSE_HOST: str
 
     class Config:
         env_file = ".env"

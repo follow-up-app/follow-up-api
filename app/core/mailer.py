@@ -28,10 +28,7 @@ class Mailer:
         message['To'] = user.email
 
         token = Crypt.encrypt(user.id, user.email)
-        print('-a')
         body_content = self.env.get_template('welcome.html')
-
-        print('a')
         body_content = body_content.render(
             data=user, url=self._settings.PANEL_URL, token=token, image='templates/img/follow_up.png')
         message.attach(MIMEText(body_content, "html"))
@@ -69,7 +66,6 @@ class Mailer:
 
     def sender(self, email, message):
         try:
-            print('b')
             server = SMTP_SSL(self._settings.SMTP_HOST,
                               self._settings.SMTP_PORT)
             server.login(self._settings.SMTP_EMAIL_FROM,

@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel
 from app.constants.enums.billing_enum import BillingEnum
@@ -38,6 +38,11 @@ class BillingFilters(BaseModel):
     start: Optional[date] = None
     end: Optional[date] = None
     status: Optional[BillingEnum] = None
+
+
+class ManyBillingUpdate(BaseModel):
+    ids: List[UUID]
+    status: BillingEnum
 
 
 class BillingGroup(BaseModel):

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.services.billing_service import BillingService
 from app.core.security import get_current_user
 from app.repositories.billing_repository import BillingRepository
-from app.schemas.billing_schemas import BillingSchemaIn, BillingSchemaOut, BillingFilters, BillingGroup
+from app.schemas.billing_schemas import BillingSchemaIn, BillingSchemaOut, BillingFilters, ManyBillingUpdate
 from db import get_db
 from db.models import User
 import logging
@@ -96,5 +96,15 @@ async def get_student_status(filters_in: BillingFilters, billing_service: Billin
         return [BillingSchemaOut.from_orm(x) for x in billings]
 
     except Exception as e:
-        logger.error(f"Error in resume query billings for instructor: {e}")
+        logger.error(f"Error in resume query billings for student: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/many-change-status', summary='Change status in many billings', tags=[tags])
+async def get_student_status(billing_in: ManyBillingUpdate, billing_service: BillingService = Depends(get_service)):
+    try:
+        return billing_service.update_many_status(billing_in.ids, billing_in.status)
+
+    except Exception as e:
+        logger.error(f"Error in change status in many billings: {e}")
         raise HTTPException(status_code=400, detail=str(e))

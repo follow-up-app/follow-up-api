@@ -12,7 +12,7 @@ from app.repositories.instructor_payment_repository import InstructorPaymentRepo
 from app.repositories.instructor_repository import InstructorRepository
 from app.repositories.procedure_repository import ProcedureRepository
 from app.repositories.procedure_schedule_repository import ProcedureScheduleRepository
-from app.repositories.responsible_contract_repository import ResponsibleContractReposioty
+from app.repositories.responsible_contract_repository import ResponsibleContractRepository
 from app.repositories.schedule_repository import ScheduleRepository
 from app.repositories.skill_repository import SkillRepository
 from app.repositories.skill_schedule_repository import SkillScheduleRepository
@@ -56,7 +56,7 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     address_instructor_respository = AddressInstructorRepository(session)
     instructor_payment_repository = InstructorPaymentRepository(session)
     contractor_repository = ContractorRepository(session, current_user)
-    responsible_contract_respository = ResponsibleContractReposioty(
+    responsible_contract_respository = ResponsibleContractRepository(
         session, current_user)
     address_contract_respository = AndressContractRepository(
         session, current_user)

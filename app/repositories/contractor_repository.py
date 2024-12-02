@@ -31,7 +31,7 @@ class ContractorRepository:
         return Contractor.query(self.session).filter(Contractor.company_id == self.current_user.company_id).all()
 
     def update(self, contractor: Contractor, contractor_in: ContractorIn) -> ContractorOut:
-        contractor.status = contractor_in.status
+        contractor.type_billing = contractor_in.category
 
         self.session.add(contractor)
         self.session.commit()

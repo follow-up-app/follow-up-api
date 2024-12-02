@@ -64,5 +64,15 @@ class BillingService:
 
         return self.billing_repository.get_student_status(start, end, filters_in.status, filters_in.student_id)
 
-    def delete_for_schedule(self, schedule_id: UUID):
+    def delete_for_schedule(self, schedule_id: UUID) -> bool:
         return self.billing_repository.delete_for_schedule(schedule_id)
+
+    def update_many_status(self, ids: List[UUID], status: BillingEnum) -> bool:
+        for id in ids:
+            billing = self.billing_repository.get_id(id)
+            if not billing:
+                raise ValueError(BillingNotFoundError.MESSAGE)
+
+            self.billing_repository.update_status(billing, status)
+
+        return True

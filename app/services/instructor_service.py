@@ -70,7 +70,6 @@ class InstructorService:
         return self.instructor_repository.update(instructor, instructor_in)
 
     def save_avatar(self, id: UUID, file: bytes) -> UserSchemaOut:
-        print(id)
         instructor = self.instructor_repository.get_id(id)
         if not instructor:
             raise ValueError(InstructorNotFoundError.MESSAGE)
@@ -114,6 +113,9 @@ class InstructorService:
 
         self.instructor_payment_repository.create_payment_details(
             instructor.id, instructor_payment_in)
+        if instructor_payment_in.comission:
+            instructor_payment_in.comission = instructor_payment_in.comission / 100
+
         return self.instructor_repository.update_type_payment(instructor, instructor_payment_in)
 
     def update_data_payment(self, instructor_id: UUID, instructor_payment_in: InstructorPaymentSchemaIn) -> InstructorSchemaOut:
@@ -126,6 +128,9 @@ class InstructorService:
 
         self.instructor_payment_repository.update_payment_details(
             payment_details, instructor_payment_in)
+
+        if instructor_payment_in.comission:
+            instructor_payment_in.comission = instructor_payment_in.comission / 100
 
         return self.instructor_repository.update_type_payment(instructor, instructor_payment_in)
 

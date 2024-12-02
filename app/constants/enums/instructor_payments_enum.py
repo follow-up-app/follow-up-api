@@ -11,3 +11,4 @@ class ModePaymentEnum(enum.Enum):
     WEEK: str = 'SEMANAL'
     DAY: str = 'DIARIA'
     HOUR: str = 'HORA'
+    COMISSION: str = 'COMISSÃO'

@@ -2,7 +2,7 @@ import datetime
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
-from db.models import Billing, User, Student, StudentPlan, Plan, Contractor
+from db.models import Billing, User, Student
 from app.constants.enums.billing_enum import BillingEnum
 from app.schemas.billing_schemas import BillingSchemaIn, BillingSchemaOut, BillingGroup
 from sqlalchemy.sql.functions import func
@@ -98,7 +98,7 @@ class BillingRepository:
         )
 
         if student_id:
-            query = query.filter(Billing.instructor_id == student_id)
+            query = query.filter(Billing.student_id == student_id)
 
         billings = query.group_by(
             Billing.student_id,
@@ -109,19 +109,23 @@ class BillingRepository:
         return billings
 
     def get_student_status(self, start: datetime, end: datetime, status: BillingEnum, student_id: UUID) -> List[BillingSchemaOut]:
-        return Billing.query(self.session).filter(
+        billings = Billing.query(self.session).filter(
             Billing.date_due >= start,
             Billing.date_due <= end,
             Billing.student_id == student_id,
-            Billing.status == status
-        ).all()
+        )
+
+        if status is not None:
+            billings = billings.filter(Billing.status == status)
+
+        return billings.all()
 
     def get_filters(self, start: datetime, end: datetime, student_id: UUID, status: BillingEnum) -> List[BillingSchemaOut]:
         billings = Billing.query(self.session).filter(
             Billing.company_id == self.current_user.company_id,
             Billing.date_due >= start,
             Billing.date_due <= end,
-        ).order_by(Billing.date_due.asc()).all()
+        )
 
         if status is not None:
             billings = billings.filter(Billing.status == status)
@@ -129,4 +133,4 @@ class BillingRepository:
         if student_id is not None:
             billings = billings.filter(Billing.student_id == student_id)
 
-        return billings
+        return billings.order_by(Billing.date_due.asc()).all()

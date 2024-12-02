@@ -8,7 +8,7 @@ class InstructorPaymentSchemaIn(BaseModel):
     specialty_id: UUID
     type_payment: TypePaymentEnum
     mode_payment: ModePaymentEnum
-    comission: Optional[float] = None
+    comission: Optional[int] = None
     value: float
     key: Optional[str] = None
     bank_number: Optional[int] = None

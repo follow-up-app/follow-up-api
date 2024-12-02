@@ -1,14 +1,15 @@
 from typing import List
 from sqlalchemy.orm import Session
 from app.constants.enums.company_enum import CompanyEnum
-from db.models import Company
+from db.models import Company, User
 from app.schemas.company_schemas import CompanySchemaIn, CompanySchemaOut
 from uuid import UUID
 
 
 class CompanyRepository:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, current_user: User):
         self.session = session
+        self.current_user = current_user
 
     def create(self, company_in: CompanySchemaIn) -> CompanySchemaOut:
         company = Company(
@@ -23,6 +24,10 @@ class CompanyRepository:
             country=company_in.country,
             email=company_in.email.lower(),
             phone=company_in.phone,
+            city_code=company_in.city_code,
+            aliquot=company_in.aliquot,
+            item_list_service=company_in.item_list_service,
+            municipal_tax_code=company_in.municipal_tax_code,
             status=CompanyEnum.ACTIVE
         )
         self.session.add(company)
@@ -47,6 +52,9 @@ class CompanyRepository:
         company.country = company_in.country
         company.email = company_in.email.lower()
         company.phone = company_in.phone
+        company.city_code = company_in.city_code
+        company.item_list_service = company_in.item_list_service
+        company.municipal_tax_code = company_in.municipal_tax_code
         company.status = company_in.status
 
         self.session.add(company)
@@ -56,3 +64,6 @@ class CompanyRepository:
 
     def get_document(self, document: str) -> CompanySchemaOut:
         return Company.query(self.session).filter(Company.document == document).first()
+
+    def company_by_user_logged(self)-> CompanySchemaOut:
+        return Company.query(self.session).filter(Company.id == self.current_user.company_id).first()

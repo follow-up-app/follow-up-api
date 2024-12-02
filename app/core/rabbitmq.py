@@ -39,7 +39,6 @@ class RabbitMQHandler:
         try:
             self.channel.basic_publish(
                 exchange='', routing_key=self.queue, body=message)
-            print(message)
             return True
 
         except Exception as e:

@@ -5,7 +5,7 @@ from app.schemas.responsible_contract_schemas import ResponsibleContractSchemaIn
 from db.models import Student, User, ResponsibleContract
 
 
-class ResponsibleContractReposioty:
+class ResponsibleContractRepository:
     def __init__(self, session: Session, current_user: User):
         self.session = session
         self.current_user = current_user

@@ -4,3 +4,7 @@ class StudentDocumentAlreadyExistsError(Exception):
 
 class StudentNotFoundError(Exception):
     MESSAGE = "Student not found"
+
+
+class PlanExistsError(Exception):
+    MESSAGE = "Plano já cadastrado para o cliente"

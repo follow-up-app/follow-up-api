@@ -63,3 +63,9 @@ class FiltersSchemaIn(BaseModel):
     student_id: Optional[UUID] = None
     start: Optional[date] = None
     end: Optional[date] = None
+
+
+class DashboardSchemaIn(BaseModel):
+    student_id: Optional[UUID] = None
+    start: Optional[date] = None
+    end: Optional[date] = None

@@ -40,23 +40,27 @@ class ModelBase(Base):
 class Company(ModelBase):
     __tablename__ = 'companies'
 
-    name = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=True)
+    social_name = Column(String(255), nullable=True)
+    fantasy_name = Column(String(255), nullable=True)
     document = Column(String(255), nullable=False)
     municipal_registration = Column(String(50), nullable=True)
     address = Column(String(255), nullable=False)
     number_address = Column(Integer(), nullable=True)
     complement = Column(String(20), nullable=True)
     zip_code = Column(String(20), nullable=False)
+    district = Column(String(255), nullable=True)
     city = Column(String(100), nullable=False)
     state = Column(String(10), nullable=False)
-    country = Column(String(50), nullable=False)
     city_code = Column(String(50), nullable=True)
     email = Column(String(255), nullable=False)
     phone = Column(String(255), nullable=False)
     aliquot = Column(String(50), nullable=True)
     item_list_service = Column(String(50), nullable=True)
     municipal_tax_code = Column(String(50), nullable=True)
+    iss_retained = Column(Boolean(), nullable=True)
     api_nfes_token = Column(String(50), nullable=True)
+    licences_n = Column(Integer(), nullable=True)
     status = Column(Enum(CompanyEnum), nullable=False)
 
     users = relationship('User', back_populates='company')
@@ -358,6 +362,7 @@ class ProcedureSchedule(ModelBase):
     help = Column(String(1000), nullable=True)
 
     skills = relationship('Skill', back_populates='procedure')
+    executions = relationship('Execution', back_populates='procedure')
 
     skill_name = association_proxy('skills', 'name')
 
@@ -378,6 +383,8 @@ class Execution(ModelBase):
     user_id = Column(UUIDType(binary=False),
                      ForeignKey(User.id), nullable=False)
     help_type = Column(Enum(HelpEnum), nullable=False)
+
+    procedure = relationship('ProcedureSchedule', back_populates='executions')
 
 
 class SkillsSchedule(ModelBase):

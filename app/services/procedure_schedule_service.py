@@ -42,3 +42,6 @@ class ProcedureScheduleService:
 
     def check_procedure_schedule_student(self, schedule_id: UUID, student_id: UUID, procedure_id: UUID) -> ProcedureSchemaOut:
         return self.procedure_schedule_repository.check_procedure_schedule_student(schedule_id, student_id, procedure_id)
+
+    def get_skill_procedures(self, skill_id: UUID, student_id: UUID) -> List[ProcedureSchemaOut]:
+        return self.procedure_schedule_repository.get_skill_procedures(skill_id, student_id)

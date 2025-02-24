@@ -17,7 +17,7 @@ class ProcedureService:
 
     def get_all(self, skill_id: UUID) -> List[ProcedureSchemaOut]:
         return self.procedure_repository.get_all(skill_id)
-    
+
     def get_for_many_skills(self, skills: List[UUID]) -> List[ProcedureSchemaOut]:
         return self.procedure_repository.get_for_many_skills(skills)
 

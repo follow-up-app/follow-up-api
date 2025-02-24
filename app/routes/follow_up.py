@@ -39,7 +39,7 @@ from db.models import User
 from app.services.billing_service import BillingService
 from app.repositories.billing_repository import BillingRepository
 from app.schemas.schedule_schemas import ScheduleSchemaOut
-from app.schemas.follow_up_schemas import FiltersSchemaIn, ScheduleSchemaFollowUp, ScheduleSchemaFollowUpMobile
+from app.schemas.follow_up_schemas import FiltersSchemaIn, ScheduleSchemaFollowUp, ScheduleSchemaFollowUpMobile, DashboardSchemaIn
 import logging
 
 
@@ -167,4 +167,43 @@ async def get_id(student_id: UUID,  follow_up_service: FollowUpService = Depends
 
     except Exception as e:
         logger.error(f"Error in query follow-up mobile schedule: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+
+@router.post('/dashboard-specialty', summary='Return dashboard', tags=[tags])
+async def get_id(filters_in: DashboardSchemaIn, follow_up_service: FollowUpService = Depends(get_service)):
+    try:
+        data = follow_up_service.dashboard_specialties_help_type(filters_in)
+        return [
+            {
+                "help_type": d.help_type,
+                "specialty": d.name,
+                "total": d.total,
+            }
+            for d in data
+        ]
+
+    except Exception as e:
+        logger.error(f"Error in query dashboard: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/dashboard-skills', summary='Return dashboard', tags=[tags])
+async def get_id(filters_in: DashboardSchemaIn, follow_up_service: FollowUpService = Depends(get_service)):
+    try:
+        return follow_up_service.dashboard_skill_goal(filters_in)
+
+
+        return [
+            {
+                "help_type": d.help_type,
+                "specialty": d.name,
+                "total": d.total,
+            }
+            for d in data
+        ]
+
+    except Exception as e:
+        logger.error(f"Error in query dashboard: {e}")
         raise HTTPException(status_code=400, detail=str(e))

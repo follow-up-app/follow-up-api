@@ -23,3 +23,6 @@ class ProcedureScheduleExists(Exception):
 
 class SkillScheduleExists(Exception):
     MESSAGE = "Esta habilidade ja está adicionado a esta agenda"
+
+class SkillScheduleLimit(Exception):
+    MESSAGE = "Essa agenda possui apenas 1 habilidade cadastrada"

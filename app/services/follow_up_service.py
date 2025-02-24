@@ -3,7 +3,7 @@ from typing import List
 from uuid import UUID
 from app.constants.exceptions.schedule_exceptions import ScheduleNotFoundError
 from app.constants.exceptions.skill_excepetions import SkillNotFoundError
-from app.schemas.follow_up_schemas import FiltersSchemaIn, ScheduleSchemaFollowUp, ScheduleSchemaFollowUpMobile
+from app.schemas.follow_up_schemas import FiltersSchemaIn, ScheduleSchemaFollowUp, ScheduleSchemaFollowUpMobile, DashboardSchemaIn
 from app.schemas.schedule_schemas import ScheduleSchemaOut
 from app.services.execution_service import ExecutionService
 from app.services.procedure_schedule_service import ProcedureScheduleService
@@ -123,3 +123,34 @@ class FollowUpService:
 
     def get_student(self, student_id: UUID) -> List[ScheduleSchemaFollowUp]:
         return self.schedule_service.get_student(student_id)
+
+
+    def dashboard_specialties_help_type(self, filters_in: DashboardSchemaIn):
+        start = datetime.combine(filters_in.start, datetime.min.time())
+        end = datetime.combine(filters_in.end, datetime.max.time())
+
+        return self.execution_service.dashboard_specialties_help_type(start, end, filters_in.student_id)
+
+    def dashboard_skill_goal(self, filters_in: DashboardSchemaIn):
+        start = datetime.combine(filters_in.start, datetime.min.time())
+        end = datetime.combine(filters_in.end, datetime.max.time())
+
+        skills = self.skill_service.skills_with_executions(start, end, filters_in.student_id)
+
+        for skill in skills:
+            executions = []
+            procedures = self.skill_service.skill_procedures(skill.id)
+
+            for procedure in procedures:
+                procedure.points = 0
+                executions = self.execution_service.get_procedures(procedure.id)
+
+                if executions:
+                    procedure.points = round(self.execution_service.count_execution_independent_procedure(
+                        procedure.id) / procedure.tries * 100, 2)
+                    procedure.executions = executions
+
+            total_points = sum(p.points for p in procedures)
+            skill.points = total_points / len(procedures) if procedures else 0
+
+        return skills

@@ -2,7 +2,8 @@ from typing import List
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.schemas.skill_schemas import SkillSchemaIn, SkillSchemaOut
-from db.models import Skill, User
+from db.models import Skill, User, ProcedureSchedule, Execution
+import datetime
 
 
 class SkillRepository:
@@ -15,7 +16,7 @@ class SkillRepository:
             company_id=self.current_user.company_id,
             specialty_id=skill_in.specialty_id,
             name=skill_in.name.upper(),
-            objective=skill_in.objective
+            objective=skill_in.objective,
         )
 
         self.session.add(skill)
@@ -27,10 +28,16 @@ class SkillRepository:
         return Skill.query(self.session).filter(Skill.id == id).first()
 
     def get_all(self) -> List[SkillSchemaOut]:
-        return Skill.query(self.session).filter(Skill.company_id == self.current_user.company_id).all()
+        return (
+            Skill.query(self.session)
+            .filter(Skill.company_id == self.current_user.company_id)
+            .all()
+        )
 
     def get_speciality(self, specialty_id: UUID) -> List[SkillSchemaOut]:
-        return Skill.query(self.session).filter(Skill.specialty_id == specialty_id).all()
+        return (
+            Skill.query(self.session).filter(Skill.specialty_id == specialty_id).all()
+        )
 
     def get_skill_student(self, skill_ids: List[UUID]) -> List[SkillSchemaOut]:
         return Skill.query(self.session).filter(Skill.id.in_(skill_ids)).all()
@@ -44,3 +51,13 @@ class SkillRepository:
         self.session.commit()
 
         return skill
+
+    def skills_with_executions(self, start: datetime, end: datetime, student_id: UUID):
+        query = Skill.query(self.session).join(ProcedureSchedule).join(Execution).filter(
+            Execution.created_date >= start, Execution.created_date <= end
+        )
+
+        if student_id:
+            query = query.filter(ProcedureSchedule.student_id == student_id)
+
+        return query.all()

@@ -2,7 +2,7 @@ from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.core.security import get_current_user
+from app.core.security import get_current_user, check_is_ower_user
 from db import get_db
 from app.schemas.company_schemas import CompanySchemaIn, CompanySchemaOut
 import logging
@@ -36,7 +36,7 @@ async def create(company_in: CompanySchemaIn, company_service: CompanyService = 
 
 
 @router.get('/', summary='Return companies list', response_model=List[CompanySchemaOut], tags=[tags])
-async def get_all(company_service: CompanyService = Depends(get_service)):
+async def get_all(company_service: CompanyService = Depends(get_service), current_user: User = Depends(check_is_ower_user)):
     try:
         companies = company_service.get_all()
         return [CompanySchemaOut.from_orm(x) for x in companies]
@@ -58,7 +58,7 @@ async def get_id(id: UUID, company_service: CompanyService = Depends(get_service
 
 
 @router.patch('/{id}', summary='Update company', response_model=CompanySchemaOut, tags=[tags])
-async def update(id: UUID, company_in: CompanySchemaIn, company_service: CompanyService = Depends(get_service)):
+async def update(id: UUID, company_in: CompanySchemaIn, company_service: CompanyService = Depends(get_service), current_user: User = Depends(check_is_ower_user)):
     try:
         company = company_service.update(id, company_in)
         return CompanySchemaOut.from_orm(company)

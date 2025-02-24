@@ -76,7 +76,6 @@ async def get_resume(filters_in: BillingFilters, billing_service: BillingService
                 "student_id": billing.student_id,
                 "fullname": billing.fullname,
                 "category": billing.category,
-                # "social_name": billing.social_name,
                 "status": billing.status,
                 "count": billing.count,
                 "total": billing.total,

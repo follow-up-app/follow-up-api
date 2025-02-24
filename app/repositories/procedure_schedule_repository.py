@@ -95,3 +95,13 @@ class ProcedureScheduleRepository:
             ProcedureSchedule.student_id == student_id,
             ProcedureSchedule.procedure_id == procedure_id,
         ).first()
+
+    def get_skill_procedures(self, skill_id: UUID, student_id: UUID) -> List[ProcedureSchemaOut]:
+        query = ProcedureSchedule.query(self.session).filter(
+            ProcedureSchedule.skill_id == skill_id,
+        )
+
+        if student_id:
+            query = query.filter(ProcedureSchedule.student_id == student_id)
+
+        return query.all()

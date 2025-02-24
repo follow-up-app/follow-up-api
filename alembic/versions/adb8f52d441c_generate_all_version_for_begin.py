@@ -34,7 +34,7 @@ def upgrade():
     sa.Column('country', sa.String(length=255), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('phone', sa.String(length=255), nullable=False),
-    sa.Column('status', sa.Enum('ACTIVE', 'IN_ANALYSIS', 'BLOCKED', 'DESACATIVE', name='statuscompany'), nullable=False),
+    sa.Column('status', sa.Enum('ACTIVE', 'IN_ANALYSIS', 'BLOCKED', 'INACTIVE', name='statuscompany'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('contractors',

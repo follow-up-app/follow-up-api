@@ -32,7 +32,7 @@ async def login(login_schema_in: LoginSchemaIn,
         settings,
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    
+
     return LoginSchemaOut(access_token=access_token, token_type="bearer", expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
 

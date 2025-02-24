@@ -3,7 +3,7 @@ from app.constants.enums.repeat_enum import RepeatEnum
 from app.constants.enums.schedule_enum import ScheduleEnum
 from app.constants.exceptions.instructor_exceptions import InstructorNotFoundError
 from app.constants.exceptions.procedure_exceptions import ProcedureExecutionError, ProcedureNotFoundError
-from app.constants.exceptions.schedule_exceptions import InstructorNotAvailableError, ProcedureScheduleExists, ScheduleHourError, ScheduleNotFoundError, ScheduleNotRemoveError, StudentNotAvailableError, SkillScheduleExists
+from app.constants.exceptions.schedule_exceptions import InstructorNotAvailableError, ProcedureScheduleExists, ScheduleHourError, ScheduleNotFoundError, ScheduleNotRemoveError, StudentNotAvailableError, SkillScheduleExists, SkillScheduleLimit
 from app.constants.exceptions.student_exceptions import StudentNotFoundError
 from app.constants.exceptions.skill_excepetions import SkillNotFoundError
 from app.repositories.execution_repository import ExecutionRepository
@@ -53,11 +53,15 @@ class ScheduleService:
         event_id = uuid.uuid4()
         if schedule_in.dates:
             for date in schedule_in.dates:
-                self.create(schedule_in, date, event_id)
+                for hours in schedule_in.time_slots:
+                    self.create(schedule_in, date, event_id, hours.start_hour, hours.end_hour)
 
-        return self.create(schedule_in, schedule_in.schedule_in, event_id)
+        for hours in schedule_in.time_slots:
+            schedule = self.create(schedule_in, schedule_in.schedule_in, event_id, hours.start_hour, hours.end_hour)
 
-    def create(self, schedule_in: ScheduleSchemaIn, data_schedule: date, event_id: UUID) -> List[ScheduleSchemaOut]:
+        return schedule
+
+    def create(self, schedule_in: ScheduleSchemaIn, data_schedule: date, event_id: UUID, start: str, end: str) -> List[ScheduleSchemaOut]:
         days = schedule_in.period * 30
         max_date = data_schedule + timedelta(days=round(days))
         period_ = max_date - data_schedule
@@ -80,26 +84,26 @@ class ScheduleService:
 
             for _ in range(period):
                 dates = self.dates_allowed(
-                    data_schedule, schedule_in.start_hour, schedule_in.end_hour, student.id, instructor.id)
+                    data_schedule, start, end, student.id, instructor.id)
 
                 schedule = self.schedule_repository.create(
                     event_id,
                     student,
                     instructor,
-                    dates[0], dates[1], schedule_in)
+                    dates[0], dates[1], schedule_in, start, end)
 
                 events.append(schedule)
                 data_schedule += timedelta(days=repeat)
 
         if schedule_in.repeat == RepeatEnum.NO:
             dates = self.dates_allowed(
-                data_schedule, schedule_in.start_hour, schedule_in.end_hour, student.id, instructor.id)
+                data_schedule, start, end, student.id, instructor.id)
 
             schedule = self.schedule_repository.create(
                 event_id,
                 student,
                 instructor,
-                dates[0], dates[1], schedule_in)
+                dates[0], dates[1], schedule_in, start, end)
 
             events.append(schedule)
 
@@ -385,4 +389,15 @@ class ScheduleService:
         if not skill_schedule:
             raise ValueError(SkillNotFoundError.MESSAGE)
 
-        return self.skill_schedule_service.delete(skill_schedule.id)
+        skill_c = self.skill_schedule_service.all_skills_events(skill_schedule.event_id)
+        if skill_c is None or skill_c <= 1:
+            raise ValueError(SkillScheduleLimit.MESSAGE)
+
+        all_skills_delete = self.skill_schedule_service.all_skill_schedules_events(skill_schedule.event_id, skill_schedule.skill_id)
+        for delete in all_skills_delete:
+            procedures_schedule = self.procedure_schedule_service.get_schedule_skill(delete.schedule_id, delete.skill_id)
+            for prc_delete in procedures_schedule:
+                self.procedure_schedule_service.delete(prc_delete.id)
+            self.skill_schedule_service.delete(delete.id)
+
+        return True

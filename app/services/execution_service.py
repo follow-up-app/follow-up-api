@@ -8,7 +8,7 @@ from app.repositories.execution_repository import ExecutionRepository
 from app.schemas.execution_schemas import ExecutionSchemaIn, ExecutionSchemaOut
 from app.services.procedure_schedule_service import ProcedureScheduleService
 from app.services.schedule_service import ScheduleService
-
+import datetime
 
 class ExecutionService:
     def __init__(self,
@@ -70,3 +70,15 @@ class ExecutionService:
 
     def delete(self, id: UUID) -> bool:
         return self.execution_repository.delete(id)
+
+    def dashboard_specialties_help_type(self, start: datetime, end: datetime, student_id: UUID):
+        return self.execution_repository.count_for_specialties_help_type(start, end, student_id)
+
+    def get_procedures_schedule(self, procedure_id: UUID) -> List[ExecutionSchemaOut]:
+        return self.execution_repository.get_procedures_schedule(procedure_id)
+
+    def count_execution_independent_procedure(self, procedure_id: UUID) -> int:
+        return self.execution_repository.count_execution_independent_procedure(procedure_id)
+
+    def get_procedures(self, procedure_id: UUID) -> List[ExecutionSchemaOut]:
+        return self.execution_repository.get_procedure(procedure_id)

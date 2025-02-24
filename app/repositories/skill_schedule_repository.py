@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from app.schemas.schedule_schemas import SkillScheduleSchemaOut
 from db.models import SkillsSchedule
+from sqlalchemy.sql.functions import func
 
 
 class SkillScheduleRepository:
@@ -23,7 +24,7 @@ class SkillScheduleRepository:
         return SkillsSchedule.query(self.session).filter(SkillsSchedule.id == id).first()
 
     def get_schedule(self, schedule_id: UUID) -> List[SkillScheduleSchemaOut]:
-        return SkillsSchedule.query(self.session).filter(SkillsSchedule.schedule_id == schedule_id).all()
+        return SkillsSchedule.query(self.session).filter(SkillsSchedule.schedule_id == schedule_id).distinct(SkillsSchedule.skill_id).all()
 
     def delete(self, id: UUID) -> bool:
         skill = SkillsSchedule.query(self.session).filter(
@@ -45,3 +46,9 @@ class SkillScheduleRepository:
             SkillsSchedule.event_id == event_id,
             SkillsSchedule.skill_id == skill_id
         ).all()
+
+    def skills_for_event(self, event_id: UUID):
+        return (self.session.query(func.count(SkillsSchedule.id))
+        .filter(SkillsSchedule.event_id == event_id)
+        .scalar())
+

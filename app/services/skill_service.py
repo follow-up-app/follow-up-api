@@ -5,10 +5,13 @@ from app.repositories.skill_repository import SkillRepository
 from app.schemas.procedure_schemas import ProcedureSchemaIn, ProcedureSchemaOut
 from app.schemas.skill_schemas import SkillManyIDs, SkillSchemaIn, SkillSchemaOut
 from app.services.procedure_service import ProcedureService
+import datetime
 
 
 class SkillService:
-    def __init__(self, skill_repository: SkillRepository, procedure_service: ProcedureService):
+    def __init__(
+        self, skill_repository: SkillRepository, procedure_service: ProcedureService
+    ):
         self.skill_repository = skill_repository
         self.procedure_service = procedure_service
 
@@ -47,11 +50,21 @@ class SkillService:
 
         return procedures
 
-    def create_procedure(self, id: UUID, procedure_in: ProcedureSchemaIn) -> ProcedureSchemaOut:
+    def create_procedure(
+        self, id: UUID, procedure_in: ProcedureSchemaIn
+    ) -> ProcedureSchemaOut:
         return self.procedure_service.create(id, procedure_in)
 
-    def update_procedure(self, procedure_id: UUID, procedure_in: ProcedureSchemaIn) -> ProcedureSchemaOut:
+    def update_procedure(
+        self, procedure_id: UUID, procedure_in: ProcedureSchemaIn
+    ) -> ProcedureSchemaOut:
         return self.procedure_service.update(procedure_id, procedure_in)
 
     def get_procedure_id(self, procedure_id: UUID) -> ProcedureSchemaOut:
         return self.procedure_service.get_id(procedure_id)
+
+    def skills_with_executions(self, start: datetime, end: datetime, student_id: UUID):
+        return self.skill_repository.skills_with_executions(start, end, student_id)
+
+    def skill_procedures(self, id: UUID) -> List[ProcedureSchemaOut]:
+        return self.procedure_service.get_all(id)

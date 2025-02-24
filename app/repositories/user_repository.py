@@ -24,7 +24,7 @@ class UserRepository:
             document=user_in.document,
             permission=PermissionEnum.ADMIN,
             position=user_in.position.upper(),
-            status=StatusEnum.ACTIVE
+            status=StatusEnum.ACTIVE,
         )
         self.session.add(user)
         self.session.commit()
@@ -35,7 +35,12 @@ class UserRepository:
         return User.query(self.session).filter(User.id == id).first()
 
     def get_all(self) -> List[UserSchemaOut]:
-        return User.query(self.session).filter(User.company_id == self.current_user.company_id).order_by(User.fullname.asc()).all()
+        return (
+            User.query(self.session)
+            .filter(User.company_id == self.current_user.company_id)
+            .order_by(User.fullname.asc())
+            .all()
+        )
 
     def update(self, user: User, user_in: UserSchemaIn) -> UserSchemaOut:
         user.fullname = user_in.fullname

@@ -10,6 +10,11 @@ from app.schemas.specialty_schemas import SpecialtySchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
 
 
+class SlotHourIn(BaseModel):
+    start_hour: str
+    end_hour: str
+
+
 class ScheduleSchemaIn(BaseModel):
     id: Optional[UUID]
     student_id: UUID
@@ -22,6 +27,7 @@ class ScheduleSchemaIn(BaseModel):
     details: Optional[str]
     color: Optional[str]
     schedule_in: date
+    time_slots: List[SlotHourIn]
     procedures: List[ProcedureSchemaOut]
     dates: Optional[List[date]] = None
 
@@ -85,7 +91,7 @@ class ScheduleSchemaOut(BaseModel):
     status: Optional[ScheduleEnum]
     student: Optional[StudentSchemaOut]
     instructor: Optional[InstructorSchemaOut]
-    skills:  Optional[List[SkillScheduleSchemaOut]]
+    skills: Optional[List[SkillScheduleSchemaOut]]
     procedures: Optional[List[ProcedureSchemaOut]]
     specialty: Optional[SpecialtySchemaOut]
     created_date: datetime
@@ -93,6 +99,7 @@ class ScheduleSchemaOut(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class SkillScheduleIn(BaseModel):
     skill_id: UUID

@@ -6,6 +6,7 @@ from app.constants.enums.status_enum import StatusEnum
 
 
 class UserSchemaIn(BaseModel):
+    company_id: Optional[UUID]
     fullname: str
     email: str
     permission: Optional[PermissionEnum]

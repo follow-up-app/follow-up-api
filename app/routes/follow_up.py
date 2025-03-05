@@ -194,16 +194,6 @@ async def get_id(filters_in: DashboardSchemaIn, follow_up_service: FollowUpServi
     try:
         return follow_up_service.dashboard_skill_goal(filters_in)
 
-
-        return [
-            {
-                "help_type": d.help_type,
-                "specialty": d.name,
-                "total": d.total,
-            }
-            for d in data
-        ]
-
     except Exception as e:
         logger.error(f"Error in query dashboard: {e}")
         raise HTTPException(status_code=400, detail=str(e))

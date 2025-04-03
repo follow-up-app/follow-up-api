@@ -62,7 +62,7 @@ class BillingService:
         start = datetime.combine(filters_in.start, datetime.min.time())
         end = datetime.combine(filters_in.end, datetime.max.time())
 
-        return self.billing_repository.get_student_status(start, end, filters_in.status, filters_in.student_id)
+        return self.billing_repository.get_student_status(start, end, filters_in.status, filters_in.student_id, filters_in.specialty_id)
 
     def delete_for_schedule(self, schedule_id: UUID) -> bool:
         return self.billing_repository.delete_for_schedule(schedule_id)

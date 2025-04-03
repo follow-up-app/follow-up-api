@@ -22,6 +22,7 @@ from app.routes.api_requests import router as api_requests_router
 from app.routes.payments import router as payments_router
 from app.routes.billings import router as billings_router
 from app.routes.health_plans import router as health_plans_router
+from app.routes.invoices import router as invoice_router
 
 
 # sentry_sdk.init(
@@ -68,6 +69,7 @@ app.include_router(api_requests_router, prefix='/api-requests')
 app.include_router(payments_router, prefix='/payments')
 app.include_router(billings_router, prefix='/billings')
 app.include_router(health_plans_router, prefix='/health-plans')
+app.include_router(invoice_router, prefix='/invoices')
 
 
 if __name__ == "__main__":

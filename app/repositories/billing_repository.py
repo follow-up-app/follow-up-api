@@ -2,7 +2,7 @@ import datetime
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
-from db.models import Billing, User, Student
+from db.models import Billing, User, Student, Schedule
 from app.constants.enums.billing_enum import BillingEnum
 from app.schemas.billing_schemas import BillingSchemaIn, BillingSchemaOut, BillingGroup
 from sqlalchemy.sql.functions import func
@@ -108,8 +108,9 @@ class BillingRepository:
 
         return billings
 
-    def get_student_status(self, start: datetime, end: datetime, status: BillingEnum, student_id: UUID) -> List[BillingSchemaOut]:
+    def get_student_status(self, start: datetime, end: datetime, status: BillingEnum, student_id: UUID, specialty_id: UUID = None) -> List[BillingSchemaOut]:
         billings = Billing.query(self.session).filter(
+            Billing.company_id == self.current_user.company_id,
             Billing.date_due >= start,
             Billing.date_due <= end,
             Billing.student_id == student_id,
@@ -118,9 +119,12 @@ class BillingRepository:
         if status is not None:
             billings = billings.filter(Billing.status == status)
 
-        return billings.all()
+        if specialty_id is not None:
+            billings = billings.join(Schedule).filter(Schedule.specialty_id == specialty_id)
 
-    def get_filters(self, start: datetime, end: datetime, student_id: UUID, status: BillingEnum) -> List[BillingSchemaOut]:
+        return billings.order_by(Billing.date_due.asc()).all()
+
+    def get_filters(self, start: datetime, end: datetime, student_id: UUID, status: BillingEnum, specialty_id: UUID = None) -> List[BillingSchemaOut]:
         billings = Billing.query(self.session).filter(
             Billing.company_id == self.current_user.company_id,
             Billing.date_due >= start,
@@ -132,5 +136,8 @@ class BillingRepository:
 
         if student_id is not None:
             billings = billings.filter(Billing.student_id == student_id)
+
+        if specialty_id is not None:
+            billings = billings.join(Schedule).filter(Schedule.specialty_id == specialty_id)
 
         return billings.order_by(Billing.date_due.asc()).all()

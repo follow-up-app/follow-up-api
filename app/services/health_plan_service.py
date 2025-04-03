@@ -26,8 +26,6 @@ class HealthPlanService:
         if not plan:
             raise ValueError(HealthPlanNotFoundError.MESSAGE)
 
-        self.valid_document_exists(health_plan_in.document)
-
         return self.health_plan_repository.update(plan, health_plan_in)
 
     def remove(self, id: UUID) -> bool:

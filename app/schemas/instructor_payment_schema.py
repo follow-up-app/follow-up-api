@@ -12,12 +12,14 @@ class InstructorPaymentSchemaIn(BaseModel):
     value: float
     key: Optional[str] = None
     bank_number: Optional[int] = None
+    bank_branch: Optional[int] = None
     account_number: Optional[str] = None
 
 
 class InstructorPaymentSchemaOut(BaseModel):
     id: UUID
     bank_number: Optional[int] = None
+    bank_branch: Optional[int] = None
     account_number: Optional[str] = None
     key: Optional[str] = None
 

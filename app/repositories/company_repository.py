@@ -65,6 +65,7 @@ class CompanyRepository:
         company.iss_retained = company_in.iss_retained
         company.licences_n = company_in.licences_n
         company.api_nfes_token = company_in.api_nfes_token
+        company.aliquot=company_in.aliquot,
         company.status = company_in.status
 
         self.session.add(company)

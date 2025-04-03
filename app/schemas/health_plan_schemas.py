@@ -8,9 +8,10 @@ class HealthPlanSchemaIn(BaseModel):
     fantasy_name: str
     document: str
     address: str
-    number_address: Optional[int]
+    number: Optional[int]
     complement: Optional[str] = None
     zip_code: str
+    district: str
     city: str
     state: str
     country: Optional[str] = None
@@ -24,9 +25,10 @@ class HealthPlanSchemaOut(BaseModel):
     fantasy_name: str
     document: str
     address: str
-    number_address: Optional[int]
+    number: Optional[int]
     complement: Optional[str] = None
     zip_code: str
+    district: Optional[str] = None
     city: str
     state: str
     country: Optional[str] = None

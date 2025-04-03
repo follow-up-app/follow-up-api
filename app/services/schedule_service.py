@@ -2,15 +2,14 @@ from typing import List, Tuple
 from app.constants.enums.repeat_enum import RepeatEnum
 from app.constants.enums.schedule_enum import ScheduleEnum
 from app.constants.exceptions.instructor_exceptions import InstructorNotFoundError
-from app.constants.exceptions.procedure_exceptions import ProcedureExecutionError, ProcedureNotFoundError
-from app.constants.exceptions.schedule_exceptions import InstructorNotAvailableError, ProcedureScheduleExists, ScheduleHourError, ScheduleNotFoundError, ScheduleNotRemoveError, StudentNotAvailableError, SkillScheduleExists, SkillScheduleLimit
+from app.constants.exceptions.procedure_exceptions import ProcedureNotFoundError
+from app.constants.exceptions.schedule_exceptions import InstructorNotAvailableError, ScheduleHourError, ScheduleNotFoundError, ScheduleNotRemoveError, StudentNotAvailableError
 from app.constants.exceptions.student_exceptions import StudentNotFoundError
-from app.constants.exceptions.skill_excepetions import SkillNotFoundError
 from app.repositories.execution_repository import ExecutionRepository
 from app.repositories.schedule_repository import ScheduleRepository
 from app.schemas.instructor_schema import InstructorSchemaOut
 from app.schemas.procedure_schemas import ProcedureSchemaIn, ProcedureSchemaOut
-from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn
+from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn, SlotDates, EventSlotOut
 from app.schemas.student_schemas import StudentSchemaOut
 from app.services.instructor_service import InstructorService
 from app.services.payment_service import PaymentService
@@ -21,7 +20,6 @@ from app.services.skill_service import SkillService
 from app.services.student_service import StudentService
 from datetime import date, datetime, timedelta
 from uuid import UUID
-import uuid
 from app.services.billing_service import BillingService
 
 
@@ -50,24 +48,23 @@ class ScheduleService:
         self.billing_service = billing_service
 
     def prepare(self, schedule_in: ScheduleSchemaIn) -> List[ScheduleSchemaOut]:
-        event_id = uuid.uuid4()
-        if schedule_in.dates:
-            for date in schedule_in.dates:
-                for hours in schedule_in.time_slots:
-                    self.create(schedule_in, date, event_id, hours.start_hour, hours.end_hour)
-
-        for hours in schedule_in.time_slots:
-            schedule = self.create(schedule_in, schedule_in.schedule_in, event_id, hours.start_hour, hours.end_hour)
+        event = self.schedule_repository.create_event(schedule_in)
+        for slot in schedule_in.date_slots:
+             for date in slot.dates:
+                for hours in slot.time_slots:
+                    schedule = self.create(schedule_in, date, event.id, hours.start_hour, hours.end_hour, slot)
 
         return schedule
 
-    def create(self, schedule_in: ScheduleSchemaIn, data_schedule: date, event_id: UUID, start: str, end: str) -> List[ScheduleSchemaOut]:
+    def create(self, schedule_in: ScheduleSchemaIn, data_schedule: date, event_id: UUID, start: str, end: str, slot: SlotDates) -> List[ScheduleSchemaOut]:
         days = schedule_in.period * 30
         max_date = data_schedule + timedelta(days=round(days))
+        week_days = ",".join(str(item.value) for item in slot.date_weeks)
+
         period_ = max_date - data_schedule
         events = []
 
-        instructor = self.instructor_service.get_id(schedule_in.instructor_id)
+        instructor = self.instructor_service.get_id(slot.instructor_id)
         if not instructor:
             raise ValueError(InstructorNotFoundError.MESSAGE)
 
@@ -75,43 +72,36 @@ class ScheduleService:
         if not student:
             raise ValueError(StudentNotFoundError.MESSAGE)
 
-        if schedule_in.repeat == RepeatEnum.WEEK or schedule_in.repeat == RepeatEnum.MOUTH:
-            period = schedule_in.period
-            repeat = 30
-            if schedule_in.repeat == RepeatEnum.WEEK:
-                period = round(period_.days / 7)
-                repeat = 7
+        period = schedule_in.period
+        repeat = 30
 
-            for _ in range(period):
-                dates = self.dates_allowed(
-                    data_schedule, start, end, student.id, instructor.id)
+        if schedule_in.repeat == RepeatEnum.WEEK:
+            period = round(period_.days / 7)
+            repeat = 7
 
-                schedule = self.schedule_repository.create(
-                    event_id,
-                    student,
-                    instructor,
-                    dates[0], dates[1], schedule_in, start, end)
-
-                events.append(schedule)
-                data_schedule += timedelta(days=repeat)
-
-        if schedule_in.repeat == RepeatEnum.NO:
-            dates = self.dates_allowed(
-                data_schedule, start, end, student.id, instructor.id)
+        for _ in range(period):
+            dates = self.dates_allowed(data_schedule, start, end, student.id, instructor.id)
 
             schedule = self.schedule_repository.create(
-                event_id,
-                student,
-                instructor,
-                dates[0], dates[1], schedule_in, start, end)
+                    event_id,
+                    student,
+                    slot.specialty_id,
+                    instructor,
+                    dates[0],
+                    dates[1],
+                    schedule_in,
+                    start,
+                    end,
+                    week_days)
 
             events.append(schedule)
+            data_schedule += timedelta(days=repeat)
 
         for sch in events:
-            for procedure in schedule_in.procedures:
+            for procedure in slot.procedures:
                 self.procedure_schedule_service.create(
                     sch.id, student.id, procedure)
-            self.skill_schedule_service.create(sch.id, procedure.skill_id)
+            self.skill_schedule_service.create(sch.id, slot.skill_id)
 
             self.payment_service.create(sch, instructor)
             self.billing_service.create(sch, student)
@@ -192,31 +182,7 @@ class ScheduleService:
             self.schedule_repository.delete(schedule.id)
 
         return True
-
-    def delete(self, id: UUID) -> bool:
-        schedule = self.schedule_repository.get_id(id)
-        if not schedule:
-            raise ValueError(ScheduleNotFoundError.MESSAGE)
-
-        executions = self.execution_repositoy.get_schedule(schedule.id)
-        if executions:
-            raise ValueError(ScheduleNotRemoveError.MESSAGE)
-
-        skills = self.skill_schedule_service.get_schedule(schedule.id)
-        procedures = self.procedure_schedule_service.get_schedule_all(
-            schedule.id)
-
-        for procedure in procedures:
-            self.procedure_schedule_service.delete(procedure.id)
-
-        for skill in skills:
-            self.skill_schedule_service.delete(skill.id)
-
-        self.payment_service.delete_for_schedule(schedule.id)
-        self.billing_service.delete_for_schedule(schedule.id)
-        self.schedule_repository.delete(schedule.id)
-
-        return True
+    
 
     def update(self, id: UUID, schedule_in: ScheduleUpadateSchamaIn) -> ScheduleSchemaOut:
         schedule = self.schedule_repository.get_id(id)
@@ -317,87 +283,45 @@ class ScheduleService:
     def get_date_filter(self, start: datetime, end: datetime,  student_id: UUID) -> List[ScheduleSchemaOut]:
         return self.schedule_repository.get_date_filter(start, end, student_id)
 
-    def delete_procedure_schedule(self, procedure_schedule_id: UUID) -> bool:
-        procedure_schedule = self.procedure_schedule_service.get_id(
-            procedure_schedule_id)
-        if not procedure_schedule:
-            raise ValueError(ProcedureNotFoundError.MESSAGE)
+    def get_event_id(self, event_id: UUID) -> EventSlotOut:
+        event = self.schedule_repository.get_event_id(event_id)
+        if not event:
+            raise ValueError(ScheduleNotFoundError.MESSAGE)
+        skills_schedule =  self.skill_schedule_service.all_skill_schedules_for_event(event.id)
 
-        executions = self.execution_repositoy.get_shedule_procedure(
-            procedure_schedule.schedule_id, procedure_schedule.procedure_id)
-        if executions:
-            raise ValueError(ProcedureExecutionError.MESSAGE)
+        slots = []
 
-        delete = self.procedure_schedule_service.delete(procedure_schedule.id)
-        skill_schedules = self.procedure_schedule_service.get_schedule_skill(
-            procedure_schedule.schedule_id, procedure_schedule.skill_id)
-        if skill_schedules == []:
-            skill_schedule = self.skill_schedule_service.check_skill_schedule(
-                procedure_schedule.schedule_id, procedure_schedule.skill_id)
-            all_skill_schedules = self.skill_schedule_service.all_skill_schedules_events(
-                skill_schedule.event_id, skill_schedule.skill_id)
-            for event in all_skill_schedules:
-                self.skill_schedule_service.delete(event.id)
+        for sk_c in skills_schedule:
+            slot = {
+                'skill_id': sk_c.skill_id,
+                'specialty_id': sk_c.schedule.specialty_id,
+                'instructor_id': sk_c.schedule.instructor_id,
+                'procedures': self.procedure_schedule_service.get_distinct_skill_procedure(sk_c.skill_id, sk_c.schedule_id),
+                'all_procedures': self.procedure_service.get_all(sk_c.skill_id),
+                'date_weeks': sk_c.schedule.week_days,
+                'skills': self.skill_service.get_speciality(sk_c.schedule.specialty_id),
+                'time_slots': []
+            }
+            hours_schedule =  self.schedule_repository.get_distinct_start_end_schedule(event_id, sk_c.skill_id, sk_c.schedule.week_days)
 
-        return delete
+            for hr in hours_schedule:
+                slot_time = {
+                    'start_hour': hr.start_hour,
+                    'end_hour': hr.end_hour
+                }
+                slot['time_slots'].append(slot_time)
 
-    def add_procedure_schedule(self, schedule_id: UUID, procedure_id: UUID) -> List[ScheduleSchemaOut]:
-        schedule = self.schedule_repository.get_id(schedule_id)
-        if not schedule:
+            slots.append(slot)
+        event.slots = slots
+
+        return event
+
+    def update_event(self, event_id: UUID, schedule_in: ScheduleSchemaIn) -> List[ScheduleSchemaOut]:
+        event = self.schedule_repository.get_event_id(event_id)
+        if not event:
             raise ValueError(ScheduleNotFoundError.MESSAGE)
 
-        procedure = self.procedure_service.get_id(
-            procedure_id)
-        if not procedure:
-            raise ValueError(ProcedureNotFoundError.MESSAGE)
+        self.delete_many(event_id)
+        self.schedule_repository.delete_event(event_id)
 
-        events = self.schedule_repository.get_event(schedule.event_id)
-        for event in events:
-            check_schedule = self.procedure_schedule_service.check_procedure_schedule_student(
-                event.id, event.student_id, procedure.id)
-            if check_schedule:
-                raise ValueError(ProcedureScheduleExists.MESSAGE)
-
-            self.procedure_schedule_service.create(
-                event.id, event.student_id, procedure)
-
-        return events
-
-    def add_skill_schedule(self, schedule_id: UUID, skill_id: UUID) -> List[ScheduleSchemaOut]:
-        schedule = self.schedule_repository.get_id(schedule_id)
-        if not schedule:
-            raise ValueError(ScheduleNotFoundError.MESSAGE)
-
-        skill = self.skill_service.get_id(
-            skill_id)
-        if not skill:
-            raise ValueError(SkillNotFoundError.MESSAGE)
-
-        events = self.schedule_repository.get_event(schedule.event_id)
-        for event in events:
-            check_schedule = self.skill_schedule_service.check_skill_schedule(
-                event.id, skill.id)
-            if check_schedule:
-                raise ValueError(SkillScheduleExists.MESSAGE)
-            self.skill_schedule_service.create(event.id, skill.id)
-
-        return events
-
-    def delete_skill_schedule(self, skill_schedule_id: UUID) -> bool:
-        skill_schedule = self.skill_schedule_service.get_id(
-            skill_schedule_id)
-        if not skill_schedule:
-            raise ValueError(SkillNotFoundError.MESSAGE)
-
-        skill_c = self.skill_schedule_service.all_skills_events(skill_schedule.event_id)
-        if skill_c is None or skill_c <= 1:
-            raise ValueError(SkillScheduleLimit.MESSAGE)
-
-        all_skills_delete = self.skill_schedule_service.all_skill_schedules_events(skill_schedule.event_id, skill_schedule.skill_id)
-        for delete in all_skills_delete:
-            procedures_schedule = self.procedure_schedule_service.get_schedule_skill(delete.schedule_id, delete.skill_id)
-            for prc_delete in procedures_schedule:
-                self.procedure_schedule_service.delete(prc_delete.id)
-            self.skill_schedule_service.delete(delete.id)
-
-        return True
+        return self.prepare(schedule_in)

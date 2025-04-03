@@ -1,16 +1,9 @@
 import enum
 
 
-class InvoiceEnum(enum.Enum):
-    NOT_FOUND: str = 'NÃO ENCONTADO'
+class InvoiceSenderStatusEnum(enum.Enum):
+    SENDER: str = 'ENVIADA'
     CANCELED: str = 'CANCELADA'
-    NOT_AUTHORIZED: str = 'NÃO AUTORIZADA'
-    INVALID_REQUEST: str = 'REQUSIÇÃO INVÁLIDA'
-    COMPANY_NOT_QUALIFIED: str = 'EMPRESA NÃO HABILITADA'
-    CERTIFICATE_EXPIRED: str = 'CERTIFICADO EXPIRADO'
-    AUTHORIZED: str = 'AUTORIZADA'
-    IN_PROCESS: str = 'EM PROCESSAMENTO'
-
 
 class ExternalApiResponse(enum.Enum):
     NOT_FOUND: str = 'nao_encontrado'

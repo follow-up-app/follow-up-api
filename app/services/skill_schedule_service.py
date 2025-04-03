@@ -1,7 +1,7 @@
 from typing import List
 from uuid import UUID
 from app.repositories.skill_schedule_repository import SkillScheduleRepository
-from app.schemas.schedule_schemas import SkillScheduleSchemaOut
+from app.schemas.schedule_schemas import SkillScheduleSchemaOut, EventSkillOut
 from app.constants.exceptions.schedule_exceptions import SkillScheduleLimit
 
 class SkillScheduleService:
@@ -28,3 +28,6 @@ class SkillScheduleService:
 
     def all_skills_events(self, event_id: UUID) -> List[SkillScheduleSchemaOut]:
         return self.skill_schedule_repository.skills_for_event(event_id)
+
+    def all_skill_schedules_for_event(self, event_id: UUID) -> List[EventSkillOut]:
+        return self.skill_schedule_repository.all_skill_schedules_for_event(event_id)

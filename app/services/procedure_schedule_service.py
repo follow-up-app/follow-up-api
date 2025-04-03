@@ -45,3 +45,7 @@ class ProcedureScheduleService:
 
     def get_skill_procedures(self, skill_id: UUID, student_id: UUID) -> List[ProcedureSchemaOut]:
         return self.procedure_schedule_repository.get_skill_procedures(skill_id, student_id)
+    
+    def get_distinct_skill_procedure(self, skill_id: UUID, schedule_id: UUID) -> List[ProcedureSchemaOut]:
+        return self.procedure_schedule_repository.get_distinct_skill_procedure(skill_id, schedule_id)
+

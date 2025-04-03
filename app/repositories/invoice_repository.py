@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from db.models import Invoice, InvoiceLog, InvoiceBilling, User
-from app.constants.enums.invoice_enum import InvoiceEnum
-from app.schemas.invoice_schemas import InvoiceLogSchemaOut, InvoiceSchemaOut, InvoiceBillingSchemaOut, InvoiceSchemaIn
+from app.constants.enums.invoice_enum import InvoiceSenderStatusEnum
+from app.schemas.invoice_schemas import InvoiceLogSchemaOut, InvoiceSchemaOut, InvoiceBillingSchemaOut, InvoiceSchemaIn, InvoiceResponseApi
 from uuid import UUID
 from typing import List
 
@@ -11,10 +11,12 @@ class InvoiceRepository:
         self.session = session
         self.current_user = current_user
 
-    def create_invoice_reference(self, reference: str):
+    def create_invoice_reference(self, response_api: InvoiceResponseApi):
         invoice = Invoice(
             company_id=self.current_user.company_id,
-            reference=reference
+            reference=response_api.ref,
+            api_status=response_api.status,
+            status=InvoiceSenderStatusEnum.SENDER
         )
 
         self.session.add(invoice)
@@ -74,3 +76,6 @@ class InvoiceRepository:
 
     def invoice_history(self, invoice_id: UUID) -> List[InvoiceLogSchemaOut]:
         return InvoiceLog.query(self.session).filter(InvoiceLog.invoice_id == invoice_id).all()
+
+    def get_last_reference(self) -> InvoiceSchemaOut:
+        return Invoice.query(self.session).filter(Invoice.company_id == self.current_user.company_id).order_by(Invoice.created_date.desc()).first()

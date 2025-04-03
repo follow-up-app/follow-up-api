@@ -1,8 +1,8 @@
 from typing import List
 from uuid import UUID
 from sqlalchemy.orm import Session
-from app.schemas.schedule_schemas import SkillScheduleSchemaOut
-from db.models import SkillsSchedule
+from app.schemas.schedule_schemas import SkillScheduleSchemaOut, EventSkillOut
+from db.models import SkillsSchedule, Schedule
 from sqlalchemy.sql.functions import func
 
 
@@ -52,3 +52,9 @@ class SkillScheduleRepository:
         .filter(SkillsSchedule.event_id == event_id)
         .scalar())
 
+    def all_skill_schedules_for_event(self, event_id: UUID) -> List[EventSkillOut]:
+        results = SkillsSchedule.query(self.session).join(SkillsSchedule.schedule).filter(
+            SkillsSchedule.event_id == event_id,
+        ).distinct(SkillsSchedule.skill_id, Schedule.week_days).all()
+
+        return [EventSkillOut.from_orm(item) for item in results]

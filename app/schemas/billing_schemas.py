@@ -35,6 +35,7 @@ class BillingSchemaOut(BaseModel):
 
 class BillingFilters(BaseModel):
     student_id: Optional[UUID] = None
+    specialty_id: Optional[UUID] = None
     start: Optional[date] = None
     end: Optional[date] = None
     status: Optional[BillingEnum] = None

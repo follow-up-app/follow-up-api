@@ -8,6 +8,7 @@ from app.schemas.instructor_schema import InstructorSchemaOut
 from app.schemas.procedure_schemas import ProcedureSchemaOut
 from app.schemas.specialty_schemas import SpecialtySchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
+from app.schemas.skill_schemas import SkillSchemaOut
 
 
 class SlotHourIn(BaseModel):
@@ -15,21 +16,42 @@ class SlotHourIn(BaseModel):
     end_hour: str
 
 
-class ScheduleSchemaIn(BaseModel):
-    id: Optional[UUID]
-    student_id: UUID
-    instructor_id: UUID
+class SlotDateWeeks(BaseModel):
+    id: Optional[int]
+    value: int
+    text: Optional[str]
+
+
+class SlotDates(BaseModel):
+    dates: List[date]
     specialty_id: UUID
-    start_hour: str
-    end_hour: str
+    instructor_id: UUID
+    skill_id: UUID
+    procedures: List[ProcedureSchemaOut]
+    time_slots: List[SlotHourIn]
+    date_weeks: List[SlotDateWeeks]
+
+
+class SlotDatesOut(BaseModel):
+    dates: List[date]
+    specialty_id: UUID
+    instructor_id: UUID
+    skill_id: UUID
+    procedures: List[ProcedureSchemaOut]
+    all_procedures: Optional[List[ProcedureSchemaOut]]
+    time_slots: List[SlotHourIn]
+    date_weeks: str
+
+    class Config:
+        orm_mode = True
+
+
+class ScheduleSchemaIn(BaseModel):
+    schedule_in: date
+    student_id: UUID
     repeat: RepeatEnum
     period: Optional[int] = None
-    details: Optional[str]
-    color: Optional[str]
-    schedule_in: date
-    time_slots: List[SlotHourIn]
-    procedures: List[ProcedureSchemaOut]
-    dates: Optional[List[date]] = None
+    date_slots: List[SlotDates]
 
 
 class ScheduleSchemaEvent(BaseModel):
@@ -96,6 +118,7 @@ class ScheduleSchemaOut(BaseModel):
     specialty: Optional[SpecialtySchemaOut]
     created_date: datetime
     updated_at: datetime
+    week_days: Optional[str]
 
     class Config:
         orm_mode = True
@@ -103,3 +126,39 @@ class ScheduleSchemaOut(BaseModel):
 
 class SkillScheduleIn(BaseModel):
     skill_id: UUID
+
+
+class EventSlotOut(BaseModel):
+    skill_id: UUID
+    skills: Optional[List[SkillSchemaOut]]
+    specialty_id: UUID
+    instructor_id: UUID
+    date_weeks: str
+    procedures: Optional[List[ProcedureSchemaOut]]
+    all_procedures: Optional[List[ProcedureSchemaOut]]
+    time_slots: List[SlotHourIn]
+
+    class Config:
+        orm_mode = True
+
+
+class EventSchemaOut(BaseModel):
+    id: UUID
+    start_in: date
+    student_id: UUID
+    repeat: RepeatEnum
+    period: int
+    slots: List[EventSlotOut]
+
+    class Config:
+        orm_mode = True
+
+
+class EventSkillOut(BaseModel):
+    id: UUID
+    skill_id: UUID
+    schedule_id: UUID
+    schedule: ScheduleSchemaOut
+
+    class Config:
+        orm_mode = True

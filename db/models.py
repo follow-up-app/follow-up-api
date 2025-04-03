@@ -18,7 +18,7 @@ from app.constants.enums.status_enum import StatusEnum
 from app.constants.enums.payment_enum import PaymentEnum
 from app.constants.enums.instructor_payments_enum import ModePaymentEnum, TypePaymentEnum
 from app.constants.enums.billing_enum import BillingEnum, CategoryEnum
-
+from app.constants.enums.invoice_enum import InvoiceSenderStatusEnum
 
 Base = declarative_base()
 
@@ -257,6 +257,7 @@ class IntructorPaymentsDetail(ModelBase):
                            ForeignKey(Instructor.id), nullable=False)
 
     bank_number = Column(Integer(), nullable=True)
+    bank_branch = Column(Integer(), nullable=True)
     account_number = Column(String(50), nullable=True)
     key = Column(String(255), nullable=True)
 
@@ -303,6 +304,19 @@ class Procedure(ModelBase):
     student = relationship('Student', back_populates='procedures')
 
 
+class Event(ModelBase):
+    __tablename__ = 'events'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+    student_id = Column(UUIDType(binary=False),
+                        ForeignKey(Student.id), nullable=True)
+
+    start_in = Column(DateTime, nullable=False)
+    repeat = Column(Enum(RepeatEnum), nullable=True)
+    period = Column(String(20), nullable=True)
+
+
 class Schedule(ModelBase):
     __tablename__ = 'schedules'
 
@@ -314,7 +328,9 @@ class Schedule(ModelBase):
                         ForeignKey(Student.id), nullable=True)
     specialty_id = Column(UUIDType(binary=False),
                           ForeignKey(Specialty.id), nullable=True)
-    event_id = Column(UUIDType(binary=False), nullable=True)
+    event_id = Column(UUIDType(binary=False),
+                          ForeignKey(Event.id), nullable=True)
+
     title = Column(String(255), nullable=False)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
@@ -330,6 +346,7 @@ class Schedule(ModelBase):
     event_user_id = Column(UUIDType(binary=False),
                            ForeignKey(User.id), nullable=True)
     color = Column(String(255), nullable=True)
+    week_days = Column(String(255), nullable=False)
 
     instructor = relationship('Instructor', back_populates='schedule')
     student = relationship('Student', back_populates='schedule')
@@ -337,6 +354,7 @@ class Schedule(ModelBase):
     specialty = relationship('Specialty', back_populates='schedule')
     payment = relationship('Payment', back_populates='schedule')
     billing = relationship('Billing', back_populates='schedule')
+    skill_schedule = relationship('SkillsSchedule', back_populates='schedule')
 
 
 class ProcedureSchedule(ModelBase):
@@ -398,6 +416,7 @@ class SkillsSchedule(ModelBase):
 
     skills = relationship('Skill', back_populates='schedule')
     event = relationship('Schedule', back_populates='event')
+    schedule = relationship('Schedule', back_populates='skill_schedule')
 
     skill_name = association_proxy('skills', 'name')
     event_id = association_proxy('event', 'event_id')
@@ -465,6 +484,8 @@ class Invoice(ModelBase):
                         ForeignKey(Company.id), nullable=False)
 
     reference = Column(String(250), nullable=False)
+    api_status = Column(String(250), nullable=True)
+    sender_status = Column(Enum(InvoiceSenderStatusEnum), nullable=False)
 
     invoice_billings = relationship('InvoiceBilling', back_populates='invoice')
 
@@ -499,10 +520,11 @@ class HealthPlan(ModelBase):
     fantasy_name = Column(String(100), nullable=True)
     document = Column(String(20), nullable=True)
     address = Column(String(255), nullable=False)
-    number_address = Column(Integer(), nullable=True)
+    number = Column(Integer(), nullable=True)
     complement = Column(String(255), nullable=True)
     zip_code = Column(String(255), nullable=False)
     city = Column(String(255), nullable=False)
+    district = Column(String(50), nullable=True)
     state = Column(String(255), nullable=False)
     country = Column(String(255), nullable=True)
     municipal_registration = Column(String(255), nullable=True)

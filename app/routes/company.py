@@ -77,3 +77,14 @@ async def get_document(document: str, company_service: CompanyService = Depends(
     except Exception as e:
         logger.error(f"Error in query company for document: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get('/user/logged', summary='Return company for user logged', response_model=CompanySchemaOut, tags=[tags])
+async def get_id(company_service: CompanyService = Depends(get_service)):
+    try:
+        company = company_service.get_company_by_user_logged()
+        return CompanySchemaOut.from_orm(company)
+
+    except Exception as e:
+        logger.error(f"Error in query company for user-logged: {e}")
+        raise HTTPException(status_code=400, detail=str(e))

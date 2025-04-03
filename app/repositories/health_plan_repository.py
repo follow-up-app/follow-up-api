@@ -17,9 +17,10 @@ class HealthPlanRepository:
             fantasy_name=health_plan_in.fantasy_name,
             document=health_plan_in.document,
             address=health_plan_in.address,
-            number_address=health_plan_in.number_address,
+            number=health_plan_in.number,
             complement=health_plan_in.complement,
             zip_code=health_plan_in.zip_code,
+            district=health_plan_in.district,
             city=health_plan_in.city,
             state=health_plan_in.state,
             country=health_plan_in.country,
@@ -44,14 +45,15 @@ class HealthPlanRepository:
         health_plan.fantasy_name = health_plan_in.fantasy_name
         health_plan.document = health_plan_in.document
         health_plan.address = health_plan_in.address
-        health_plan.number_address = health_plan_in.number_address
+        health_plan.number = health_plan_in.number
         health_plan.complement = health_plan_in.complement
+        health_plan.zip_code = health_plan_in.zip_code
+        health_plan.district = health_plan_in.district
         health_plan.city = health_plan_in.city
         health_plan.state = health_plan_in.state
         health_plan.country = health_plan_in.country
         health_plan.email = health_plan_in.email
         health_plan.phone = health_plan_in.phone
-        health_plan.active = health_plan_in.active
 
         self.session.add(health_plan)
         self.session.commit()

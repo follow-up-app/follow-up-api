@@ -105,3 +105,9 @@ class ProcedureScheduleRepository:
             query = query.filter(ProcedureSchedule.student_id == student_id)
 
         return query.all()
+    
+    def get_distinct_skill_procedure(self, skill_id, schedule_id: UUID) -> List[ProcedureSchemaOut]:
+        return ProcedureSchedule.query(self.session).filter(
+            ProcedureSchedule.skill_id == skill_id,
+             ProcedureSchedule.schedule_id == schedule_id,
+        ).distinct(ProcedureSchedule.procedure_id).all()

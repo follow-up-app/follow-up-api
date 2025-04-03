@@ -36,7 +36,7 @@ from app.repositories.billing_repository import BillingRepository
 from app.services.billing_service import BillingService
 from db import get_db
 from db.models import User
-from app.schemas.schedule_schemas import ProcedureScheduleSchemaIn, ScheduleSchemaIn, ScheduleSchemaOut, ScheduleUpadateSchamaIn, SkillScheduleIn
+from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, EventSchemaOut
 import logging
 
 
@@ -128,14 +128,14 @@ async def get_all(schedule_service: ScheduleService = Depends(get_service)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get('/details/{id}', summary='Return schedule', tags=[tags])
-async def get_id(id: UUID, schedule_service: ScheduleService = Depends(get_service)):
+@router.get('/details/{event_id}', summary='Return event schedule', tags=[tags])
+async def get_id(event_id: UUID, schedule_service: ScheduleService = Depends(get_service)):
     try:
-        schedule = schedule_service.get_id(id)
-        return ScheduleSchemaOut.from_orm(schedule)
+        schedule = schedule_service.get_event_id(event_id)
+        return EventSchemaOut.from_orm(schedule)
 
     except Exception as e:
-        logger.error(f"Error in query schedule for id: {e}")
+        logger.error(f"Error in query event schedule for event_id: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -161,6 +161,17 @@ async def get_all(instructor_id: UUID, schedule_service: ScheduleService = Depen
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.patch('/update/{event_id}', summary='Update status schedule', tags=[tags])
+async def update(event_id: UUID, schedule_in: ScheduleSchemaIn, schedule_service: ScheduleService = Depends(get_service)):
+    try:
+        schedules = schedule_service.update_event(event_id, schedule_in)
+        return [ScheduleSchemaOut.from_orm(x) for x in schedules]
+
+    except Exception as e:
+        logger.error(f"Error in update event schedule: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
+
+
 @router.delete('/events/{event_id}', summary='Remove all schedules', tags=[tags])
 async def delete_many(event_id: UUID, schedule_service: ScheduleService = Depends(get_service)):
     try:
@@ -169,27 +180,6 @@ async def delete_many(event_id: UUID, schedule_service: ScheduleService = Depend
     except Exception as e:
         logger.error(f"Error in delete many schedules: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.delete('/{id}', summary='Delete schedule', tags=[tags])
-async def delete_unique(id: UUID, schedule_service: ScheduleService = Depends(get_service)):
-    try:
-        return schedule_service.delete(id)
-
-    except Exception as e:
-        logger.error(f"Error in delete unique schedule: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.put('/{id}/update', summary='Update status schedule', response_model=ScheduleSchemaOut, tags=[tags])
-async def update(id: UUID, schedule_in: ScheduleUpadateSchamaIn, schedule_service: ScheduleService = Depends(get_service)):
-    try:
-        schedule = schedule_service.update(id, schedule_in)
-        return ScheduleSchemaOut.from_orm(schedule)
-
-    except Exception as e:
-        logger.error(f"Error in update schedule: {e}")
-        raise HTTPException(status_code=500, detail='Server error')
 
 
 @router.get('/schedule-today', summary='Return all schedule today', response_model=List[ScheduleSchemaOut], tags=[tags])
@@ -232,60 +222,4 @@ async def get_produre(id: UUID, skill_id: UUID, schedule_service: ScheduleServic
 
     except Exception as e:
         logger.error(f"Error in query procedure schedule: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.patch('/procedure/{procedure_schedule_id}', summary='Update procedure schedule', response_model=ProcedureSchemaOut, tags=[tags])
-async def update_procedure_schedule(procedure_schedule_id: UUID, procedure_in: ProcedureSchemaIn, schedule_service: ScheduleService = Depends(get_service)):
-    try:
-        procedure_schedule = schedule_service.update_procedure_schedule(
-            procedure_schedule_id, procedure_in)
-        return ProcedureSchemaOut.from_orm(procedure_schedule)
-
-    except Exception as e:
-        logger.error(f"Error in update procedure schedule: {e}")
-        raise HTTPException(status_code=500, detail='Server error')
-
-
-@router.post('/{id}/procedures/', summary='add procedure in schedule', response_model=List[ScheduleSchemaOut], tags=[tags])
-async def add_procedure(id: UUID, procedure_in: ProcedureScheduleSchemaIn, schedule_service: ScheduleService = Depends(get_service)):
-    try:
-        schedules = schedule_service.add_procedure_schedule(
-            id, procedure_in.procedure_id)
-        return [ScheduleSchemaOut.from_orm(x) for x in schedules]
-
-    except Exception as e:
-        logger.error(f"Error in add procedure in schedule: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.delete('/procedures/{procedure_schedule_id}', summary='Delete procedure schedule', tags=[tags])
-async def delete_procedure(procedure_schedule_id: UUID, schedule_service: ScheduleService = Depends(get_service)):
-    try:
-        return schedule_service.delete_procedure_schedule(procedure_schedule_id)
-
-    except Exception as e:
-        logger.error(f"Error in delete procedure in schedule: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.post('/{id}/skills/', summary='add skill in schedule', response_model=List[ScheduleSchemaOut], tags=[tags])
-async def add_skill(id: UUID, skill_in: SkillScheduleIn, schedule_service: ScheduleService = Depends(get_service)):
-    try:
-        schedules = schedule_service.add_skill_schedule(
-            id, skill_in.skill_id)
-        return [ScheduleSchemaOut.from_orm(x) for x in schedules]
-
-    except Exception as e:
-        logger.error(f"Error in add skill in schedule: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.delete('/skills/{skill_schedule_id}', summary='Delete skill schedule', tags=[tags])
-async def delete_skill_schedule(skill_schedule_id: UUID, schedule_service: ScheduleService = Depends(get_service)):
-    try:
-        return schedule_service.delete_skill_schedule(skill_schedule_id)
-
-    except Exception as e:
-        logger.error(f"Error in delete skill in schedule: {e}")
         raise HTTPException(status_code=400, detail=str(e))

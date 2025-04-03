@@ -32,3 +32,6 @@ class CompanyService:
 
     def get_document(self, document: str) -> CompanySchemaOut:
         return self.company_repository.get_document(document)
+
+    def get_company_by_user_logged(self) -> CompanySchemaOut:
+        return self.company_repository.company_by_user_logged()

@@ -4,9 +4,9 @@ from datetime import date, datetime
 from sqlalchemy.orm import Session
 from app.constants.enums.schedule_enum import ScheduleEnum
 from app.schemas.instructor_schema import InstructorSchemaOut
-from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut
+from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, EventSchemaOut
 from app.schemas.student_schemas import StudentSchemaOut
-from db.models import Schedule, User
+from db.models import Schedule, User, Event, SkillsSchedule
 from sqlalchemy.sql.functions import func
 
 
@@ -18,29 +18,30 @@ class ScheduleRepository:
     def create(self,
                event_id: UUID,
                student: StudentSchemaOut,
+               specialty_id: UUID,
                instructor: InstructorSchemaOut,
                date_schedule_in: datetime,
                date_schedule_out: datetime,
                schedule_in: ScheduleSchemaIn,
                hour_start: str,
-               hour_end: str
+               hour_end: str,
+               week_days: str
                ) -> ScheduleSchemaOut:
 
         schedule = Schedule(
             company_id=self.current_user.company_id,
             student_id=student.id,
-            specialty_id=schedule_in.specialty_id,
+            specialty_id=specialty_id,
             event_id=event_id,
             start=date_schedule_in,
             end=date_schedule_out,
             title=student.fullname + ' | ' + instructor.fullname,
             instructor_id=instructor.id,
-            details=schedule_in.details,
             start_hour=hour_start,
             end_hour=hour_end,
             repeat=schedule_in.repeat,
             period=schedule_in.period,
-            color=schedule_in.color,
+            week_days=week_days,
             status=ScheduleEnum.SCHEDULED
         )
 
@@ -154,3 +155,34 @@ class ScheduleRepository:
             schedules = schedules.filter(Schedule.student_id == student_id)
 
         return schedules
+
+    def create_event(self, schedule_in: ScheduleSchemaIn) -> EventSchemaOut:
+        event = Event(
+            company_id=self.current_user.company_id,
+            student_id=schedule_in.student_id,
+            start_in=schedule_in.schedule_in,
+            repeat=schedule_in.repeat,
+            period=schedule_in.period
+        )
+
+        self.session.add(event)
+        self.session.commit()
+
+        return event
+
+    def get_event_id(self, event_id: UUID) -> EventSchemaOut:
+        return Event.query(self.session).filter(Event.id == event_id).first()
+
+    def get_distinct_start_end_schedule(self, event_id: UUID, skill_id: UUID, week_days: str) -> List[ScheduleSchemaOut]:
+        return Schedule.query(self.session).join(Schedule.skill_schedule).filter(
+            SkillsSchedule.skill_id == skill_id,
+            Schedule.event_id == event_id,
+            Schedule.week_days == week_days
+        ).distinct(Schedule.start_hour, Schedule.end_hour).all()
+
+    def delete_event(self, event_id: UUID) -> bool:
+        event = Event.query(self.session).filter(
+            Event.id == event_id).first()
+
+        self.session.delete(event)
+        self.session.commit()

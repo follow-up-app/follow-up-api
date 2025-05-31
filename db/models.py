@@ -334,7 +334,7 @@ class Schedule(ModelBase):
                           ForeignKey(Event.id), nullable=True)
 
     title = Column(String(255), nullable=False)
-    start = Column(DateTime, nullable=False)
+    start = Column(DateTime(timezone=True), nullable=False)
     end = Column(DateTime, nullable=False)
     start_hour = Column(String(20), nullable=True)
     end_hour = Column(String(20), nullable=True)

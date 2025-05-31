@@ -60,13 +60,13 @@ class ScheduleService:
 
         return schedule
 
-    def create(self, schedule_in: ScheduleSchemaIn, data_schedule: date, event_id: UUID, start: str, end: str, slot: SlotDates) -> List[ScheduleSchemaOut]:
+    def create(self, schedule_in: ScheduleSchemaIn, date_schedule: date, event_id: UUID, start: str, end: str, slot: SlotDates) -> List[ScheduleSchemaOut]:
+        events = []
         days = schedule_in.period * 30
-        max_date = data_schedule + timedelta(days=round(days))
+        max_date = date_schedule + timedelta(days=round(days))
         week_days = ",".join(str(item.value) for item in slot.date_weeks)
 
-        period_ = max_date - data_schedule
-        events = []
+        period_ = max_date - date_schedule
 
         instructor = self.instructor_service.get_id(slot.instructor_id)
         if not instructor:
@@ -84,31 +84,33 @@ class ScheduleService:
             repeat = 7
 
         for _ in range(period):
-            dates = self.dates_allowed(data_schedule, start, end, student.id, instructor.id)
+            if date_schedule >= date.today():
+                dates = self.dates_allowed(date_schedule, start, end, student.id, instructor.id)
 
-            schedule = self.schedule_repository.create(
-                    event_id,
-                    student,
-                    slot.specialty_id,
-                    instructor,
-                    dates[0],
-                    dates[1],
-                    schedule_in,
-                    start,
-                    end,
-                    week_days)
+                schedule = self.schedule_repository.create(
+                        event_id,
+                        student,
+                        slot.specialty_id,
+                        instructor,
+                        dates[0],
+                        dates[1],
+                        schedule_in,
+                        start,
+                        end,
+                        week_days)
 
-            events.append(schedule)
-            data_schedule += timedelta(days=repeat)
+                events.append(schedule)
+            date_schedule += timedelta(days=repeat)
 
         for sch in events:
-            for procedure in slot.procedures:
-                self.procedure_schedule_service.create(
-                    sch.id, student.id, procedure)
-            self.skill_schedule_service.create(sch.id, slot.skill_id)
+            if date_schedule >= date.today():
+                for procedure in slot.procedures:
+                    self.procedure_schedule_service.create(
+                        sch.id, student.id, procedure)
+                self.skill_schedule_service.create(sch.id, slot.skill_id)
 
-            self.payment_service.create(sch, instructor)
-            self.billing_service.create(sch, student)
+                self.payment_service.create(sch, instructor)
+                self.billing_service.create(sch, student)
 
         return events
 
@@ -122,11 +124,11 @@ class ScheduleService:
         if date_schedule_out <= date_schedule_in:
             raise ValueError(ScheduleHourError.MESSAGE)
 
-        if self.check_instructor(instructor_id, date_schedule_in, date_schedule_out):
-            raise ValueError(InstructorNotAvailableError.MESSAGE)
+        # if self.check_instructor(instructor_id, date_schedule_in, date_schedule_out):
+        #     raise ValueError(InstructorNotAvailableError.MESSAGE)
 
-        if self.check_student(student_id, date_schedule_in, date_schedule_out):
-            raise ValueError(StudentNotAvailableError.MESSAGE)
+        # if self.check_student(student_id, date_schedule_in, date_schedule_out):
+        #     raise ValueError(StudentNotAvailableError.MESSAGE)
 
         return date_schedule_in, date_schedule_out
 
@@ -162,10 +164,7 @@ class ScheduleService:
         return self.schedule_repository.get_instuctor_all(instructor_id)
 
     def delete_many(self, event_id: UUID) -> bool:
-        schedules = self.schedule_repository.get_event_future(event_id)
-        if not schedules:
-            raise ValueError('Não existem agendas futuras para este evento.')
-
+        schedules = self.schedule_repository.get_event_scheduled(event_id)
         for schedule in schedules:
             self.process_delete(schedule.id)
 
@@ -319,7 +318,7 @@ class ScheduleService:
         event = self.schedule_repository.get_event_id(event_id)
         if not event:
             raise ValueError(ScheduleNotFoundError.MESSAGE)
-        schedules = self.schedule_repository.get_event_future(event_id)
+        schedules = self.schedule_repository.get_event_scheduled(event_id)
         for schedule in schedules:
             self.process_delete(schedule.id)
 

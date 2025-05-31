@@ -15,6 +15,7 @@ class SpecialtyRepository:
             company_id=self.current_user.company_id,
             name=specialty_in.name.upper(),
             description=specialty_in.description,
+            code_nfes=specialty_in.code_nfes,
             value_hour=specialty_in.value_hour,
         )
         self.session.add(specialty)
@@ -33,6 +34,7 @@ class SpecialtyRepository:
     def update(self, specialty: Specialty, specialty_in: SpecialtySchemaIn) -> SpecialtySchemaOut:
         specialty.name = specialty_in.name
         specialty.description = specialty_in.description
+        specialty.code_nfes = specialty_in.code_nfes
         specialty.value_hour = specialty_in.value_hour
 
         self.session.add(specialty)

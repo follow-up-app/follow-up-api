@@ -92,7 +92,7 @@ def upgrade():
     sa.Column('date_due', sa.Date(), nullable=False),
     sa.Column('date_done', sa.Date(), nullable=True),
     sa.Column('description', sa.String(length=250), nullable=True),
-    sa.Column('status', sa.Enum('OPEN', 'CONFIRMED', 'DONE', name='billingenum'), nullable=False),
+    sa.Column('status', sa.Enum('OPEN', 'CONFIRMED', 'GENERATE_INVOICE', 'DONE', name='billingenum'), nullable=False),
     sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
     sa.ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ),

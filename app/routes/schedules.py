@@ -19,7 +19,7 @@ from app.repositories.skill_repository import SkillRepository
 from app.repositories.skill_schedule_repository import SkillScheduleRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas.procedure_schemas import ProcedureSchemaIn, ProcedureSchemaOut
+from app.schemas.procedure_schemas import ProcedureSchemaOut
 from app.services.address_contract_service import AddressContractService
 from app.services.contractor_service import ContractorService
 from app.services.instructor_service import InstructorService
@@ -34,6 +34,7 @@ from app.services.student_service import StudentService
 from app.services.user_service import UserService
 from app.repositories.billing_repository import BillingRepository
 from app.services.billing_service import BillingService
+from app.repositories.invoice_repository import InvoiceRepository
 from db import get_db
 from db.models import User
 from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, EventSchemaOut
@@ -66,6 +67,8 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     procedure_schedule_repository = ProcedureScheduleRepository(session)
     user_repository = UserRepository(session, current_user)
     billing_repository = BillingRepository(session, current_user)
+    invoice_repository = InvoiceRepository(session, current_user)
+
     mailer = Mailer()
 
     address_contract_service = AddressContractService(
@@ -102,7 +105,8 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         procedure_service,
         procedure_schedule_service,
         payment_service,
-        billing_service
+        billing_service,
+        invoice_repository
     )
 
 
@@ -175,7 +179,8 @@ async def update(event_id: UUID, schedule_in: ScheduleSchemaIn, schedule_service
 @router.delete('/events/{event_id}', summary='Remove all schedules', tags=[tags])
 async def delete_many(event_id: UUID, schedule_service: ScheduleService = Depends(get_service)):
     try:
-        return schedule_service.delete_many(event_id)
+        delete =  schedule_service.delete_many(event_id)
+        return {'status_code': 200,  'executed': delete}
 
     except Exception as e:
         logger.error(f"Error in delete many schedules: {e}")

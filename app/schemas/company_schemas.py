@@ -20,8 +20,6 @@ class CompanySchemaIn(BaseModel):
     phone: str
     city_code: Optional[str] = None
     aliquot: Optional[int] = None
-    item_list_service: Optional[str] = None
-    municipal_tax_code: Optional[str] = None
     iss_retained: Optional[bool] = None
     licences_n: Optional[int] = None
     api_nfes_token: Optional[str] = None
@@ -30,26 +28,22 @@ class CompanySchemaIn(BaseModel):
 
 class CompanySchemaOut(BaseModel):
     id: UUID
-    fantasy_name: Optional[str] = None
+    fantasy_name: str
     social_name: str
-    fantasy_name: Optional[str] = None
     document: str
-    municipal_registration: Optional[str] = None
     address: str
-    number_address: Optional[int]
+    number_address:int
     complement: Optional[str] = None
     zip_code: str
-    district: Optional[str] = None
+    district: str
     city: str
     state: str
     email: str
     phone: str
-    city_code: Optional[str] = None
+    city_code: str
     aliquot: Optional[int] = None
-    item_list_service: Optional[str] = None
-    municipal_tax_code: Optional[str] = None
     iss_retained: Optional[bool] = None
-    licences_n: Optional[int] = None
+    licences_n: int
     api_nfes_token: Optional[str] = None
     status: CompanyEnum
 

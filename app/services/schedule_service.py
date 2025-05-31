@@ -21,6 +21,8 @@ from app.services.student_service import StudentService
 from datetime import date, datetime, timedelta
 from uuid import UUID
 from app.services.billing_service import BillingService
+from app.repositories.invoice_repository import InvoiceRepository
+
 
 
 class ScheduleService:
@@ -34,7 +36,8 @@ class ScheduleService:
                  procedure_service: ProcedureService,
                  procedure_schedule_service: ProcedureScheduleService,
                  payment_service: PaymentService,
-                 billing_service: BillingService
+                 billing_service: BillingService,
+                 invoice_repository: InvoiceRepository
                  ):
         self.schedule_repository = schedule_repository
         self.student_service = student_service
@@ -46,6 +49,7 @@ class ScheduleService:
         self.procedure_schedule_service = procedure_schedule_service
         self.payment_service = payment_service
         self.billing_service = billing_service
+        self.invoice_repository = invoice_repository
 
     def prepare(self, schedule_in: ScheduleSchemaIn) -> List[ScheduleSchemaOut]:
         event = self.schedule_repository.create_event(schedule_in)
@@ -158,31 +162,40 @@ class ScheduleService:
         return self.schedule_repository.get_instuctor_all(instructor_id)
 
     def delete_many(self, event_id: UUID) -> bool:
-        schedules = self.schedule_repository.get_event(event_id)
+        schedules = self.schedule_repository.get_event_future(event_id)
         if not schedules:
-            raise ValueError(ScheduleNotFoundError.MESSAGE)
+            raise ValueError('Não existem agendas futuras para este evento.')
 
         for schedule in schedules:
-            executions = self.execution_repositoy.get_schedule(schedule.id)
-            if executions:
-                raise ValueError(ScheduleNotRemoveError.MESSAGE)
-
-            skills = self.skill_schedule_service.get_schedule(schedule.id)
-            procedures = self.procedure_schedule_service.get_schedule_all(
-                schedule.id)
-
-            for procedure in procedures:
-                self.procedure_schedule_service.delete(procedure.id)
-
-            for skill in skills:
-                self.skill_schedule_service.delete(skill.id)
-
-            self.payment_service.delete_for_schedule(schedule.id)
-            self.billing_service.delete_for_schedule(schedule.id)
-            self.schedule_repository.delete(schedule.id)
+            self.process_delete(schedule.id)
 
         return True
-    
+
+    def process_delete(self, id: UUID) -> bool:
+        billing = self.billing_service.get_by_schedule_id(id)
+        invoice = self.invoice_repository.get_invoice_for_billing(billing.id)
+        if invoice:
+            raise ValueError(f"Já existe uma NFSe emitida para esta agenda. Faça o cancelamento antes de processeguir: Ref {invoice.invoice.reference}")
+
+        executions = self.execution_repositoy.get_schedule(id)
+        if executions:
+            raise ValueError(ScheduleNotRemoveError.MESSAGE)
+
+        skills = self.skill_schedule_service.get_schedule(id)
+        procedures = self.procedure_schedule_service.get_schedule_all(id)
+
+        for procedure in procedures:
+            self.procedure_schedule_service.delete(procedure.id)
+
+        for skill in skills:
+            self.skill_schedule_service.delete(skill.id)
+
+        self.payment_service.delete_for_schedule(id)
+        self.billing_service.delete_for_schedule(id)
+        self.schedule_repository.delete(id)
+
+        return True
+
 
     def update(self, id: UUID, schedule_in: ScheduleUpadateSchamaIn) -> ScheduleSchemaOut:
         schedule = self.schedule_repository.get_id(id)
@@ -263,20 +276,6 @@ class ScheduleService:
 
         return self.procedure_schedule_service.get_schedule_skill(schedule.id, skill_id)
 
-    def update_procedure_schedule(self, procedure_schedule_id: UUID, procedure_in: ProcedureSchemaIn) -> ProcedureSchemaOut:
-        procedure_schedule = self.procedure_schedule_service.get_id(
-            procedure_schedule_id)
-        if not procedure_schedule:
-            raise ValueError(ProcedureNotFoundError.MESSAGE)
-
-        all_procedures = self.procedure_schedule_service.get_student_procedure(
-            procedure_schedule.student_id, procedure_schedule.procedure_id)
-
-        for procedure in all_procedures:
-            self.procedure_schedule_service.update(procedure.id, procedure_in)
-
-        return procedure_schedule
-
     def get_follow_up(self) -> List[ScheduleSchemaOut]:
         return self.schedule_repository.get_follow_up()
 
@@ -320,8 +319,8 @@ class ScheduleService:
         event = self.schedule_repository.get_event_id(event_id)
         if not event:
             raise ValueError(ScheduleNotFoundError.MESSAGE)
-
-        self.delete_many(event_id)
-        self.schedule_repository.delete_event(event_id)
+        schedules = self.schedule_repository.get_event_future(event_id)
+        for schedule in schedules:
+            self.process_delete(schedule.id)
 
         return self.prepare(schedule_in)

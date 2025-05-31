@@ -67,6 +67,9 @@ class BillingService:
     def delete_for_schedule(self, schedule_id: UUID) -> bool:
         return self.billing_repository.delete_for_schedule(schedule_id)
 
+    def delete_invoice_billing(self, id: UUID) -> bool:
+        return self.billing_repository.delete_invoice_billing(id)
+
     def update_many_status(self, ids: List[UUID], status: BillingEnum) -> bool:
         for id in ids:
             billing = self.billing_repository.get_id(id)
@@ -76,3 +79,10 @@ class BillingService:
             self.billing_repository.update_status(billing, status)
 
         return True
+
+    def get_by_schedule_id(self, schedule_id: UUID) -> BillingSchemaOut:
+        billing = self.billing_repository.get_schedule_id(schedule_id)
+        if not billing:
+            raise ValueError(BillingNotFoundError.MESSAGE)
+
+        return billing

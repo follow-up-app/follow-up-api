@@ -11,7 +11,7 @@ from app.repositories.billing_repository import BillingRepository
 from app.repositories.health_plan_repository import HealthPlanRepository
 from app.repositories.responsible_contract_repository import ResponsibleContractRepository
 from app.repositories.address_contract_repository import AndressContractRepository
-from app.schemas.invoice_schemas import InvoiceSchemaIn, InvoiceSchemaOut, InvoiceBillingSchemaOut
+from app.schemas.invoice_schemas import InvoiceSchemaIn
 from app.core.invoice_requests import InvoiceRequests
 from db import get_db
 from db.models import User
@@ -49,41 +49,32 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     )
 
 
-@router.post('/', summary='sender invoice', response_model=InvoiceSchemaOut, tags=[tags])
+@router.post('/', summary='sender invoice', tags=[tags])
 async def create(invoice_in: InvoiceSchemaIn, invoice_service: InvoiceService = Depends(get_service)):
     try:
-        return invoice_service.sender(invoice_in)
+        invoice = invoice_service.sender(invoice_in)
+        return {'status_code': 200, 'reference': invoice}
 
     except Exception as e:
         logger.error(f"Error in sender invoice: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get('/billing/{billing_id}', summary='Return invoice list by students', response_model=List[InvoiceBillingSchemaOut], tags=[tags])
+@router.get('/billing/{billing_id}', summary='Return invoice list by students', tags=[tags])
 async def get_all(billing_id: UUID, invoice_service: InvoiceService = Depends(get_service)):
     try:
-        invoices = invoice_service.by_billing(billing_id)
-        return [InvoiceBillingSchemaOut.from_orm(x) for x in invoices]
+       return invoice_service.by_billing(billing_id)
 
     except Exception as e:
         logger.error(f"Error in query invoices billing: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get('/reference/{reference}', summary='Return invoice for reference', tags=[tags])
-async def by_reference(reference: str, invoice_service: InvoiceService = Depends(get_service)):
-    try:
-        return invoice_service.by_reference(reference)
-
-    except Exception as e:
-        logger.error(f"Error in query invoices reference api: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.delete('/reference/{reference}', summary='Delete invoice for reference', tags=[tags])
 async def delete(reference: str, invoice_service: InvoiceService = Depends(get_service)):
     try:
-        return invoice_service.delete(reference)
+        invoice_service.delete(reference)
+        return {'status_code': 200,  'reference': reference}
 
     except Exception as e:
         logger.error(f"Error in delte invoices reference api: {e}")
@@ -93,7 +84,8 @@ async def delete(reference: str, invoice_service: InvoiceService = Depends(get_s
 @router.post('/reference/{reference}/{email}', summary='Sendeer mail with invoice for reference', tags=[tags])
 async def sender_email(reference: str, email: str, invoice_service: InvoiceService = Depends(get_service)):
     try:
-        return invoice_service.sender_email(reference, email)
+        invoice_service.sender_email(reference, email)
+        return {'status_code': 200,  'reference': reference}
 
     except Exception as e:
         logger.error(f"Error in sender email with invoices reference api: {e}")

@@ -15,7 +15,7 @@ from app.constants.enums.permission_enum import PermissionEnum
 from app.constants.enums.repeat_enum import RepeatEnum
 from app.constants.enums.schedule_enum import ScheduleEnum
 from app.constants.enums.status_enum import StatusEnum
-from app.constants.enums.payment_enum import PaymentEnum
+from app.constants.enums.payment_enum import PaymentEnum, OrderPaymentEnum
 from app.constants.enums.instructor_payments_enum import ModePaymentEnum, TypePaymentEnum
 from app.constants.enums.billing_enum import BillingEnum, CategoryEnum
 from app.constants.enums.invoice_enum import InvoiceSenderStatusEnum
@@ -213,6 +213,7 @@ class Instructor(ModelBase):
     document_company = Column(String(20), nullable=True)
     social_name = Column(String(100), nullable=True)
     fantasy_name = Column(String(100), nullable=True)
+    crp = Column(String(50), nullable=True)
     email = Column(String(50), nullable=False)
     phone = Column(String(50), nullable=True)
     whats_app = Column(Boolean(), nullable=True)
@@ -229,6 +230,7 @@ class Instructor(ModelBase):
     payment_details = relationship(
         'IntructorPaymentsDetail', back_populates='instructor')
     payment = relationship('Payment', back_populates='instructor')
+    order_payments = relationship('OrderPayment', back_populates='instructor')
 
     specialty_name = association_proxy('specialty', 'name')
 
@@ -568,3 +570,31 @@ class StudentMedicine(ModelBase):
     measure = Column(String(50), nullable=True)
     schedules = Column(String(50), nullable=True)
     anotations = Column(String(250), nullable=True)
+
+
+class OrderPayment(ModelBase):
+    __tablename__ = 'order_payments'
+
+    company_id = Column(UUIDType(binary=False),
+                        ForeignKey(Company.id), nullable=False)
+    instructor_id = Column(UUIDType(binary=False),
+                        ForeignKey(Instructor.id), nullable=False)
+
+    number = Column(String(20), nullable=False)
+    period_reference = Column(String(20), nullable=False)
+    description = Column(String(200), nullable=True)
+    value = Column(Float(), nullable=False)
+    date_due = Column(Date, nullable=False)
+    date_done = Column(Date, nullable=True)
+    status = Column(Enum(OrderPaymentEnum), nullable=False)
+
+
+    instructor = relationship('Instructor', back_populates='order_payments')
+
+class PaymentReference(ModelBase):
+    __tablename__ = 'payment_references'
+
+    order_payment_id = Column(UUIDType(binary=False),
+                        ForeignKey(OrderPayment.id), nullable=False)
+    payment_id = Column(UUIDType(binary=False),
+                        ForeignKey(Payment.id), nullable=False)

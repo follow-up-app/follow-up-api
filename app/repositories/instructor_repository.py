@@ -5,6 +5,7 @@ from app.constants.enums.status_enum import StatusEnum
 from app.schemas.instructor_payment_schema import InstructorPaymentSchemaIn
 from app.schemas.instructor_schema import Filters, InstructorSchemaIn, InstructorSchemaOut
 from db.models import Instructor, User
+from app.constants.enums.instructor_payments_enum import ModePaymentEnum
 
 
 class InstructorRepository:
@@ -28,6 +29,7 @@ class InstructorRepository:
             document_company=instructor_in.document_company,
             social_name=instructor_in.social_name,
             fantasy_name=instructor_in.fantasy_name,
+            crp=instructor_in.crp,
             status=StatusEnum.ACTIVE
         )
 
@@ -58,6 +60,7 @@ class InstructorRepository:
         instructor.uf_exp = instructor_in.uf_exp
         instructor.nationality = instructor_in.nationality
         instructor.birthday = instructor_in.birthday
+        instructor.crp = instructor_in.crp
 
         self.session.add(instructor)
         self.session.commit()
@@ -105,3 +108,6 @@ class InstructorRepository:
         self.session.commit()
 
         return instructor
+
+    def get_by_mode_payment(self, mode_payment: ModePaymentEnum) -> List[InstructorSchemaOut]:
+        return Instructor.query(self.session).filter(Instructor.mode_payment == mode_payment).all()

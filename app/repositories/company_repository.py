@@ -13,6 +13,7 @@ class CompanyRepository:
 
     def create(self, company_in: CompanySchemaIn) -> CompanySchemaOut:
         company = Company(
+            name=company_in.social_name.upper(),
             social_name=company_in.social_name.upper(),
             fantasy_name=company_in.fantasy_name.upper(),
             document=company_in.document,
@@ -28,8 +29,6 @@ class CompanyRepository:
             city_code=company_in.city_code,
             aliquot=company_in.aliquot,
             municipal_registration=company_in.municipal_registration,
-            item_list_service=company_in.item_list_service,
-            municipal_tax_code=company_in.municipal_tax_code,
             iss_retained=company_in.iss_retained,
             licences_n=company_in.licences_n,
             api_nfes_token=company_in.api_nfes_token,
@@ -60,8 +59,6 @@ class CompanyRepository:
         company.phone = company_in.phone
         company.city_code = company_in.city_code
         company.municipal_registration = company_in.municipal_registration
-        company.item_list_service = company_in.item_list_service
-        company.municipal_tax_code = company_in.municipal_tax_code
         company.iss_retained = company_in.iss_retained
         company.licences_n = company_in.licences_n
         company.api_nfes_token = company_in.api_nfes_token

@@ -132,3 +132,10 @@ class PaymnentRepository:
             Payment.instructor_id == instructor_id,
             Payment.status == status
         ).all()
+
+    def get_by_reference_status(self, instructor_id: UUID, status: PaymentEnum, ref: str) -> List[PaymentSchemaOut]:
+        return Payment.query(self.session).filter(
+            Payment.instructor_id == instructor_id,
+            Payment.status == status,
+            Payment.reference == ref,
+        ).all()

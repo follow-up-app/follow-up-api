@@ -11,9 +11,6 @@ class InstructorPaymentSchemaIn(BaseModel):
     comission: Optional[int] = None
     value: float
     key: Optional[str] = None
-    bank_number: Optional[int] = None
-    bank_branch: Optional[int] = None
-    account_number: Optional[str] = None
 
 
 class InstructorPaymentSchemaOut(BaseModel):

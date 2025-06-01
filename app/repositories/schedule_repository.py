@@ -69,6 +69,10 @@ class ScheduleRepository:
     def get_event(self, event_id: UUID) -> List[ScheduleSchemaOut]:
         return Schedule.query(self.session).filter(Schedule.event_id == event_id).all()
 
+    def get_event_scheduled(self, event_id: UUID) -> List[ScheduleSchemaOut]:
+        return Schedule.query(self.session).filter(Schedule.event_id == event_id,
+                                                   Schedule.status == ScheduleEnum.SCHEDULED).all()
+
     def done(self, schedule: ScheduleSchemaOut) -> ScheduleSchemaOut:
         schedule.status = ScheduleEnum.DONE
         schedule.event_finish = datetime.now()

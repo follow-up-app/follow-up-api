@@ -19,6 +19,7 @@ class InstructorSchemaIn(BaseModel):
     document_company: Optional[str]
     social_name: Optional[str]
     fantasy_name: Optional[str]
+    crp: Optional[str] = None
     comission: Optional[str]
     status: Optional[StatusEnum]
 
@@ -41,6 +42,7 @@ class InstructorSchemaOut(BaseModel):
     document_company: Optional[str]
     social_name: Optional[str]
     fantasy_name: Optional[str]
+    crp: Optional[str] = None
     type_payment: Optional[TypePaymentEnum]
     mode_payment: Optional[ModePaymentEnum]
     value: Optional[str]

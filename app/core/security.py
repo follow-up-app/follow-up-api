@@ -10,11 +10,15 @@ from app.constants.enums.permission_enum import PermissionEnum
 from config import Settings, get_settings
 from db import get_db
 from db.models import User
-from app.core.utils import now
+import datetime
+import pytz
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def now():
+    settings = get_settings()
+    return datetime.datetime.now(pytz.timezone(settings.TIMEZONE))
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)

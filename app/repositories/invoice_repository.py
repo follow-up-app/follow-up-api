@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from db.models import Invoice, InvoiceLog, InvoiceBilling, User
 from app.constants.enums.invoice_enum import InvoiceSenderStatusEnum
-from app.schemas.invoice_schemas import InvoiceLogSchemaOut, InvoiceSchemaOut, InvoiceBillingSchemaOut, InvoiceSchemaIn, InvoiceResponseApi
+from app.schemas.invoice_schemas import InvoiceLogSchemaOut, InvoiceSchemaOut, InvoiceBillingSchemaOut, InvoiceSchemaIn, InvoiceSenderApi
 from uuid import UUID
 from typing import List
 
@@ -11,12 +11,12 @@ class InvoiceRepository:
         self.session = session
         self.current_user = current_user
 
-    def create_invoice_reference(self, response_api: InvoiceResponseApi):
+    def create_invoice_reference(self, response_api: InvoiceSenderApi):
         invoice = Invoice(
             company_id=self.current_user.company_id,
             reference=response_api.ref,
             api_status=response_api.status,
-            status=InvoiceSenderStatusEnum.SENDER
+            sender_status=InvoiceSenderStatusEnum.SENDER
         )
 
         self.session.add(invoice)
@@ -38,8 +38,8 @@ class InvoiceRepository:
     def get_invoice_id(self, id: UUID) -> InvoiceSchemaOut:
         return Invoice.query(self.session).filter(Invoice.id == id).first()
 
-    def get_invoice_billing_all(self, billing_id: UUID) -> List[InvoiceBillingSchemaOut]:
-        return InvoiceBilling.query(self.session).filter(InvoiceBilling.billing_id == billing_id).all()
+    def get_invoice_for_billing(self, billing_id: UUID) -> InvoiceBillingSchemaOut:
+        return InvoiceBilling.query(self.session).filter(InvoiceBilling.billing_id == billing_id).first()
 
     def remove_invoice_billing(self, billing_id: UUID, invoice_id: UUID) -> bool:
         invoice_billing = InvoiceBilling.query(self.session).filter(

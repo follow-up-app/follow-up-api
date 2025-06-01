@@ -10,5 +10,5 @@ class ModePaymentEnum(enum.Enum):
     MOUNTH: str = 'MENSAL'
     WEEK: str = 'SEMANAL'
     DAY: str = 'DIARIA'
-    HOUR: str = 'HORA'
+    HOUR: str = 'AGENDA'
     COMISSION: str = 'COMISSÃO'

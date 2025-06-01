@@ -141,3 +141,12 @@ class BillingRepository:
             billings = billings.join(Schedule).filter(Schedule.specialty_id == specialty_id)
 
         return billings.order_by(Billing.date_due.asc()).all()
+
+    def delete_invoice_billing(self, id: UUID) -> bool:
+        billing = Billing.query(self.session).filter(Billing.id == id).first()
+        if not billing:
+            return False
+        self.session.delete(billing)
+        self.session.commit()
+
+        return True

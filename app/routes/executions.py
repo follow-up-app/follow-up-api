@@ -35,6 +35,7 @@ from app.services.billing_service import BillingService
 from app.repositories.billing_repository import BillingRepository
 from app.services.payment_service import PaymentService
 from app.repositories.payment_repository import PaymnentRepository
+from app.repositories.invoice_repository import InvoiceRepository
 from db import get_db
 from db.models import User
 import logging
@@ -90,6 +91,7 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
     billing_service = BillingService(billing_repository)
     payment_repository = PaymnentRepository(session, current_user)
     payment_service = PaymentService(payment_repository)
+    invoice_repository = InvoiceRepository(session, current_user)
 
     schedule_service = ScheduleService(
         schedule_repository,
@@ -101,7 +103,8 @@ def get_service(session: Session = Depends(get_db), current_user: User = Depends
         procedure_service,
         procedure_schedule_service,
         payment_service,
-        billing_service
+        billing_service,
+        invoice_repository
     )
 
     return ExecutionService(execution_repository, schedule_service, procedure_schedule_service)

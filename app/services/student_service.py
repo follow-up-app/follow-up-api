@@ -23,10 +23,10 @@ class StudentService:
         self.address_contract_service = address_contract_service
 
     def create(self, student_in: StudentSchemaIn) -> StudentSchemaOut:
-        check_document = self.student_repository.get_document(
-            student_in.document)
-        if check_document:
-            raise ValueError(StudentDocumentAlreadyExistsError.MESSAGE)
+        # check_document = self.student_repository.get_document(
+        #     student_in.document)
+        # if check_document:
+        #     raise ValueError(StudentDocumentAlreadyExistsError.MESSAGE)
 
         contractor = self.contractor_service.create()
 

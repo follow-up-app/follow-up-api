@@ -34,7 +34,7 @@ class PaymentService:
         if not payment:
             raise ValueError(PaymentNotFoundError.MESSAGE)
 
-        return self.payment_repository.update_status(payment, PaymentEnum.SCHEDULED)
+        return self.payment_repository.update_status(payment, PaymentEnum.CONFIRMED)
 
     def get_all(self) -> List[PaymentSchemaOut]:
         return self.payment_repository.get_all()

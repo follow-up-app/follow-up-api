@@ -44,7 +44,7 @@ class BillingService:
         if not billing:
             raise ValueError(BillingNotFoundError.MESSAGE)
 
-        return self.billing_repository.update_status(billing, BillingEnum.SCHEDULED)
+        return self.billing_repository.update_status(billing, BillingEnum.CONFIRMED)
 
     def get_filters(self, filters_in: BillingFilters) -> List[BillingSchemaOut]:
         start = datetime.combine(filters_in.start, datetime.min.time())

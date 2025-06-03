@@ -177,6 +177,8 @@ async def update(id: UUID, schedule_in: ScheduleSchemaIn, schedule_service: Sche
 
 @router.put('/{id}/update', summary='Update status schedule', response_model=ScheduleSchemaOut, tags=[tags])
 async def update(id: UUID, schedule_in: ScheduleUpadateSchamaIn, schedule_service: ScheduleService = Depends(get_service)):
+    schedule = schedule_service.update(id, schedule_in)
+    return ScheduleSchemaOut.from_orm(schedule)
     try:
         schedule = schedule_service.update(id, schedule_in)
         return ScheduleSchemaOut.from_orm(schedule)

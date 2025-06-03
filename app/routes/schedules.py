@@ -175,6 +175,17 @@ async def update(id: UUID, schedule_in: ScheduleSchemaIn, schedule_service: Sche
         logger.error(f"Error in update event schedule: {e}")
         raise HTTPException(status_code=500, detail='Server error')
 
+@router.put('/{id}/update', summary='Update status schedule', response_model=ScheduleSchemaOut, tags=[tags])
+async def update(id: UUID, schedule_in: ScheduleUpadateSchamaIn, schedule_service: ScheduleService = Depends(get_service)):
+    try:
+        schedule = schedule_service.update(id, schedule_in)
+        return ScheduleSchemaOut.from_orm(schedule)
+
+    except Exception as e:
+        logger.error(f"Error in update schedule: {e}")
+        raise HTTPException(status_code=500, detail='Server error')
+
+
 @router.patch('/update/event/{event_id}', summary='Update status schedule', tags=[tags])
 async def update(event_id: UUID, schedule_in: ScheduleSchemaIn, schedule_service: ScheduleService = Depends(get_service)):
     try:

@@ -37,7 +37,7 @@ from app.services.billing_service import BillingService
 from app.repositories.invoice_repository import InvoiceRepository
 from db import get_db
 from db.models import User
-from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, EventSchemaOut
+from app.schemas.schedule_schemas import ScheduleSchemaIn, ScheduleSchemaOut, EventSchemaOut, ScheduleUpadateSchamaIn
 import logging
 
 
